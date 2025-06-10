@@ -472,7 +472,10 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
      */
     function getFoldersContainingCurrentItem() {
         // Access window.firestoreWatchlistsCache which is exposed by main.js
-        if (!window.firestoreWatchlistsCache) return [];
+        if (!window.firestoreWatchlistsCache) {
+            console.warn("window.firestoreWatchlistsCache is not available in renderWatchlistOptionsInModal.");
+            return [];
+        }
         return window.firestoreWatchlistsCache.filter(watchlist =>
             watchlist.items.some(item => String(item.tmdb_id) === String(currentItemId) && item.item_type === currentItemType)
         ).map(watchlist => watchlist.id); // Return folder IDs
@@ -487,7 +490,10 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
         currentlySelectedWatchlistIds = getFoldersContainingCurrentItem(); // Refresh selection status
         const allWatchlists = window.firestoreWatchlistsCache || []; // Access global cache from main.js
 
-        // Populate the dropdown list with all available watchlists, marking those that contain the current item
+        // Debugging logs to inspect the cache content when dropdown is updated
+        console.log("UI: updateDropdownDisplay called. All Watchlists in cache:", allWatchlists);
+        console.log("UI: Currently selected watchlist IDs for item:", currentlySelectedWatchlistIds);
+
         dropdownListModal.innerHTML = allWatchlists.length
             ? allWatchlists.map(watchlist => `
                 <div class="dropdown-item ${currentlySelectedWatchlistIds.includes(watchlist.id) ? 'item-selected' : ''}" data-folder-id="${watchlist.id}">
@@ -507,8 +513,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
         }
     }
 
-    // Initialize display when the modal opens
-    updateDropdownDisplay();
+    updateDropdownDisplay(); // Initial display update when modal opens
 
     // Event listener to toggle dropdown visibility
     dropdownSelectedTextModal.onclick = (event) => {
@@ -519,6 +524,8 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
         if (isOpen) {
             dropdownSelectedTextModal.focus(); // Return focus for accessibility
         }
+        // Force an update when clicked, in case the cache updated after modal opened
+        updateDropdownDisplay();
     };
 
     // Event listener to close dropdown when clicking outside
@@ -558,90 +565,6 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
                 await window.handleCreateLibraryFolder(newFolderName.trim());
             }
         }
-        // Update dropdown display after creation (Firestore listener will also update it)
-        updateDropdownDisplay();
+        updateDropdownDisplay(); // Update dropdown display after creation (Firestore listener will also update it)
     });
-}
-
-
-/**
- * Updates properties of elements based on the current theme mode (light/dark).
- * This includes icon visibility, and fallback image sources.
- * @param {boolean} isLightMode - True if light mode is active.
- */
-export function updateThemeDependentElements(isLightMode) {
-    const sunIcon = document.querySelector('.sun-icon');
-    const moonIcon = document.querySelector('.moon-icon');
-    const heroImage = document.getElementById('hero-image-element');
-
-    // Toggle visibility of sun/moon icons
-    if (sunIcon && moonIcon) {
-        sunIcon.style.display = isLightMode ? 'none' : 'inline-block';
-        moonIcon.style.display = isLightMode ? 'inline-block' : 'none';
-    }
-
-    // Update fallback image URLs for the hero section if a placeholder is currently shown
-    if (heroImage) {
-        // Only change if the current src is a placeholder, otherwise respect actual image
-        if (heroImage.src.includes('placehold.co')) {
-             heroImage.src = isLightMode
-                ? 'https://placehold.co/1200x600/A0C4FF/1D1D1F?text=Featured+Show' // Light mode placeholder
-                : 'https://placehold.co/1200x600/3B0764/F3F4F6?text=Featured+Show'; // Dark mode placeholder
-            // Ensure onerror also reflects the correct theme
-            heroImage.onerror = function() {
-                this.onerror=null;
-                this.src= isLightMode ? 'https://placehold.co/1200x600/A0C4FF/1D1D1F?text=Fallback+Image' : 'https://placehold.co/1200x600/3B0764/F3F4F6?text=Fallback+Image';
-            };
-        }
-    }
-    // Update CSS variables for header/footer background based on theme for consistent blur
-    // This allows the rgba background to switch its base color smoothly
-    const headerFooterBgBase = isLightMode ? getComputedStyle(document.documentElement).getPropertyValue('--header-footer-bg-light-rgb') : getComputedStyle(document.documentElement).getPropertyValue('--header-footer-bg-dark-rgb');
-    document.documentElement.style.setProperty('--header-footer-bg-rgb', headerFooterBgBase.trim());
-
-    // Update custom property for primary text color (used in profile dropdown hover effect)
-    const textPrimaryColor = isLightMode ? '0, 0, 0' : '255, 255, 255';
-    document.documentElement.style.setProperty('--text-primary-rgb', textPrimaryColor);
-}
-
-/**
- * Updates the hero section with details of a featured movie or TV show.
- * Handles cases where no item is provided (displays generic content).
- * @param {object|null} item - The featured item object from TMDB, or null to show generic content.
- * @param {boolean} isLightMode - True if light mode is active, for fallback image colors.
- */
-export function updateHeroSection(item, isLightMode) {
-    const heroTitle = document.getElementById('hero-title');
-    const heroOverview = document.getElementById('hero-overview');
-    const heroImageElement = document.getElementById('hero-image-element');
-
-    if (item && heroTitle && heroOverview && heroImageElement) {
-        // Set actual item data
-        heroTitle.textContent = item.title || item.name || 'Featured Content';
-        heroOverview.textContent = item.overview || 'Discover the latest blockbusters and critically acclaimed series.';
-        let newHeroImageUrl = '';
-        if (item.backdrop_path) {
-            newHeroImageUrl = `${TMDB_BACKDROP_BASE_URL}${item.backdrop_path}`;
-        } else if (item.poster_path) { // Use poster as fallback for backdrop if available
-            newHeroImageUrl = `${TMDB_BACKDROP_BASE_URL}${item.poster_path}`;
-        } else {
-            // Fallback to a placeholder image if no actual image path
-            newHeroImageUrl = isLightMode ? 'https://placehold.co/1200x600/A0C4FF/1D1D1F?text=Featured+Show' : 'https://placehold.co/1200x600/3B0764/F3F4F6?text=Featured+Show';
-        }
-        heroImageElement.src = newHeroImageUrl;
-        // Set onerror to handle cases where the image fails to load
-        heroImageElement.onerror = function() {
-            this.onerror=null; // Prevent infinite loop if fallback also fails
-            this.src= isLightMode ? 'https://placehold.co/1200x600/A0C4FF/1D1D1F?text=Fallback+Image' : 'https://placehold.co/1200x600/3B0764/F3F4F6?text=Fallback+Image';
-        };
-    } else if (heroTitle && heroOverview && heroImageElement) {
-        // Display generic content if no item is provided (e.g., initial load or error)
-        heroTitle.textContent = 'Featured Content';
-        heroOverview.textContent = 'Discover the latest blockbusters and critically acclaimed series.';
-        heroImageElement.src = isLightMode ? 'https://placehold.co/1200x600/A0C4FF/1D1D1F?text=Featured+Show' : 'https://placehold.co/1200x600/3B0764/F3F4F6?text=Featured+Show';
-        heroImageElement.onerror = function() {
-            this.onerror=null;
-            this.src= isLightMode ? 'https://placehold.co/1200x600/A0C4FF/1D1D1F?text=Fallback+Image' : 'https://placehold.co/1200x600/3B0764/F3F4F6?text=Fallback+Image';
-        };
-    }
 }
