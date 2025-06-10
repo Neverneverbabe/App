@@ -121,7 +121,9 @@ itemDetailModal.addEventListener('click', (event) => {
  * @returns {string} - The HTML string for the content card.
  */
 export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
-    const posterPath = item.poster_path ? `${TMDB_IMG_BASE_URL}${item.poster_path}` : '';
+    const posterPath = (typeof item.poster_path === 'string' && item.poster_path)
+        ? `${TMDB_IMG_BASE_URL}${item.poster_path}`
+        : '';
     const title = item.title || item.name || 'Untitled';
     const fallbackImageUrl = `https://placehold.co/200x300/${isLightMode ? 'BBB' : '555'}/${isLightMode ? '333' : 'FFF'}?text=${encodeURIComponent(title)}`;
     const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
@@ -147,7 +149,7 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                     data-fallback="${fallbackImageUrl}">
                 ${certificationBadge}
                 <div class="overlay">
-                    <svg fill="currentColor" viewBox="0 0 20 20">
+                    <svg fill="currentColor" viewBox="0="0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                     </svg>
                 </div>
@@ -177,37 +179,26 @@ export function displayContentRow(elementId, items, isLightMode, onCardClick, is
 
     if (items && items.length > 0) {
         items.forEach(item => {
-            // Only create a card if a poster path exists to avoid empty cards
-            // Or use a generic placeholder if no poster, but ensure item is renderable.
-            if (item.poster_path || item.backdrop_path) { // Allow backdrop_path for display if no poster
-                const cardHtml = createContentCardHtml(item, isLightMode, isItemSeenFn);
-                const tempDiv = document.createElement('div'); // Create a temporary div to parse HTML string
-                tempDiv.innerHTML = cardHtml;
-                const cardElement = tempDiv.firstElementChild; // Get the actual DOM element
+            // Always render a card, fallback image will be used if needed
+            const cardHtml = createContentCardHtml(item, isLightMode, isItemSeenFn);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = cardHtml;
+            const cardElement = tempDiv.firstElementChild;
 
-                if (cardElement) {
-                    // Add click listener to the whole card, but prevent it if the seen toggle is clicked
-                    cardElement.addEventListener('click', (e) => {
-                        if (e.target.closest('.seen-toggle-icon')) {
-                            // If the click originated from within the seen-toggle-icon, do nothing for the card click
-                            return;
-                        }
-                        const id = parseInt(cardElement.dataset.id);
-                        const type = cardElement.dataset.type;
-                        if (!isNaN(id) && type) {
-                            onCardClick(id, type);
-                        }
-                    });
-                    rowElement.appendChild(cardElement);
-                }
+            if (cardElement) {
+                cardElement.addEventListener('click', (e) => {
+                    if (e.target.closest('.seen-toggle-icon')) return;
+                    const id = parseInt(cardElement.dataset.id);
+                    const type = cardElement.dataset.type;
+                    if (!isNaN(id) && type) onCardClick(id, type);
+                });
+                rowElement.appendChild(cardElement);
             }
         });
     } else {
-        // Display a message if no content is found
         rowElement.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No content found in this category.</p>`;
     }
 
-    // After rendering, re-attach event listeners for seen toggle icons on newly added cards
     if (window.attachSeenToggleListenersToCards) {
         window.attachSeenToggleListenersToCards(rowElement);
     }
@@ -226,45 +217,29 @@ export function appendItemsToGrid(gridElement, items, isLightMode, onCardClick, 
         console.error("Grid element not found for appending items.");
         return;
     }
-
-    // If the grid previously had a "loading message", remove it
     const loadingMessage = gridElement.querySelector('.loading-message');
-    if (loadingMessage) {
-        loadingMessage.remove();
-    }
-    // If the grid had a "no content" message, remove it if new items are coming
-    if (gridElement.textContent.includes('No items matched') && items.length > 0) {
-        gridElement.innerHTML = '';
-    }
+    if (loadingMessage) loadingMessage.remove();
+    if (gridElement.textContent.includes('No items matched') && items.length > 0) gridElement.innerHTML = '';
 
     if (items && items.length > 0) {
         items.forEach(item => {
-            if (item.poster_path || item.backdrop_path) {
-                const cardHtml = createContentCardHtml(item, isLightMode, isItemSeenFn);
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = cardHtml;
-                const cardElement = tempDiv.firstElementChild;
+            const cardHtml = createContentCardHtml(item, isLightMode, isItemSeenFn);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = cardHtml;
+            const cardElement = tempDiv.firstElementChild;
 
-                if (cardElement) {
-                    cardElement.addEventListener('click', (e) => {
-                        if (e.target.closest('.seen-toggle-icon')) {
-                            return;
-                        }
-                        const id = parseInt(cardElement.dataset.id);
-                        const type = cardElement.dataset.type;
-                        if (!isNaN(id) && type) {
-                            onCardClick(id, type);
-                        }
-                    });
-                    gridElement.appendChild(cardElement);
-                }
+            if (cardElement) {
+                cardElement.addEventListener('click', (e) => {
+                    if (e.target.closest('.seen-toggle-icon')) return;
+                    const id = parseInt(cardElement.dataset.id);
+                    const type = cardElement.dataset.type;
+                    if (!isNaN(id) && type) onCardClick(id, type);
+                });
+                gridElement.appendChild(cardElement);
             }
         });
-        if (window.attachSeenToggleListenersToCards) {
-            window.attachSeenToggleListenersToCards(gridElement);
-        }
+        if (window.attachSeenToggleListenersToCards) window.attachSeenToggleListenersToCards(gridElement);
     } else if (gridElement.children.length === 0) {
-        // If no items were added and the grid is still empty, show a message
         gridElement.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No more content to load.</p>`;
     }
 }
@@ -284,31 +259,22 @@ export function displaySearchResults(elementId, results, isLightMode, onCardClic
         console.error(`Container with ID '${elementId}' not found.`);
         return;
     }
-
-    container.innerHTML = ''; // Clear previous results
-
+    container.innerHTML = '';
     if (results && results.length > 0) {
         const grid = document.createElement('div');
-        grid.className = 'search-results-grid'; // Apply grid styling
-
+        grid.className = 'search-results-grid';
         results.forEach(item => {
-            // Only display movies and TV shows, and only if they have a poster
-            if ((item.media_type === 'movie' || item.media_type === 'tv') && (item.poster_path || item.backdrop_path)) {
+            if (item.media_type === 'movie' || item.media_type === 'tv') {
                 const cardHtml = createContentCardHtml(item, isLightMode, isItemSeenFn);
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = cardHtml;
                 const cardElement = tempDiv.firstElementChild;
-
                 if (cardElement) {
                     cardElement.addEventListener('click', (e) => {
-                        if (e.target.closest('.seen-toggle-icon')) {
-                            return;
-                        }
+                        if (e.target.closest('.seen-toggle-icon')) return;
                         const id = parseInt(cardElement.dataset.id);
                         const type = cardElement.dataset.type;
-                        if (!isNaN(id) && type) {
-                            onCardClick(id, type);
-                        }
+                        if (!isNaN(id) && type) onCardClick(id, type);
                     });
                     grid.appendChild(cardElement);
                 }
@@ -316,9 +282,7 @@ export function displaySearchResults(elementId, results, isLightMode, onCardClic
         });
         if (grid.children.length > 0) {
             container.appendChild(grid);
-            if (window.attachSeenToggleListenersToCards) {
-                window.attachSeenToggleListenersToCards(grid);
-            }
+            if (window.attachSeenToggleListenersToCards) window.attachSeenToggleListenersToCards(grid);
         } else {
             container.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No movies or TV shows found matching your criteria.</p>`;
         }
@@ -575,14 +539,15 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
 
 /**
  * Updates the hero section with a new image, title, and description.
- * @param {string} imageUrl - The URL of the hero image.
+ * @param {string|object} imageUrl - The URL of the hero image (should be a string).
  * @param {string} title - The title to display.
  * @param {string} description - The description to display.
  */
 export function updateHeroSection(imageUrl, title, description) {
     const heroImage = document.getElementById('hero-image-element');
     const heroContent = document.querySelector('.hero-section .content');
-    if (heroImage) heroImage.src = imageUrl || '';
+    // Ensure imageUrl is a string, otherwise use empty string (triggers fallback)
+    heroImage.src = (typeof imageUrl === 'string') ? imageUrl : '';
     if (heroContent) {
         heroContent.innerHTML = `
             <h2>${title || ''}</h2>

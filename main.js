@@ -1222,3 +1222,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
+
+// Example: When you want to set the hero image
+const heroItem = /* your featured movie/show object */;
+const heroImageUrl = (typeof heroItem.backdrop_path === 'string' && heroItem.backdrop_path)
+    ? `${TMDB_BACKDROP_BASE_URL}${heroItem.backdrop_path}`
+    : ''; // Empty string triggers fallback
+
+updateHeroSection(heroImageUrl, heroItem.title || heroItem.name, heroItem.overview);
