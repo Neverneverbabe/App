@@ -1,7 +1,8 @@
 // SignIn/firebase.js
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import * as FirebaseAuthFunctions from 'firebase/auth'; // Import all auth functions
-import * as FirebaseFirestoreFunctions from 'firebase/firestore'; // Import all firestore functions
+// Updated Firebase SDK imports to use CDN paths for browser compatibility
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
+import * as FirebaseAuthFunctions from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
+import * as FirebaseFirestoreFunctions from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
 
 // Firebase configuration. This should ideally come from an environment variable
 // in a production setup, but for a standalone Canvas project, hardcoding is common.
