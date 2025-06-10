@@ -1,7 +1,7 @@
 // App/main.js
 import { fetchTrendingItems, fetchItemDetails, fetchSearchResults, fetchDiscoveredItems } from './api.js';
 // Corrected import path for Firebase functions from the SignIn folder
-import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, listenToUserCollection, deleteUserData } from '../SignIn/firebase_api.js';
+import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, listenToUserCollection, deleteUserData } from './firebase_api.js';
 // Updated import path for ratingUtils.js
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
 import { displayContentRow, displayItemDetails, updateThemeDependentElements, updateHeroSection, displaySearchResults, createContentCardHtml, appendItemsToGrid, showCustomAlert, hideCustomAlert, showLoadingIndicator, hideLoadingIndicator, updateSeenButtonStateInModal, renderWatchlistOptionsInModal } from './ui.js';
