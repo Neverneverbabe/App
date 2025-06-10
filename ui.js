@@ -144,7 +144,7 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                     onerror="this.onerror=null;this.src='${fallbackImageUrl}';">
                 ${certificationBadge}
                 <div class="overlay">
-                    <svg fill="currentColor" viewBox="0 0 20 20">
+                    <svg fill="currentColor" viewBox="0="0" 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                     </svg>
                 </div>
@@ -568,4 +568,63 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
         }
         updateDropdownDisplay(); // Update dropdown display after creation (Firestore listener will also update it)
     });
+}
+
+/**
+ * Updates the hero section with a new image, title, and description.
+ * @param {string} imageUrl - The URL of the hero image.
+ * @param {string} title - The title to display.
+ * @param {string} description - The description to display.
+ */
+export function updateHeroSection(imageUrl, title, description) {
+    const heroImage = document.getElementById('hero-image-element');
+    const heroContent = document.querySelector('.hero-section .content');
+    if (heroImage) heroImage.src = imageUrl || '';
+    if (heroContent) {
+        heroContent.innerHTML = `
+            <h2>${title || ''}</h2>
+            <p>${description || ''}</p>
+        `;
+    }
+}
+
+/**
+ * Updates all theme-dependent UI elements (icons, backgrounds, etc.) for dark/light mode.
+ * @param {boolean} isLightMode - True if light mode is active.
+ */
+export function updateThemeDependentElements(isLightMode) {
+    // Toggle sun/moon icons
+    const sunIcon = document.querySelector('.sun-icon');
+    const moonIcon = document.querySelector('.moon-icon');
+    if (sunIcon && moonIcon) {
+        if (isLightMode) {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = '';
+        } else {
+            sunIcon.style.display = '';
+            moonIcon.style.display = 'none';
+        }
+    }
+
+    // Update dropdown backgrounds and borders for Apple-style dropdowns
+    document.querySelectorAll('.apple-dropdown, .dropdown-selected, .dropdown-list, .dropdown-footer').forEach(el => {
+        if (isLightMode) {
+            el.classList.add('light-mode');
+        } else {
+            el.classList.remove('light-mode');
+        }
+    });
+
+    // Update modal backgrounds if needed
+    document.querySelectorAll('.item-detail-modal-content').forEach(el => {
+        if (isLightMode) {
+            el.style.backgroundColor = '#f5f5f7';
+            el.style.color = '#1d1d1f';
+        } else {
+            el.style.backgroundColor = '';
+            el.style.color = '';
+        }
+    });
+
+    // Update other theme-dependent elements as needed...
 }
