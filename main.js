@@ -1,7 +1,7 @@
 // App/main.js
 import { fetchTrendingItems, fetchItemDetails, fetchSearchResults, fetchDiscoveredItems } from './api.js';
 // Corrected import path for Firebase functions from the SignIn folder
-import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, listenToUserCollection, deleteUserData } from './firebase_api.js';
+import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, listenToUserCollection, deleteUserData } from '../SignIn/firebase_api.js';
 // Updated import path for ratingUtils.js
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
 import { displayContentRow, displayItemDetails, updateThemeDependentElements, updateHeroSection, displaySearchResults, createContentCardHtml, appendItemsToGrid, showCustomAlert, hideCustomAlert, showLoadingIndicator, hideLoadingIndicator, updateSeenButtonStateInModal, renderWatchlistOptionsInModal } from './ui.js';
@@ -1178,42 +1178,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         libraryFoldersRow.innerHTML = ''; // Clear existing cards
 
-        // Add the "Create New Watchlist" input and button
-        const createContainer = document.createElement('div');
-        createContainer.className = 'flex items-center gap-2 mr-6'; // Basic flex styling
-        createContainer.innerHTML = `
-            <input type="text" id="library-create-watchlist-input" placeholder="New Watchlist Name"
-                style="padding: 0.5em 1em; border-radius: 8px; border: 1px solid var(--border-color, #333); font-size: 1em; background: var(--card-bg); color: var(--text-primary);">
-            <button id="library-create-watchlist-btn"
-                style="padding: 0.5em 1.2em; border-radius: 8px; border: none; background: var(--science-blue); color: white; font-weight: bold; cursor: pointer;">
-                Create
-            </button>
+        // Create the "Add New Watchlist" card
+        const createNewCard = document.createElement('div');
+        createNewCard.className = 'content-card folder-card create-new-folder-card';
+        createNewCard.style.cssText = `
+            flex-shrink: 0;
+            width: 10rem;
+            height: 14rem; /* Match content card height */
+            background-color: var(--card-bg);
+            border: 2px dashed var(--text-secondary);
+            border-radius: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-right: 1rem; /* Consistent spacing */
+            margin-bottom: 1rem; /* Consistent spacing */
         `;
-        libraryFoldersRow.appendChild(createContainer);
+        createNewCard.innerHTML = `
+            <i class="fas fa-plus" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
+            <p style="text-align: center; font-size: 0.9em; font-weight: 500; color: var(--text-secondary);">New Watchlist</p>
+        `;
+        createNewCard.addEventListener('click', async () => {
+            const newFolderName = prompt("Enter new watchlist name:");
+            if (newFolderName && newFolderName.trim() !== "") {
+                await handleCreateLibraryFolder(newFolderName.trim());
+            }
+        });
+        libraryFoldersRow.appendChild(createNewCard);
 
-        const createInput = document.getElementById('library-create-watchlist-input');
-        const createBtn = document.getElementById('library-create-watchlist-btn');
-
-        if (createBtn) {
-            createBtn.onclick = async () => {
-                const name = createInput.value.trim();
-                if (!name) {
-                    showCustomAlert('Info', "Please enter a name for the new watchlist.");
-                    return;
-                }
-                createBtn.disabled = true; // Disable button during creation
-                try {
-                    await handleCreateLibraryFolder(name);
-                    createInput.value = ''; // Clear input on success
-                } finally {
-                    createBtn.disabled = false; // Re-enable button
-                }
-            };
-        }
-
-        // If no watchlists exist, display a message
+        // If no watchlists exist (beyond the "create new" card), display a message
         if (firestoreWatchlistsCache.length === 0) {
-            libraryFoldersRow.innerHTML += `<p style="color:var(--text-secondary); padding: 1rem;">No watchlists yet. Create one above.</p>`;
+            // No need for a separate message, the "New Watchlist" card will be prominent
             return;
         }
 
