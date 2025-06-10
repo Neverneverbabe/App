@@ -486,7 +486,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails) {
     /**
      * Updates the HTML display of the dropdown list and the selected text based on current item's watchlist status.
      */
-    function updateDropdownDisplay() {
+    export function updateDropdownDisplay() { // Exported to be available globally if needed, though primarily internal.
         currentlySelectedWatchlistIds = getFoldersContainingCurrentItem(); // Refresh selection status
         const allWatchlists = window.firestoreWatchlistsCache || []; // Access global cache from main.js
 
