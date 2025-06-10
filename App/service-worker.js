@@ -8,10 +8,12 @@ const urlsToCache = [
     'api.js',       // Cache the new JavaScript files
     'ui.js',        // Cache the new JavaScript files
     'main.js',      // Cache the new JavaScript files
-    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
-    // Note: Placehold.co images are external and won't be cached by this service worker directly.
-    // For a real PWA with robust offline image support, you'd implement a network-first strategy
-    // or cache specific image URLs if they are known and controlled.
+    'ratingUtils.js', // Cache the newly created ratingUtils.js
+    // Firebase related files
+    '../SignIn/firebase.js',
+    '../SignIn/firebase_api.js',
+    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
 ];
 
 self.addEventListener('install', (event) => {
@@ -60,4 +62,3 @@ self.addEventListener('activate', (event) => {
         })
     );
 });
-
