@@ -1,4 +1,4 @@
-// service-worker.js 
+// service-worker.js
 const CACHE_NAME = 'watch-tv-cache-v2'; // Changed cache version
 const urlsToCache = [
     './', // Caches the root directory, which will typically be index.html
@@ -9,9 +9,9 @@ const urlsToCache = [
     'ui.js',        // Cache the new JavaScript files
     'main.js',      // Cache the new JavaScript files
     'ratingUtils.js', // Cache the newly created ratingUtils.js
-    // Firebase related files
-    '../SignIn/firebase.js',
-    '../SignIn/firebase_api.js',
+    // Firebase related files - corrected paths
+    './SignIn/firebase.js',
+    './SignIn/firebase_api.js',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
 ];

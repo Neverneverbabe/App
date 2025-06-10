@@ -128,7 +128,7 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
     const mediaType = item.media_type || (item.title ? 'movie' : 'tv'); // Determine type if not explicitly provided
     const certification = getCertification(item); // Get age rating using the new ratingUtils function
     const certificationBadge = certification !== 'N/A' ? `<span class="rating-badge" style="position: absolute; bottom: 8px; left: 8px; background-color: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; z-index: 5;">${certification}</span>` : '';
-    
+
     // Check if the item is seen using the provided function
     const isSeen = isItemSeenFn(item.id, mediaType);
     const seenIconClass = isSeen ? 'item-is-seen' : ''; // Apply class if seen

@@ -1,10 +1,11 @@
 // App/main.js
 import { fetchTrendingItems, fetchItemDetails, fetchSearchResults, fetchDiscoveredItems } from './api.js';
-// Corrected import path for Firebase functions from the SignIn folder
-import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, listenToUserCollection, deleteUserData } from '../SignIn/firebase_api.js';
+// Corrected import path for Firebase functions from the now-nested SignIn folder
+import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, listenToUserCollection, deleteUserData } from './SignIn/firebase_api.js';
 // Updated import path for ratingUtils.js
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
 import { displayContentRow, displayItemDetails, updateThemeDependentElements, updateHeroSection, displaySearchResults, createContentCardHtml, appendItemsToGrid, showCustomAlert, hideCustomAlert, showLoadingIndicator, hideLoadingIndicator, updateSeenButtonStateInModal, renderWatchlistOptionsInModal } from './ui.js';
+import { initAuthRefs } from './SignIn/auth.js'; // Import initAuthRefs from auth.js
 
 // --- Global variables to store fetched data for re-filtering without new API calls ---
 let cachedTrendingMovies = [];
@@ -77,6 +78,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const confirmPasswordInput = document.getElementById('confirm-password-input');
     const authSubmitButton = document.getElementById('auth-submit-button');
     const authSwitchLink = document.getElementById('auth-switch-link');
+
+    // Initialize auth.js with necessary UI elements and the showCustomAlert function
+    initAuthRefs({
+        authDropdownMenu: profileDropdown, // Pass the profile dropdown as authDropdownMenu
+        newWatchlistNameInput: document.getElementById('library-create-watchlist-input'), // Pass this if still needed for auth.js
+        createWatchlistBtn: document.getElementById('library-create-watchlist-btn'), // Pass this if still needed for auth.js
+        // Pass other elements if they are used by auth.js for direct manipulation
+        // (currently they are placeholders in auth.js, so not strictly needed to pass here)
+    }, null, showCustomAlert); // Pass showCustomAlert as the third argument
 
     // Set the current year in the footer dynamically
     document.getElementById('current-year').textContent = new Date().getFullYear();
@@ -737,7 +747,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             showCustomAlert('Error', errorMessage); // Show custom error alert
         } finally {
-            hideLoadingIndicator(); // Hide loading indicator
+            hideLoadingIndicator();
         }
     });
 
@@ -1164,6 +1174,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Expose toggleSeenStatus globally for ui.js to use in modal
+    window.toggleSeenStatus = toggleSeenStatus;
+
     // Expose these functions globally so ui.js can call them from the modal
     window.handleAddRemoveItemToFolder = handleAddRemoveItemToFolder;
     window.handleCreateLibraryFolder = handleCreateLibraryFolder;
@@ -1270,10 +1283,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Add visual highlight to the selected folder card
                 libraryFoldersRow.querySelectorAll('.folder-card').forEach(fc => {
                     fc.style.border = '2px solid transparent';
-                    fc.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                    fc.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'; // Corrected
                 });
                 card.style.border = `2px solid var(--science-blue)`;
-                card.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(0, 0, 0, 0.1)`;
+                card.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(0, 0, 0, 0.1)`; // Corrected
             });
 
             libraryFoldersRow.appendChild(card);
@@ -1284,7 +1297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const selectedCard = libraryFoldersRow.querySelector(`.folder-card[data-folder-id="${currentSelectedLibraryFolder}"]`);
             if (selectedCard) {
                 selectedCard.style.border = `2px solid var(--science-blue)`;
-                selectedCard.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(0, 0, 0, 0.1)`;
+                selectedCard.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(0, 0, 0, 0.1)`; // Corrected
             }
         }
     }
