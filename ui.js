@@ -123,17 +123,19 @@ itemDetailModal.addEventListener('click', (event) => {
 export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
     const posterPath = item.poster_path ? `${TMDB_IMG_BASE_URL}${item.poster_path}` : '';
     const title = item.title || item.name || 'Untitled';
-    // Fallback image URL for when poster_path is missing or fails to load
     const fallbackImageUrl = `https://placehold.co/200x300/${isLightMode ? 'BBB' : '555'}/${isLightMode ? '333' : 'FFF'}?text=${encodeURIComponent(title)}`;
-    const mediaType = item.media_type || (item.title ? 'movie' : 'tv'); // Determine type if not explicitly provided
-    const certification = getCertification(item); // Get age rating using the new ratingUtils function
-    const certificationBadge = certification !== 'N/A' ? `<span class="rating-badge" style="position: absolute; bottom: 8px; left: 8px; background-color: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; z-index: 5;">${certification}</span>` : '';
+    const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
+    const certification = getCertification(item);
+    const certificationBadge = certification !== 'N/A'
+        ? `<span class="rating-badge" style="position: absolute; bottom: 8px; left: 8px; background-color: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; z-index: 5;">${certification}</span>`
+        : '';
 
-    // Check if the item is seen using the provided function
     const isSeen = isItemSeenFn(item.id, mediaType);
-    const seenIconClass = isSeen ? 'item-is-seen' : ''; // Apply class if seen
-    const seenIconTitle = isSeen ? 'Mark as Unseen' : 'Mark as Seen'; // Dynamic title for accessibility
+    const seenIconClass = isSeen ? 'item-is-seen' : '';
+    const seenIconTitle = isSeen ? 'Mark as Unseen' : 'Mark as Seen';
 
+    // Always set src to posterPath if available, fallback otherwise
+    // Use a unique query param to force reload if needed
     return `
         <div class="content-card" data-id="${item.id}" data-type="${mediaType}" data-certification="${certification}">
             <div class="image-container">
@@ -141,10 +143,11 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                     <i class="fas fa-check"></i>
                 </div>
                 <img src="${posterPath || fallbackImageUrl}" alt="${title}"
-                    onerror="this.onerror=null;this.src='${fallbackImageUrl}';">
+                    onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}"
+                    data-fallback="${fallbackImageUrl}">
                 ${certificationBadge}
                 <div class="overlay">
-                    <svg fill="currentColor" viewBox="0="0" 20 20">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                     </svg>
                 </div>
