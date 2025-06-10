@@ -1,7 +1,7 @@
 // App/main.js
 import { fetchTrendingItems, fetchItemDetails, fetchSearchResults, fetchDiscoveredItems } from './api.js';
 // Corrected import path for Firebase functions from the now-nested SignIn folder
-import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, listenToUserCollection, deleteUserData } from './SignIn/firebase_api.js';
+import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData } from './SignIn/firebase_api.js';
 // Updated import path for ratingUtils.js
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
 
@@ -975,11 +975,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Expose toggleSeenStatus globally for ui.js to use in modal
     window.toggleSeenStatus = toggleSeenStatus;
 
+    /**
+     * Adds or removes an item from a watchlist (folder) in Firestore.
+     * Called by the modal dropdown in ui.js.
+     * @param {string} folderId - The Firestore watchlist/folder ID.
+     * @param {object} itemDetails - The TMDB item details object.
+     * @param {'movie'|'tv'} itemType - The type of the item.
+     */
+    async function handleAddRemoveItemToFolder(folderId, itemDetails, itemType) {
+        try {
+            // Find the watchlist in the cache
+            const watchlist = firestoreWatchlistsCache.find(wl => wl.id === folderId);
+            if (!watchlist) {
+                showCustomAlert("Error", "Watchlist not found.", "error");
+                return;
+            }
+            // Check if item is already in the watchlist
+            const exists = watchlist.items.some(
+                item => String(item.tmdb_id) === String(itemDetails.id) && item.item_type === itemType
+            );
+            let updatedItems;
+            if (exists) {
+                // Remove item
+                updatedItems = watchlist.items.filter(
+                    item => !(String(item.tmdb_id) === String(itemDetails.id) && item.item_type === itemType)
+                );
+            } else {
+                // Add item
+                updatedItems = [
+                    ...watchlist.items,
+                    {
+                        tmdb_id: String(itemDetails.id),
+                        item_type: itemType,
+                        title: itemDetails.title || itemDetails.name || "",
+                        poster_path: itemDetails.poster_path || "",
+                        added_at: Date.now()
+                    }
+                ];
+            }
+            // Save to Firestore (replace with your Firestore update function)
+            await window.saveUserData("watchlists", folderId, { items: updatedItems });
+            showCustomAlert("Success", exists ? "Removed from watchlist." : "Added to watchlist.", "success");
+        } catch (err) {
+            showCustomAlert("Error", "Failed to update watchlist.", "error");
+            console.error(err);
+        }
+    }
+
     // Expose these functions globally so ui.js can call them from the modal
     window.handleAddRemoveItemToFolder = handleAddRemoveItemToFolder;
-    window.handleCreateLibraryFolder = handleCreateLibraryFolder;
     // Expose firestoreWatchlistsCache globally for ui.js to access watchlist data in modal
-    window.firestoreWatchlistsCache = firestoreWatchlistsCache; // This needs to be actively updated. The onSnapshot listener handles it.
+    window.firestoreWatchlistsCache = firestoreWatchlistsCache;
 
     /**
      * Renders the library folder (watchlist) cards in the Library tab.
