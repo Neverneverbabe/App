@@ -86,7 +86,8 @@
             top: 0;
             left: 0;
             right: 0;
-            z-index: 1050; /* Sit above the overlay */
+            /* Place header below the sidebar overlay */
+            z-index: 1048;
             padding: 1rem 1rem; /* p-4 */
             display: flex;
             align-items: center;
@@ -1008,7 +1009,7 @@
             width: 100vw; /* Full viewport width */
             height: 100vh; /* Full viewport height */
             background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
-            z-index: 1049; /* Below main sidebar, above content */
+            z-index: 1049; /* Below sidebars, above header and content */
         }
         #sidebar-overlay.active {
             display: block;
