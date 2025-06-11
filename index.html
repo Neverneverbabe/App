@@ -99,6 +99,18 @@
             color: var(--text-primary);
         }
 
+        /* Fixed top bar wrapper */
+        #top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;             /* or matching header height */
+            z-index: 999;
+            background-color: var(--header-footer-bg);
+        }
+        #main-content { padding-top: 56px; }
+
         /* Container for logo and navigation */
         header #header-main {
             display: flex;
@@ -276,7 +288,7 @@
         /* Main Content Area */
         main {
             flex-grow: 1; /* Allow main content to take available space */
-            padding-top: 5rem; /* pt-20 to account for fixed header */
+            padding-top: 0; /* top padding handled by #main-content */
             padding-bottom: 2rem; /* pb-8 */
             padding-left: 1rem; /* px-4 */
             padding-right: 1rem;
@@ -1172,7 +1184,7 @@
     </style>
 </head>
 <body>
-    <header>
+    <header id="top-bar">
         <div id="header-main">
             <button id="sidebar-toggle-button" title="Toggle Navigation Menu" aria-controls="main-nav" aria-expanded="false">
                 <i class="fas fa-bars"></i>
@@ -1217,7 +1229,7 @@
   <a href="#" class="tab-link" data-tab="search-tab">Search</a>
 </nav>
 
-    <div id="sidebar-overlay"></div> <main>
+    <div id="sidebar-overlay"></div> <main id="main-content">
         <section class="tab-content active-tab" id="watch-now-tab">
             <section class="hero-section">
                 <img id="hero-image-element" src="" alt="Featured Show"
