@@ -12,7 +12,8 @@ let currentUserId = null;
 let firebaseAuthInstance = null; // Will be set by canvasSignIn
 
 /**
- * Signs in with custom token or anonymously if not available.
+ * Signs in with a custom token if available. If no token is provided,
+ * the user remains unauthenticated.
  * This is called from main.js after Firebase services are initialized.
  * @param {object} authInstanceParam - The Firebase Auth instance passed from main.js.
  * @param {string|null} initialAuthToken - The custom auth token from Canvas, or null.
@@ -29,8 +30,7 @@ export async function canvasSignIn(authInstanceParam, initialAuthToken) {
             await firebaseAuthFunctions.signInWithCustomToken(firebaseAuthInstance, initialAuthToken);
             console.log("Signed in with custom token.");
         } else {
-            await firebaseAuthFunctions.signInAnonymously(firebaseAuthInstance);
-            console.log("Signed in anonymously.");
+            console.log("No custom auth token provided; skipping automatic sign-in.");
         }
     } catch (error) {
         console.error("Canvas sign-in failed:", error);
