@@ -1,6 +1,7 @@
 // SignIn/firebase_api.js
 // Import initialized auth and db instances, and all Firebase functions from firebase.js
 import { getFirebaseAuth, getFirebaseFirestore, firebaseAuthFunctions, firebaseFirestoreFunctions } from './firebase.js';
+import { showCustomAlert } from '../ui.js';
 
 // Define appId globally using the __app_id provided by the Canvas environment
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -44,7 +45,10 @@ function getAuthInstance() {
  */
 export async function signUp(name, email, password) {
     const auth = getAuthInstance();
-    if (!auth) throw new Error("Firebase Auth is not initialized.");
+    if (!auth) {
+        showCustomAlert('Error', 'Authentication service is not initialized. Please reload the page.', 'error');
+        return null;
+    }
     try {
         const userCredential = await firebaseAuthFunctions.createUserWithEmailAndPassword(auth, email, password);
         // After creating the user, update their profile with the display name
@@ -64,7 +68,10 @@ export async function signUp(name, email, password) {
  */
 export async function signIn(email, password) {
     const auth = getAuthInstance();
-    if (!auth) throw new Error("Firebase Auth is not initialized.");
+    if (!auth) {
+        showCustomAlert('Error', 'Authentication service is not initialized. Please reload the page.', 'error');
+        return null;
+    }
     try {
         const userCredential = await firebaseAuthFunctions.signInWithEmailAndPassword(auth, email, password);
         return userCredential;
@@ -80,7 +87,10 @@ export async function signIn(email, password) {
  */
 export async function signOutUser() {
     const auth = getAuthInstance();
-    if (!auth) throw new Error("Firebase Auth is not initialized.");
+    if (!auth) {
+        showCustomAlert('Error', 'Authentication service is not initialized. Please reload the page.', 'error');
+        return;
+    }
     try {
         await firebaseAuthFunctions.signOut(auth);
     } catch (error) {
