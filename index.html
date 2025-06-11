@@ -116,11 +116,14 @@
         }
 
         header nav {
-            display: flex; /* Always show nav */
-            gap: 1.5rem; /* space-x-6 */
+            /* These styles are for the nav container itself */
+            /* Removed flex properties, now handled by dropdown classes */
             font-size: 1.125rem; /* text-lg */
             color: var(--text-secondary);
-            flex-wrap: wrap; /* Allow wrapping on small screens */
+            /* flex-wrap: wrap; */ /* No longer needed here as it's a vertical list */
+            display: none; /* Ensure original nav is hidden by default. Will be controlled by JS for dropdown */
+            gap: 0;
+            flex-wrap: nowrap;
         }
 
         header nav a {
@@ -217,7 +220,7 @@
             color: var(--text-primary);
         }
         .light-mode .profile-dropdown button:hover {
-            background-color: rgba(var(--text-primary-rgb, 0, 0, 0), 0.05);
+            background-color: rgba(0, 0, 0, 0.05);
         }
 
 
@@ -860,19 +863,138 @@
         #search-tab {
             padding-top: 4.5rem; /* Adjust this value as needed */
         }
+
+        /* NEW: Styles for the dropdown navigation container and trigger */
+        .dropdown-nav-container {
+            position: relative; /* For dropdown positioning */
+            display: inline-block; /* Allows it to sit next to other header elements */
+            z-index: 55; /* Ensure it's above other header elements */
+            margin-right: 1.5rem; /* Add some space if other header elements are on left */
+        }
+
+        .nav-dropdown-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem; /* text-lg, consistent with original nav */
+            color: var(--text-secondary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            display: flex; /* To align text and arrow */
+            align-items: center;
+            gap: 0.5rem; /* Space between text and arrow */
+        }
+
+        .nav-dropdown-button:hover {
+            color: var(--science-blue);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        body.light-mode .nav-dropdown-button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-arrow {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .nav-dropdown-button.active .nav-arrow {
+            transform: rotate(180deg); /* Rotate arrow when dropdown is open */
+        }
+
+        /* Styles for the dropdown content (the actual navigation links) */
+        .nav-dropdown-content {
+            display: none; /* Hidden by default, will be shown via JS */
+            position: absolute;
+            top: calc(100% + 5px); /* Position 5px below the button */
+            left: 0; /* Align with the left edge of the button */
+            background-color: var(--card-bg); /* Use card background for the dropdown */
+            min-width: 200px; /* Minimum width for the dropdown */
+            box-shadow: 0 8px 16px 0px rgba(0,0,0,0.2);
+            border-radius: 0.75rem; /* Rounded corners */
+            padding: 0.5rem 0;
+            z-index: 100; /* Ensure it's above other content */
+
+            flex-direction: column; /* Stack links vertically */
+            gap: 0; /* No gap between links within the dropdown */
+        }
+
+        /* This targets the <a> tags within the .nav-dropdown-content */
+        .nav-dropdown-content a {
+            padding: 0.75rem 1rem; /* Padding for individual links */
+            text-decoration: none;
+            display: block; /* Make links full width */
+            color: var(--text-primary); /* Use primary text color */
+            font-size: 1rem; /* Slightly smaller than header nav for list look */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            white-space: nowrap; /* Prevent wrapping if text is long */
+        }
+
+        .nav-dropdown-content a:hover {
+            background-color: rgba(var(--text-primary-rgb, 255, 255, 255), 0.1); /* Subtle hover effect */
+            color: var(--science-blue);
+        }
+        body.light-mode .nav-dropdown-content a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Ensure active link styling within dropdown */
+        .nav-dropdown-content a.active-nav-link {
+            background-color: rgba(var(--science-blue-rgb, 0, 102, 204), 0.1); /* Subtle blue background for active */
+            color: var(--science-blue);
+            font-weight: 600;
+            border-bottom: none; /* Remove bottom border from original nav styling */
+            border-radius: 0.5rem; /* Slightly rounded for individual items */
+            margin: 0 0.5rem; /* Little margin to look inset */
+        }
+
+        /* Adjustments for different screen sizes */
+        @media (min-width: 640px) { /* On larger screens, the original horizontal nav was present */
+            header #header-main nav { /* The original horizontal nav should now be part of the dropdown */
+                display: none; /* Hide the old horizontal navigation */
+            }
+            .dropdown-nav-container {
+                display: inline-block; /* Make sure dropdown is visible on larger screens */
+            }
+        }
+        @media (max-width: 639px) { /* On smaller screens, header #header-main nav was full width below logo */
+            header #header-main nav { /* The original horizontal nav should now be part of the dropdown */
+                display: none; /* Hide the old horizontal navigation */
+            }
+            .dropdown-nav-container {
+                display: inline-block; /* Keep dropdown visible */
+            }
+        }
+        /* Ensure icon-buttons align to the right of header */
+        header {
+            justify-content: space-between; /* Already set, but good to re-confirm */
+        }
+        header #header-main {
+            flex-grow: 1; /* Allow header-main to take available space */
+            justify-content: flex-start; /* Align logo and dropdown to start */
+            gap: 1rem; /* Adjust gap if needed */
+        }
+        .icon-buttons {
+            flex-shrink: 0; /* Prevent icon buttons from shrinking */
+        }
     </style>
 </head>
 <body>
     <header>
         <div id="header-main">
             <h1 class="logo"><img src="Sad Face.png" alt="Sad Face Logo" style="height: 1.5em; vertical-align: middle;"></h1>
-            <nav id="main-nav">
-                <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
-                <a href="#" class="tab-link" data-tab="explore-tab">Explore</a>
-                <a href="#" class="tab-link" data-tab="library-tab">Library</a>
-                <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
-                <a href="#" class="tab-link" data-tab="search-tab">Search</a>
-            </nav>
+            <div class="dropdown-nav-container">
+                <button id="nav-dropdown-toggle" class="nav-dropdown-button">
+                    Menu <i class="fas fa-chevron-down nav-arrow"></i>
+                </button>
+                <nav id="main-nav" class="nav-dropdown-content">
+                    <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
+                    <a href="#" class="tab-link" data-tab="explore-tab">Explore</a>
+                    <a href="#" class="tab-link" data-tab="library-tab">Library</a>
+                    <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
+                    <a href="#" class="tab-link" data-tab="search-tab">Search</a>
+                </nav>
+            </div>
         </div>
         <div class="icon-buttons">
             <button id="theme-toggle" class="toggle-button" title="Toggle Dark/Light Mode">
@@ -1020,6 +1142,4 @@
     <script src="ui.js" type="module"></script>
     <script src="main.js" type="module"></script>
 </body>
-</html>git add .
-git commit -m "Your message"
-git push
+</html>
