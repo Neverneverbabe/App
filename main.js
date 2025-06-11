@@ -71,9 +71,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterClearBtn = document.getElementById('filter-clear-btn');
     const body = document.body;
     const sidebarToggleButton = document.getElementById('sidebar-toggle-button');
+    const sidebarToggleIcon = sidebarToggleButton ? sidebarToggleButton.querySelector('i') : null; // Get the icon element
     const currentTabNameDisplay = document.getElementById('current-tab-name-display');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const mainNav = document.getElementById('main-nav');
+    const mainNav = document.getElementById('main-nav'); // This is the sidebar
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const searchResultsContainer = document.getElementById('search-results-container');
@@ -207,8 +208,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         populateCurrentTabContent();
 
         // Close sidebar after tab selection
-        mainNav.classList.remove('sidebar-open');
-        sidebarOverlay.classList.remove('active');
+        if (mainNav.classList.contains('sidebar-open')) {
+            mainNav.classList.remove('sidebar-open');
+            sidebarOverlay.classList.remove('active');
+            updateSidebarButtonState(false); // Update button state
+        }
     }
 
     /**
@@ -427,20 +431,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    /**
+     * Updates the sidebar toggle button's ARIA attribute and icon.
+     * @param {boolean} isOpen - True if the sidebar is to be shown as open, false otherwise.
+     */
+    function updateSidebarButtonState(isOpen) {
+        if (sidebarToggleButton && sidebarToggleIcon) {
+            sidebarToggleButton.setAttribute('aria-expanded', isOpen);
+            if (isOpen) {
+                sidebarToggleIcon.classList.remove('fa-bars');
+                sidebarToggleIcon.classList.add('fa-times');
+            } else {
+                sidebarToggleIcon.classList.remove('fa-times');
+                sidebarToggleIcon.classList.add('fa-bars');
+            }
+        }
+    }
+
     // --- Event Listeners ---
 
     // Sidebar Toggle Button
-    sidebarToggleButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        mainNav.classList.toggle('sidebar-open');
-        sidebarOverlay.classList.toggle('active');
-    });
+    if (sidebarToggleButton) {
+        sidebarToggleButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = mainNav.classList.toggle('sidebar-open');
+            sidebarOverlay.classList.toggle('active', isOpen); // Sync overlay with sidebar state
+            updateSidebarButtonState(isOpen);
+        });
+    }
 
     // Sidebar Overlay Click to Close
-    sidebarOverlay.addEventListener('click', () => {
-        mainNav.classList.remove('sidebar-open');
-        sidebarOverlay.classList.remove('active');
-    });
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            mainNav.classList.remove('sidebar-open');
+            sidebarOverlay.classList.remove('active');
+            updateSidebarButtonState(false);
+        });
+    }
 
     // Sidebar Navigation tab clicks
     mainNav.querySelectorAll('a.tab-link').forEach(link => {

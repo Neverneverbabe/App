@@ -15,6 +15,7 @@
         :root {
             --science-blue: #0066CC;
             --shark: #1D1D1F;
+            --science-blue-darker: #0052a3; /* Darker shade for hover states */
             --athens-gray: #F5F5F7;
             --white: #FFFFFF;
             --black: #000000;
@@ -316,20 +317,22 @@
         }
 
         .hero-section button {
-            background-color: var(--black);
+            background-color: var(--science-blue);
             color: var(--white);
             font-weight: 600; /* font-semibold */
             padding: 0.5rem 1.5rem; /* py-2 px-6 */
             border-radius: 9999px; /* rounded-full */
             border: none;
             cursor: pointer;
-            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* transition duration-300 ease-in-out transform */
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
         }
 
         .hero-section button:hover {
-            background-color: #222; /* Darker black on hover */
+            background-color: var(--science-blue-darker);
             transform: scale(1.05);
+            box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.15), 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover */
+
         }
 
         /* Item Detail Modal (New Section) */
@@ -739,17 +742,17 @@
             font-size: 1rem;
             font-family: 'Inter', sans-serif;
             font-weight: 500;
-            background-color: var(--black); /* Changed from --science-blue */
+            background-color: var(--science-blue);
             color: var(--white);
-            border: 1px solid var(--black); /* Changed from --science-blue */
+            border: 1px solid var(--science-blue);
             border-radius: 10px; /* Match input border-radius */
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
             margin-bottom: 1rem; /* Keep existing margin */
         }
         #search-button:hover {
-            background-color: #222; /* Darker shade of black for hover */
-            border-color: #222; /* Darker shade of black for hover */
+            background-color: var(--science-blue-darker);
+            border-color: var(--science-blue-darker);
         }
         /* Search Results Grid Styles */
         .search-results-grid {
@@ -814,18 +817,18 @@
         .auth-submit-button {
             width: 100%;
             padding: 0.75em 1.5em;
-            margin-top: 1.5rem;
-            background-color: var(--black);
+            margin-top: 1.5rem; /* Keep existing margin */
+            background-color: var(--science-blue);
             color: var(--white);
-            border: 1px solid var(--black);
+            border: 1px solid var(--science-blue);
             border-radius: 10px;
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
         .auth-submit-button:hover {
-            background-color: #222;
-            border-color: #222;
+            background-color: var(--science-blue-darker);
+            border-color: var(--science-blue-darker);
         }
 
         /* Seen Action Button in Modal */
@@ -1014,7 +1017,7 @@
 <body>
     <header>
         <div id="header-main">
-            <button id="sidebar-toggle-button" class="icon-buttons" title="Toggle Navigation Menu">
+            <button id="sidebar-toggle-button" class="icon-buttons" title="Toggle Navigation Menu" aria-expanded="false" aria-controls="main-nav">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="logo"><img src="Sad Face.png" alt="Sad Face Logo" style="height: 1.5em; vertical-align: middle;"></h1>
