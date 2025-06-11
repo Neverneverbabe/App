@@ -1,43 +1,55 @@
 // SignIn/auth.js
-import { auth } from './firebase.js'; // Firebase auth instance
-// Corrected imports: Use the functions actually exported by firebase_api.js
+// Import Firebase functions directly, as instances will be passed from main.js or retrieved via getters
+import { firebaseAuthFunctions } from './firebase.js';
+// Import API functions that now handle getting their own auth/db instances
 import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser } from './firebase_api.js';
 
 // This private variable will hold the actual showCustomAlert function passed from main.js
 let _showCustomAlert = console.log; // Default to console.log as a fallback if not explicitly initialized
 
-// Placeholder functions for dependencies that were removed or not part of this project's scope.
-// These are included just to ensure any existing calls in the original logic don't throw errors.
-// In a clean architecture, auth.js would ideally only return authentication results,
-// and other modules (like main.js) would handle UI updates based on those results.
+// Global variable to hold the current authenticated user's ID
 let currentUserId = null;
-function updateCurrentUserId(id) { currentUserId = id; console.log("Placeholder: Current User ID updated to:", currentUserId); }
-function updateCurrentSelectedWatchlistName(name) { console.log("Placeholder: Selected Watchlist Name updated to:", name); }
-async function loadAndDisplayWatchlistsFromFirestore() { console.log("Placeholder: Loading and displaying watchlists from Firestore..."); }
-function updateAddToWatchlistButtonState(id, details, containerId) { console.log("Placeholder: Updating add to watchlist button state for:", id); }
-function determineActiveWatchlistButtonContainerId() { console.log("Placeholder: Determining active watchlist button container ID."); return "default-watchlist-container"; }
-async function loadAndDisplaySeenItems() { console.log("Placeholder: Loading and displaying seen items..."); }
-function updateMarkAsSeenButtonState(id, details, containerId) { console.log("Placeholder: Updating mark as seen button state for:", id); }
-function determineActiveSeenButtonContainerId() { console.log("Placeholder: Determining active seen button container ID."); return "default-seen-container"; }
+let firebaseAuthInstance = null; // Will be set by canvasSignIn
 
+/**
+ * Signs in with custom token or anonymously if not available.
+ * This is called from main.js after Firebase services are initialized.
+ * @param {object} authInstanceParam - The Firebase Auth instance passed from main.js.
+ * @param {string|null} initialAuthToken - The custom auth token from Canvas, or null.
+ */
+export async function canvasSignIn(authInstanceParam, initialAuthToken) {
+    if (!authInstanceParam) {
+        console.error("Firebase Auth instance is not provided to canvasSignIn. Cannot perform sign-in.");
+        return;
+    }
+    firebaseAuthInstance = authInstanceParam; // Store the instance for later use by other functions
 
-// DOM Elements (initialized in main.js and passed or imported from each app/website's context)
-// These variables are now declared without direct assignment here, as they are passed via initAuthRefs.
-let authDropdownMenu, newWatchlistNameInput, createWatchlistBtn;
-let currentSelectedItemDetails;
+    try {
+        if (initialAuthToken && typeof initialAuthToken === 'string') {
+            await firebaseAuthFunctions.signInWithCustomToken(firebaseAuthInstance, initialAuthToken);
+            console.log("Signed in with custom token.");
+        } else {
+            await firebaseAuthFunctions.signInAnonymously(firebaseAuthInstance);
+            console.log("Signed in anonymously.");
+        }
+    } catch (error) {
+        console.error("Canvas sign-in failed:", error);
+        _showCustomAlert(`Authentication failed: ${error.message}`, "error");
+    }
+}
+
+// DOM Elements (initialized in main.js and passed via initAuthRefs)
+let authDropdownMenu;
 
 /**
  * Initializes references to UI elements and the custom alert function.
  * This function is called by main.js to provide auth.js with necessary external dependencies.
  * @param {object} elements - Object containing references to auth-related DOM elements (e.g., authDropdownMenu).
- * @param {object} itemDetailsRef - Reference to the currentSelectedItemDetails from main.js's state.
+ * @param {object} _itemDetailsRef - Not directly used in auth.js, but kept for signature compatibility.
  * @param {function} showCustomAlertFn - The actual showCustomAlert function from ui.js.
  */
-export function initAuthRefs(elements, itemDetailsRef, showCustomAlertFn) {
+export function initAuthRefs(elements, _itemDetailsRef, showCustomAlertFn) {
     authDropdownMenu = elements.authDropdownMenu;
-    newWatchlistNameInput = elements.newWatchlistNameInput;
-    createWatchlistBtn = elements.createWatchlistBtn;
-    currentSelectedItemDetails = itemDetailsRef;
     _showCustomAlert = showCustomAlertFn || console.log; // Assign the actual alert function
 }
 
@@ -79,11 +91,10 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
         if (!email || !password) { _showCustomAlert("Email and password required.", "error"); return; }
         if (!isValidEmail(email)) { _showCustomAlert("Invalid email format.", "error"); return; }
         try {
-            await signIn(email, password); // Use the exported 'signIn' function
+            await signIn(email, password); // Call signIn from firebase_api.js (gets its own auth instance)
             _showCustomAlert("Signed in!", "success");
             if (onSuccessCallback) onSuccessCallback();
         } catch (error) {
-            // Use the passed _showCustomAlert function for all messages
             _showCustomAlert(`Sign in error: ${error.message}`, "error");
         }
     };
@@ -95,18 +106,14 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
     signUpButton.onclick = async () => {
         const email = emailField.value;
         const password = passwordField.value;
-        // The name input is managed by main.js and passed from there for signUp.
-        // For the auth.js dropdown UI, we assume a simple sign-up without name.
-        // If a name is needed for the dropdown, it would need to be added to the UI here.
         const name = email; // Fallback name for quick sign-up from dropdown if no name input is available
         if (!email || !password) { _showCustomAlert("Email and password required.", "error"); return; }
         if (!isValidEmail(email)) { _showCustomAlert("Invalid email format.", "error"); return; }
         try {
-            await signUp(name, email, password); // Use the exported 'signUp' function
+            await signUp(name, email, password); // Call signUp from firebase_api.js (gets its own auth instance)
             _showCustomAlert("Signed up! You are now logged in.", "success");
             if (onSuccessCallback) onSuccessCallback();
         } catch (error) {
-            // Use the passed _showCustomAlert function for all messages
             _showCustomAlert(`Sign up error: ${error.message}`, "error");
         }
     };
@@ -121,7 +128,7 @@ export function updateAuthDropdownUI(user) {
     if (user) {
         const userInfo = document.createElement('div');
         userInfo.className = 'auth-dropdown-status';
-        userInfo.textContent = `Logged in as: ${user.email}`;
+        userInfo.textContent = `Logged in as: ${user.email || 'Anonymous User'}`; // Display email or anonymous status
         authDropdownMenu.appendChild(userInfo);
         const signOutDropdownButton = document.createElement('button');
         signOutDropdownButton.id = 'signOutDropdownButton';
@@ -129,8 +136,8 @@ export function updateAuthDropdownUI(user) {
         signOutDropdownButton.textContent = 'Sign Out';
         signOutDropdownButton.addEventListener('click', async () => {
             try {
-                const oldUserId = currentUserId;
-                await signOutUser(); // Use the exported 'signOutUser' function
+                const oldUserId = currentUserId; // Preserve oldUserId before sign out for local storage
+                await signOutUser(); // Call signOutUser from firebase_api.js (gets its own auth instance)
                 localStorage.removeItem(`mediaFinderLastSelectedWatchlist_${oldUserId}`);
                 _showCustomAlert("Signed out successfully.", "info"); // Use _showCustomAlert
                 if (authDropdownMenu) authDropdownMenu.classList.add('hidden');
@@ -146,46 +153,27 @@ export function updateAuthDropdownUI(user) {
     }
 }
 
-// Removed 'elements' parameter as it's passed during initialization via initAuthRefs
+/**
+ * Handles authentication state changes, updating UI and setting current user ID.
+ * @param {object|null} user - The Firebase User object, or null if signed out.
+ */
 export async function handleAuthStateChanged(user) {
     updateAuthDropdownUI(user);
+
     if (user) {
-        updateCurrentUserId(user.uid);
-        // The following elements are now managed directly by main.js in the library tab,
-        // so direct manipulation or reliance on their existence in auth.js is removed.
-        // if (newWatchlistNameInput) newWatchlistNameInput.disabled = false;
-        // if (createWatchlistBtn) createWatchlistBtn.disabled = false;
-
-        // These loading/display calls are handled by main.js's populateCurrentTabContent
-        // in response to auth state changes and tab switches.
-        // await loadAndDisplaySeenItems();
-        // await loadAndDisplayWatchlistsFromFirestore();
-
-        if (currentSelectedItemDetails) {
-            // These functions are placeholders, assuming their real implementation is in main.js's scope
-            const activeBtnContainerId = determineActiveWatchlistButtonContainerId();
-            updateAddToWatchlistButtonState(currentSelectedItemDetails.tmdb_id, currentSelectedItemDetails, activeBtnContainerId);
-            const activeSeenBtnContainerId = determineActiveSeenButtonContainerId();
-            updateMarkAsSeenButtonState(currentSelectedItemDetails.tmdb_id, currentSelectedItemDetails, activeSeenBtnContainerId);
-        }
+        currentUserId = user.uid;
+        console.log("Auth state changed: User UID updated to:", currentUserId);
     } else {
-        updateCurrentUserId(null);
-        updateCurrentSelectedWatchlistName(null);
-
-        // Content clearing for these containers is handled by main.js in populateCurrentTabContent.
-        // if (watchlistTilesContainer) watchlistTilesContainer.innerHTML = '<p class="text-xs text-gray-400 col-span-full w-full text-center">Sign in to see your watchlists.</p>';
-        // if (watchlistDisplayContainer) watchlistDisplayContainer.innerHTML = '<p class="text-gray-500 italic col-span-full text-center">Sign in to manage your watchlists.</p>';
-        // if (seenItemsDisplayContainer) seenItemsDisplayContainer.innerHTML = '<p class="text-gray-500 italic col-span-full text-center">Sign in to see your seen items.</p>';
-
-        // if (newWatchlistNameInput) newWatchlistNameInput.disabled = true;
-        // if (createWatchlistBtn) createWatchlistBtn.disabled = true;
-
-        if (currentSelectedItemDetails) {
-            // These functions are placeholders, assuming their real implementation is in main.js's scope
-            const activeBtnContainerId = determineActiveWatchlistButtonContainerId();
-            updateAddToWatchlistButtonState(currentSelectedItemDetails.tmdb_id, currentSelectedItemDetails, activeBtnContainerId);
-            const activeSeenBtnContainerId = determineActiveSeenButtonContainerId();
-            updateMarkAsSeenButtonState(currentSelectedItemDetails.tmdb_id, currentSelectedItemDetails, activeSeenBtnContainerId);
-        }
+        currentUserId = null; // Clear userId on sign out
     }
+}
+
+/**
+ * Returns the current authenticated user's ID.
+ * This function now gets the current user via `getCurrentUser()` from firebase_api.js.
+ * @returns {string|null} The current user's UID or null if not signed in.
+ */
+export function getFirebaseUserId() {
+    const user = getCurrentUser(); // Get current user from firebase_api.js
+    return user ? user.uid : null;
 }

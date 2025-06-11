@@ -712,14 +712,16 @@
         .icon-buttons #filter-button.filter-active i {
             color: var(--science-blue); /* Highlight icon when filter is active */
         }
-        /* Positioning for the filter dropdown */
+        /* Positioning for the filter dropdown (deprecated for modal) */
+        /*
         #filter-options-list {
             position: absolute;
-            top: calc(100% + 5px); /* Position below the button with a small gap */
+            top: calc(100% + 5px);
             right: 0;
-            width: 180px; /* Or auto, or a fixed width */
-            z-index: 1050; /* Ensure it's above other content */
+            width: 180px;
+            z-index: 1050;
         }
+        */
         .filter-dropdown-footer {
             padding: 0.5em 1em;
             border-top: 1px solid var(--border-color, #333);
@@ -1188,18 +1190,10 @@
                 <i class="fas fa-sun sun-icon"></i>
                 <i class="fas fa-moon moon-icon" style="display: none;"></i>
             </button>
-            <div id="filter-dropdown-container" style="position: relative;">
+            <div id="filter-button-container">
                 <button id="filter-button" title="Filter Content">
                     <i class="fas fa-filter"></i>
                 </button>
-                <div id="filter-options-list" class="apple-dropdown" style="display: none;">
-                    <div id="filter-options-items-container" class="dropdown-list hide-scrollbar">
-                        </div>
-                    <div class="filter-dropdown-footer">
-                        <button id="filter-clear-btn" class="filter-action-button">Clear</button>
-                        <button id="filter-apply-btn" class="filter-action-button apply">Apply</button>
-                    </div>
-                </div>
             </div>
             <button data-tab="search-tab" title="Search">
                 <i class="fas fa-search"></i>
@@ -1320,6 +1314,21 @@
                 <button type="submit" id="auth-submit-button" class="auth-submit-button">Sign In</button>
             </form>
             <p id="auth-switch-link" class="auth-switch-link">Don't have an account? Sign Up</p>
+        </div>
+    </div>
+
+    <!-- Filter Modal (New) -->
+    <div id="filter-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 350px; padding: 1.5rem;">
+            <button class="close-button" aria-label="Close">&times;</button>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">Filter Content</h2>
+            <div id="filter-options-items-container-modal" class="dropdown-list hide-scrollbar" style="position: static; max-height: 250px; overflow-y: auto; border: none; box-shadow: none;">
+                <!-- Filter options will be rendered here by JavaScript -->
+            </div>
+            <div class="filter-dropdown-footer" style="border-radius: 0.75rem;">
+                <button id="filter-clear-btn-modal" class="filter-action-button">Clear</button>
+                <button id="filter-apply-btn-modal" class="filter-action-button apply">Apply</button>
+            </div>
         </div>
     </div>
 
