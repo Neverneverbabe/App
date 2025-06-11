@@ -1,12 +1,8 @@
 // App/main.js
 import { fetchTrendingItems, fetchItemDetails, fetchSearchResults, fetchDiscoveredItems } from './api.js';
-// Corrected import path for Firebase functions from the now-nested SignIn folder
-// Imported functions now rely on initialized instances obtained via getters or are self-sufficient
 import { signUp, signIn, signOutUser, onAuthChange, getCurrentUser, saveUserData, getUserCollection, deleteUserData, listenToUserCollection } from './SignIn/firebase_api.js';
-// Updated import path for ratingUtils.js
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
 
-// Explicitly import each UI function used from ui.js as a named import
 import {
     displayContentRow,
     displayItemDetails,
@@ -23,39 +19,31 @@ import {
     renderWatchlistOptionsInModal
 } from './ui.js';
 
-// Import constants from config.js
 import { TMDB_BACKDROP_BASE_URL } from './config.js';
 
-// Import auth-related functions from auth.js
 import { initAuthRefs, handleAuthStateChanged, getFirebaseUserId, canvasSignIn } from './SignIn/auth.js';
-
-// Import Firebase initialization and getter functions
 import { initializeFirebaseServices, getFirebaseAuth, getFirebaseFirestore } from './SignIn/firebase.js';
 
-// --- Global variables to store fetched data for re-filtering without new API calls ---
 let cachedTrendingMovies = [];
 let cachedRecommendedShows = [];
 let cachedNewReleaseMovies = [];
 let cachedSearchResults = [];
-let cachedExploreItems = []; // Cache for items fetched in the Explore tab
-let localUserSeenItemsCache = []; // Cache for seen items for the current user
-let firestoreWatchlistsCache = []; // Global cache for Firestore watchlists
+let cachedExploreItems = [];
+let localUserSeenItemsCache = [];
+let firestoreWatchlistsCache = [];
 
-// --- Global variable for current filter state ---
-let currentAgeRatingFilter = []; // Default to no filter (empty array means 'All Ratings')
-let currentSelectedLibraryFolder = null; // To keep track of the selected folder in the Library tab
+let currentAgeRatingFilter = [];
+let currentSelectedLibraryFolder = null;
 
-// --- Explore Tab State ---
 let exploreCurrentPage = 1;
 let exploreIsLoading = false;
 let exploreHasMore = true;
 
-// Debounce timer for search input
 let searchTimer = null;
-const SEARCH_DEBOUNCE_DELAY = 500; // milliseconds
+const SEARCH_DEBOUNCE_DELAY = 500;
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // PWA: Service Worker registration for offline capabilities
+// Shift the main initialization logic to window.onload
+window.onload = async () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
             .then((registration) => {
@@ -66,33 +54,68 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
     }
 
-    // --- Firebase Initialization and Auth Setup ---
-    // Ensure Firebase config and initial auth token are available from the Canvas environment
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    // --- Firebase Initialization and Auth Setup (Guaranteed availability with polling on window.onload) ---
+    // Poll for the presence of __firebase_config and __initial_auth_token
+    const pollForFirebaseGlobals = setInterval(async () => {
+        if (typeof window.__firebase_config !== 'undefined' && typeof window.__initial_auth_token !== 'undefined') {
+            clearInterval(pollForFirebaseGlobals); // Stop polling once globals are found
+            await initializeAndAuthFirebase();
+        } else {
+            // console.warn("Firebase Canvas globals not yet available. Waiting on window.onload..."); // Keep commented to reduce noise
+        }
+    }, 100); // Check every 100ms
 
-    if (!firebaseConfig) {
-        console.error("Firebase configuration (__firebase_config) is not available. Firebase features will be disabled.");
-        showCustomAlert('Error', 'Firebase configuration missing. Core features may not work.', 'error');
-        return; // Prevent further Firebase-dependent operations
+    async function initializeAndAuthFirebase() {
+        // Now it's guaranteed that window.__firebase_config is defined
+        const firebaseConfig = JSON.parse(window.__firebase_config);
+        const initialAuthToken = window.__initial_auth_token;
+
+        if (!firebaseConfig) {
+            console.error("Firebase configuration (__firebase_config) is not available. Firebase features will be disabled.");
+            showCustomAlert('Error', 'Firebase configuration missing. Core features may not work.', 'error');
+            return;
+        }
+
+        initializeFirebaseServices(firebaseConfig);
+        const auth = getFirebaseAuth();
+        const db = getFirebaseFirestore();
+
+        if (!auth || !db) {
+            console.error("Firebase Auth or Firestore failed to initialize. Check Firebase config.");
+            showCustomAlert('Error', 'Firebase services failed to initialize. Please check console for details.', 'error');
+            return;
+        }
+
+        // Perform initial Canvas sign-in (anonymous or with custom token)
+        await canvasSignIn(auth, initialAuthToken);
+
+        // After successful Firebase init and auth, set up the auth state listener
+        onAuthChange(async (user) => {
+            await handleAuthStateChanged(user);
+            if (user) {
+                console.log("Auth state changed: User signed in - UID:", user.uid, "Display Name:", user.displayName);
+                await loadUserSeenItems();
+                await loadUserFirestoreWatchlists();
+                if (authModal.style.display === 'flex') {
+                    hideCustomAlert();
+                }
+            } else {
+                console.log("Auth state changed: User signed out");
+                localUserSeenItemsCache = [];
+                firestoreWatchlistsCache = [];
+                window.firestoreWatchlistsCache = [];
+            }
+            populateCurrentTabContent();
+        });
+
+        // Initial content population if already authenticated (e.g., after a quick reload)
+        // or if anonymous sign-in already occurred.
+        populateCurrentTabContent();
     }
 
-    // Initialize Firebase services
-    initializeFirebaseServices(firebaseConfig);
-    const auth = getFirebaseAuth(); // Retrieve initialized auth instance
-    const db = getFirebaseFirestore(); // Retrieve initialized db instance
-
-    if (!auth || !db) {
-        console.error("Firebase Auth or Firestore failed to initialize. Check Firebase config.");
-        showCustomAlert('Error', 'Firebase services failed to initialize. Please check console for details.', 'error');
-        return;
-    }
-
-    // Perform initial Canvas sign-in (anonymous or with custom token)
-    await canvasSignIn(auth, initialAuthToken);
-
-
-    // --- DOM Element References ---
+    // --- DOM Element References (rest of window.onload) ---
+    // Moved these inside window.onload as well to ensure they are available
+    // when Firebase initialization might trigger subsequent DOM manipulations.
     const themeToggleBtn = document.getElementById('theme-toggle');
     const filterButton = document.getElementById('filter-button');
     const body = document.body;
@@ -152,31 +175,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isLightMode = false;
     updateThemeDependentElements(isLightMode);
 
-    // --- Firebase Auth State Change Listener ---
-    // This listener updates UI based on user sign-in/out status and triggers data loads.
-    onAuthChange(async (user) => { // onAuthChange now gets auth from firebase_api.js
-        // Delegate UI updates for auth state changes to auth.js's handleAuthStateChanged function
-        await handleAuthStateChanged(user);
-
-        // Continue with main.js specific logic that depends on auth state
-        if (user) {
-            console.log("Auth state changed: User signed in - UID:", user.uid, "Display Name:", user.displayName);
-            await loadUserSeenItems(); // loadUserSeenItems now gets db from firebase_api.js
-            await loadUserFirestoreWatchlists(); // loadUserFirestoreWatchlists now gets db from firebase_api.js
-            // If the auth modal is open, close it after successful sign-in
-            if (authModal.style.display === 'flex') {
-                hideCustomAlert();
-            }
-        } else {
-            console.log("Auth state changed: User signed out");
-            // Clear local caches if user signs out
-            localUserSeenItemsCache = [];
-            firestoreWatchlistsCache = [];
-            window.firestoreWatchlistsCache = []; // Ensure global cache is also cleared
-        }
-        // Re-populate the currently active tab content to reflect auth state changes (e.g., seen status)
-        populateCurrentTabContent();
-    });
 
     // --- Core Functions ---
 
@@ -828,13 +826,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             await signOutUser(); // Call signOutUser from firebase_api.js
             profileDropdown.classList.remove('show');
             showCustomAlert('Success', 'You have been signed out.');
-        } catch (error) {
-            console.error("Error signing out:", error);
-            showCustomAlert('Error', `Sign out failed: ${error.message}`);
-        } finally {
-            hideLoadingIndicator();
-        }
-    });
+    } 
+    catch (error) {
+        console.error("Error signing out:", error);
+        showCustomAlert('Error', `Sign out failed: ${error.message}`);
+    } finally {
+        hideLoadingIndicator();
+    }
+});
 
     authModalCloseButton.addEventListener('click', closeAuthModal);
     authModal.addEventListener('click', (event) => {
@@ -1276,7 +1275,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     fc.style.border = '2px solid transparent';
                     fc.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
                 });
-                // Corrected line 1277
                 card.style.border = `2px solid var(--science-blue)`;
                 card.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(0, 0, 0, 0.1)`;
             });
@@ -1361,4 +1359,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.attachSeenToggleListenersToCards(librarySelectedFolderMoviesRow);
         }
     }
-});
+};
