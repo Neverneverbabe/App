@@ -98,7 +98,7 @@ window.onload = async () => {
             return;
         }
 
-        // Perform initial Canvas sign-in (anonymous or with custom token)
+        // Perform initial Canvas sign-in using a custom token if provided
         await canvasSignIn(auth, initialAuthToken);
 
         // After successful Firebase init and auth, set up the auth state listener
@@ -121,7 +121,7 @@ window.onload = async () => {
         });
 
         // Initial content population if already authenticated (e.g., after a quick reload)
-        // or if anonymous sign-in already occurred.
+        // or if a user was previously signed in.
         populateCurrentTabContent();
     }
 
