@@ -247,6 +247,7 @@ window.onload = async () => {
         mainNav?.classList.remove('sidebar-open');
         secondarySidebar?.classList.remove('open');
         sidebarOverlay?.classList.remove('active');
+        document.body.style.overflow = '';
         if (mainNav?.classList.contains('sidebar-open') === false) updateSidebarButtonState(false);
         console.log(`[DEBUG] switchTab for ${tabId} finished.`);
     }
@@ -446,6 +447,9 @@ window.onload = async () => {
     function updateSidebarButtonState(isOpen) {
         if (sidebarToggleButton && sidebarToggleIcon) {
             sidebarToggleButton.setAttribute('aria-expanded', isOpen);
+            if (mainNav) {
+                mainNav.setAttribute('aria-hidden', (!isOpen).toString());
+            }
             if (isOpen) {
                 sidebarToggleIcon.classList.remove('fa-bars');
                 sidebarToggleIcon.classList.add('fa-times');
@@ -462,6 +466,7 @@ window.onload = async () => {
     sidebarToggleButton?.addEventListener('click', () => {
         const isOpen = mainNav?.classList.toggle('sidebar-open');
         sidebarOverlay?.classList.toggle('active', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
         updateSidebarButtonState(isOpen);
     });
 
@@ -497,6 +502,7 @@ window.onload = async () => {
     sidebarOverlay?.addEventListener('click', () => {
         if (mainNav?.classList.contains('sidebar-open')) {
             mainNav.classList.remove('sidebar-open');
+            document.body.style.overflow = '';
             updateSidebarButtonState(false);
         }
         if (secondarySidebar && secondarySidebar.classList.contains('open')) {
@@ -506,6 +512,17 @@ window.onload = async () => {
             closeFilterModal();
         }
         sidebarOverlay?.classList.remove('active');
+    });
+
+    // Close sidebar with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mainNav?.classList.contains('sidebar-open')) {
+            mainNav.classList.remove('sidebar-open');
+            sidebarOverlay?.classList.remove('active');
+            document.body.style.overflow = '';
+            updateSidebarButtonState(false);
+            sidebarToggleButton?.focus();
+        }
     });
 
     // Sidebar Navigation tab clicks

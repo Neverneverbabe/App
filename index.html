@@ -86,7 +86,7 @@
             top: 0;
             left: 0;
             right: 0;
-            z-index: 1000; /* Increased z-index */
+            z-index: 1050; /* Sit above the overlay */
             padding: 1rem 1rem; /* p-4 */
             display: flex;
             align-items: center;
@@ -1173,12 +1173,12 @@
 <body>
     <header>
         <div id="header-main">
-            <button id="sidebar-toggle-button" title="Toggle Navigation Menu">
+            <button id="sidebar-toggle-button" title="Toggle Navigation Menu" aria-controls="main-nav" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="logo"><img src="Sad Face.png" alt="Sad Face Logo" style="height: 1.5em; vertical-align: middle;"></h1>
             <span id="current-tab-name-display">Watch TV+</span> </div>
-        <nav id="main-nav"> <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
+        <nav id="main-nav" aria-hidden="true"> <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
             <a href="#" class="tab-link" data-tab="explore-tab">Explore</a>
             <a href="#" class="tab-link" data-tab="library-tab">Library</a>
             <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
