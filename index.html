@@ -126,7 +126,9 @@
         #main-nav {
             /* Sidebar Styles */
             position: fixed;
-            display: none; /* Hidden by default */
+            display: flex; /* Keep sidebar rendered */
+            visibility: hidden;
+            pointer-events: none;
             top: 0;
             left: 0; /* Initial position for transform */
             width: 280px; /* Consistent width */
@@ -143,8 +145,9 @@
 
         /* Sidebar open state */
         #main-nav.sidebar-open {
-            display: flex; /* Show when open */
             transform: translateX(0); /* Slide in */
+            visibility: visible;
+            pointer-events: auto;
         }
 
         /* Styles for links within the sidebar */
