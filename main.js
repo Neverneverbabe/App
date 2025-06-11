@@ -66,13 +66,24 @@ window.onload = async () => {
     }, 100); // Check every 100ms
 
     async function initializeAndAuthFirebase() {
-        // Now it's guaranteed that window.__firebase_config is defined
-        const firebaseConfig = JSON.parse(window.__firebase_config);
+        let firebaseConfig;
+        if (typeof window.__firebase_config !== 'undefined') {
+            try {
+                firebaseConfig = JSON.parse(window.__firebase_config);
+            } catch (e) {
+                console.error('Failed to parse __firebase_config', e);
+            }
+        }
+
+        if (!firebaseConfig && typeof window.firebaseConfig !== 'undefined') {
+            firebaseConfig = window.firebaseConfig;
+        }
+
         const initialAuthToken = window.__initial_auth_token;
 
         if (!firebaseConfig) {
-            console.error("Firebase configuration (__firebase_config) is not available. Firebase features will be disabled.");
-            showCustomAlert('Error', 'Firebase configuration missing. Core features may not work.', 'error');
+            console.error('Firebase configuration is not available.');
+            showCustomAlert('Error', 'Firebase must be configured before using this application. Please update firebase-config.js with your project details.', 'error');
             return;
         }
 
