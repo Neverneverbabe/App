@@ -78,6 +78,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const searchResultsContainer = document.getElementById('search-results-container');
+    // Mobile Sidebar Button Elements
+    const themeToggleMobileBtn = document.getElementById('theme-toggle-mobile');
+    const filterButtonMobile = document.getElementById('filter-button-mobile');
+    const searchButtonMobile = document.getElementById('search-button-mobile');
+    const profileButtonMobile = document.getElementById('profile-button-mobile');
+
+    // Secondary Sidebar Elements
+    const secondarySidebarButton = document.getElementById('secondary-sidebar-button');
+    const secondarySidebar = document.getElementById('secondary-sidebar');
+    const closeSecondarySidebarButton = secondarySidebar ? secondarySidebar.querySelector('.close-secondary-sidebar') : null;
+
     const libraryFoldersRow = document.getElementById('library-folders-row');
     const selectedFolderTitleElement = document.getElementById('selected-folder-title');
     const librarySelectedFolderMoviesRow = document.getElementById('library-selected-folder-movies-row');
@@ -172,7 +183,9 @@ document.addEventListener('DOMContentLoaded', async () => {
      * Switches the active tab in the main content area.
      * @param {string} tabId - The ID of the tab to activate (e.g., 'watch-now-tab').
      */
-    function switchTab(tabId) {
+    function switchToTab(tabId) { // Renamed to match provided code
+        console.log(`[DEBUG] switchTab called with: ${tabId}`); // New log
+
         // Remove 'active-tab' class from all tab content sections
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active-tab');
@@ -181,11 +194,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const activeTab = document.getElementById(tabId);
         if (activeTab) {
             activeTab.classList.add('active-tab');
-            // Update tab name display next to logo
-            const activeNavLinkForName = document.querySelector(`#main-nav a[data-tab="${tabId}"]`);
-            if (activeNavLinkForName) {
-                currentTabNameDisplay.textContent = activeNavLinkForName.textContent.trim();
-            }
+            console.log(`[DEBUG] Added active-tab to: ${tabId}`); // New log
+            // Update tab name display
+            const label = document.querySelector(`.tab-link[data-tab="${tabId}"]`)?.textContent || '';
+            if (currentTabNameDisplay) currentTabNameDisplay.textContent = label;
+            } else {
+            console.error(`[DEBUG] Could not find tab content element with ID: ${tabId}`); // New log
+            return; // Exit if tab content not found
         }
 
         // Update active navigation link styling
@@ -193,26 +208,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         const activeNavLink = document.querySelector(`#main-nav a[data-tab="${tabId}"]`);
         if (activeNavLink) {
             activeNavLink.classList.add('active-nav-link');
+            console.log(`[DEBUG] Added active-nav-link to link for: ${tabId}`); // New log
+        } else {
+            console.warn(`[DEBUG] Could not find nav link to style for tab: ${tabId}`); // New log
         }
 
         // Toggle visibility of the hero section based on the active tab
-        const watchNowTab = document.getElementById('watch-now-tab');
-        const heroSection = watchNowTab.querySelector('.hero-section');
-        if (tabId === 'watch-now-tab') {
-            if (heroSection) heroSection.style.display = 'flex'; // Show hero section for 'Watch TV+' tab
-        } else {
-            if (heroSection) heroSection.style.display = 'none'; // Hide for other tabs
+        const watchNowTabElement = document.getElementById('watch-now-tab'); // Renamed to avoid conflict
+        if (watchNowTabElement) {
+            const heroSection = watchNowTabElement.querySelector('.hero-section');
+            if (tabId === 'watch-now-tab') {
+                if (heroSection) heroSection.style.display = 'flex'; // Show hero section for 'Watch TV+' tab
+            } else {
+                if (heroSection) heroSection.style.display = 'none'; // Hide for other tabs
+            }
         }
 
         // Re-populate content for the newly active tab
+        console.log(`[DEBUG] Calling populateCurrentTabContent for ${tabId}`); // New log
         populateCurrentTabContent();
 
         // Close sidebar after tab selection
-        if (mainNav.classList.contains('sidebar-open')) {
-            mainNav.classList.remove('sidebar-open');
-            sidebarOverlay.classList.remove('active');
-            updateSidebarButtonState(false); // Update button state
-        }
+        mainNav?.classList.remove('sidebar-open');
+        secondarySidebar?.classList.remove('open');
+        sidebarOverlay?.classList.remove('active');
+        if (mainNav?.classList.contains('sidebar-open') === false) updateSidebarButtonState(false); // Ensure icon updates
+        console.log(`[DEBUG] switchTab for ${tabId} finished.`); // New log
     }
 
     /**
@@ -451,39 +472,131 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Event Listeners ---
 
     // Sidebar Toggle Button
-    if (sidebarToggleButton) {
+    sidebarToggleButton?.addEventListener('click', () => {
         sidebarToggleButton.addEventListener('click', (event) => {
             event.stopPropagation();
-            const isOpen = mainNav.classList.toggle('sidebar-open');
-            sidebarOverlay.classList.toggle('active', isOpen); // Sync overlay with sidebar state
+            const isOpen = mainNav?.classList.toggle('sidebar-open');
+            sidebarOverlay?.classList.toggle('active', isOpen); // Sync overlay with sidebar state
             updateSidebarButtonState(isOpen);
         });
+    });
+
+    // Helper function to close the right sidebar
+    function closeRightSidebar() { // This function is good, let's keep it
+        if (secondarySidebar && secondarySidebar.classList.contains('open')) {
+            secondarySidebar.classList.remove('open');
+            // If the main (left) sidebar is also closed, then deactivate the overlay
+            if (!mainNav.classList.contains('sidebar-open')) {
+                sidebarOverlay.classList.remove('active');
+            }
+        }
     }
 
-    // Sidebar Overlay Click to Close
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', () => {
-            mainNav.classList.remove('sidebar-open');
-            sidebarOverlay.classList.remove('active');
-            updateSidebarButtonState(false);
-        });
-    }
-
-    // Sidebar Navigation tab clicks
-    mainNav.querySelectorAll('a.tab-link').forEach(link => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default link behavior
-            const tabId = link.dataset.tab; // Use link directly, not event.target
-            if (tabId) {
-                switchTab(tabId); // Call switchTab function
+    // Secondary Sidebar Button (right sidebar)
+    secondarySidebarButton?.addEventListener('click', () => {
+        secondarySidebarButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (secondarySidebar) {
+                secondarySidebar.classList.add('open');
+                sidebarOverlay?.classList.add('active');
             }
         });
     });
 
+    // Close button for Secondary Sidebar
+    closeSecondarySidebarButton?.addEventListener('click', () => {
+        closeSecondarySidebarButton.addEventListener('click', () => {
+            if (secondarySidebar) {
+                secondarySidebar.classList.remove('open');
+                if (!mainNav?.classList.contains('sidebar-open')) {
+                    sidebarOverlay?.classList.remove('active');
+                }
+            }
+        });
+    });
+
+    // Sidebar Overlay Click to Close
+    overlay?.addEventListener('click', () => {
+        sidebarOverlay.addEventListener('click', () => {
+            if (mainNav?.classList.contains('sidebar-open')) {
+                mainNav.classList.remove('sidebar-open');
+                updateSidebarButtonState(false); // Update main sidebar button
+            }
+            if (secondarySidebar && secondarySidebar.classList.contains('open')) {
+                secondarySidebar.classList.remove('open');
+            }
+            sidebarOverlay?.classList.remove('active'); // Deactivate overlay
+        });
+    });
+
+    // Sidebar Navigation tab clicks
+    document.querySelectorAll('#main-nav .tab-link').forEach(link => { // Target links within #main-nav
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            const targetTab = link.getAttribute('data-tab');
+            if (targetTab) switchToTab(targetTab);
+        });
+    });
+
+
+    
     // Set initial tab name display
     const initialActiveNavLink = mainNav.querySelector('a.tab-link.active-nav-link');
     if (initialActiveNavLink) currentTabNameDisplay.textContent = initialActiveNavLink.textContent.trim();
 
+    // --- Mobile Secondary Sidebar Button Event Listeners ---
+    themeToggleMobileBtn?.addEventListener('click', () => {
+        themeToggleMobileBtn.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            isLightMode = body.classList.contains('light-mode');
+            updateThemeDependentElements(isLightMode);
+            populateCurrentTabContent();
+            closeRightSidebar(); // Use the existing helper
+        });
+    });
+
+    if (filterButtonMobile) {
+        filterButtonMobile.addEventListener('click', () => {
+            closeRightSidebar();
+            // Programmatically open the main filter dropdown
+            if (filterButton && filterOptionsList && filterOptionsItemsContainer) {
+                const isOpen = filterOptionsList.style.display === 'block';
+                if (!isOpen) {
+                    tempSelectedFilters = currentAgeRatingFilter.length === 0 ? [""] : [...currentAgeRatingFilter];
+                    renderFilterDropdownOptions(filterOptionsItemsContainer, tempSelectedFilters);
+                    filterOptionsList.style.display = 'block';
+                    positionPopup(filterButton, filterOptionsList); // Position relative to the main filter button
+                } else {
+                    // If it was somehow already open, ensure it's correctly positioned or just leave it.
+                    // For simplicity, we'll assume it wasn't open or that re-positioning is fine.
+                    positionPopup(filterButton, filterOptionsList);
+                }
+            }
+        });
+    }
+
+    searchButtonMobile?.addEventListener('click', () => {
+        searchButtonMobile.addEventListener('click', () => {
+            switchToTab('search-tab'); // switchToTab now handles closing both sidebars
+            // closeRightSidebar(); // No longer needed here as switchToTab handles it
+        });
+    });
+
+    profileButtonMobile?.addEventListener('click', () => {
+        profileButtonMobile.addEventListener('click', () => {
+            const user = getCurrentUser();
+            if (user) {
+                // Toggle the main profile dropdown if user is signed in
+                if (profileDropdown) {
+                    profileDropdown.classList.toggle('show');
+                }
+            } else {
+                // Open sign-in modal if user is not signed in
+                openAuthModal('signin');
+            }
+            closeRightSidebar(); // Use the existing helper
+        });
+    });
 
     // Header search button click (also switches to search tab)
     const headerSearchButton = document.querySelector('.icon-buttons button[data-tab="search-tab"]');
@@ -491,20 +604,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         headerSearchButton.addEventListener('click', (event) => {
             event.preventDefault();
             const tabId = headerSearchButton.dataset.tab;
-            if (tabId) switchTab(tabId);
+            if (tabId) switchToTab(tabId);
         });
     }
 
     // Theme toggle button click
-    themeToggleBtn.addEventListener('click', () => {
+    themeToggleBtn?.addEventListener('click', () => {
         body.classList.toggle('light-mode'); // Toggle 'light-mode' class on the body
         isLightMode = body.classList.contains('light-mode'); // Update state variable
+        localStorage.setItem('theme', isLightMode ? 'light' : 'dark'); // Save theme preference
         updateThemeDependentElements(isLightMode); // Direct access via named import
         populateCurrentTabContent(); // Re-populate content to update card/image styling
     });
 
     // --- Filter Dropdown Logic & State ---
     let tempSelectedFilters = []; // Temporary array to hold selections before 'Apply'
+
+    // Load saved theme preference on DOMContentLoaded
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' && !body.classList.contains('light-mode')) {
+        body.classList.add('light-mode');
+        isLightMode = true;
+        updateThemeDependentElements(isLightMode);
+    }
 
     /**
      * Renders filter options in the dropdown, marking currently selected ones.

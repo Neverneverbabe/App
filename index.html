@@ -14,8 +14,8 @@
         /* Custom CSS Variables for Colors (Apple Palette) */
         :root {
             --science-blue: #0066CC;
+            --science-blue-rgb: 0, 102, 204; /* Added RGB version for rgba() */
             --shark: #1D1D1F;
-            --science-blue-darker: #0052a3; /* Darker shade for hover states */
             --athens-gray: #F5F5F7;
             --white: #FFFFFF;
             --black: #000000;
@@ -25,13 +25,16 @@
             --bg-secondary: #0a0a0a; /* Slightly darker than shark for contrast */
             --text-primary: var(--white);
             --text-secondary: #e0e0e0;
-            --icon-color-default-dark: #b0b0b0; /* Slightly lighter for default visibility */
+            --icon-color-default-dark: #999999; /* Adjusted: Darker for better blending in dark mode */
             --header-icon-color-dark: var(--white); /* White for clear visibility */
             --card-bg: #2d2d2d;
             --gradient-start: #6b21a8; /* purple-800 */
             --gradient-end: #3730a3; /* indigo-900 */
             --header-footer-bg-dark-rgb: 13, 13, 13; /* RGB for #0d0d0d */
             --header-footer-bg: rgba(var(--header-footer-bg-dark-rgb), 0.9);
+            /* Input specific variables for dark mode */
+            --input-bg-color: var(--card-bg); /* #2d2d2d */
+            --input-border-color: #454545; /* Subtle dark border */
         }
 
         /* Light Mode Variables - Overrides defaults when .light-mode is active */
@@ -47,6 +50,9 @@
             --gradient-end: #818cf8; /* indigo-400 */
             --header-footer-bg-light-rgb: 253, 253, 253; /* RGB for #fdfdfd */
             --header-footer-bg: rgba(var(--header-footer-bg-light-rgb), 0.9);
+            /* Input specific variables for light mode */
+            --input-bg-color: var(--white);
+            --input-border-color: #D1D1D6; /* Apple light gray border */
         }
 
         /* Base styles */
@@ -80,7 +86,7 @@
             top: 0;
             left: 0;
             right: 0;
-            z-index: 50;
+            z-index: 1000; /* Increased z-index */
             padding: 1rem 1rem; /* p-4 */
             display: flex;
             align-items: center;
@@ -116,44 +122,49 @@
             letter-spacing: 0.025em; /* tracking-wide */
         }
 
-        header nav {
+        /* Updated styles for #main-nav (left sidebar) */
+        #main-nav {
             /* Sidebar Styles */
             position: fixed;
+            display: none; /* Hidden by default */
             top: 0;
-            left: -280px; /* Start off-screen */
-            width: 280px;
-            height: 100%;
+            left: 0; /* Initial position for transform */
+            width: 280px; /* Consistent width */
+            height: 100vh; /* Full viewport height */
             background-color: var(--card-bg); /* Or var(--bg-secondary) */
-            padding-top: 4rem; /* Space for header or close button */
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            z-index: 1000; /* High z-index */
-            transition: left 0.3s ease-in-out;
-            display: flex; /* Use flex for vertical stacking of links */
+            padding: 1rem; /* Changed from padding-top: 4rem */
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4); /* Updated shadow */
+            z-index: 1050;
+            transform: translateX(-100%); /* Start off-screen */
+            transition: transform 0.3s ease-in-out; /* Only transition transform */
             flex-direction: column;
-            gap: 0.5rem; /* Gap between links */
-        }
-
-        header nav a {
-            text-decoration: none;
-            color: inherit;
-            transition: color 0.2s ease-in-out; /* transition duration-200 ease-in-out */
+            gap: 1rem; /* Adjusted gap */
         }
 
         /* Sidebar open state */
-        header nav.sidebar-open {
-            left: 0; /* Slide in */
+        #main-nav.sidebar-open {
+            display: flex; /* Show when open */
+            transform: translateX(0); /* Slide in */
         }
 
         /* Styles for links within the sidebar */
-        header nav a {
-            padding: 1rem 1.5rem; /* Adjusted padding here */
-            display: block;
-            color: var(--text-primary);
-            font-size: 1.1rem;
+        #main-nav a {
+            background-color: #3a3a3a; /* Match example */
+            padding: 0.75rem 1rem; /* Adjusted padding */
+            border-radius: 10px; /* Rounded corners for links */
+            font-size: 1rem; /* Adjusted font size */
+            color: #fff; /* Match example */
+            text-decoration: none;
+            display: flex; /* For icon alignment if added later */
+            align-items: center; /* For icon alignment */
+            transition: background-color 0.2s ease-in-out;
+            width: 100%; /* Ensure full width for consistent background */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
 
-        header nav a:hover {
-            color: var(--science-blue);
+        #main-nav a:hover {
+            background-color: rgba(255, 255, 255, 0.1); /* Match example hover */
+            color: var(--science-blue); /* Accent color for text on hover */
         }
 
         header .icon-buttons {
@@ -162,28 +173,37 @@
         }
 
         header .icon-buttons button {
-            background-color: rgba(255, 255, 255, 0.05); /* Added subtle background for dark mode */
-            border: none;
+            background-color: var(--card-bg); /* Default background for icon buttons */
+            border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle border for dark mode */
             cursor: pointer;
-            padding: 0.5rem; /* p-2 */
+            padding: 0.75rem; /* Consistent padding for a better touch target */
             border-radius: 9999px; /* rounded-full */
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; /* transition duration-200 */
-            color: var(--icon-color-default-dark); /* Default icon color for dark mode */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            color: var(--text-primary); /* Icon color for visibility against card-bg */
         }
 
         /* Hamburger button specific style */
         #sidebar-toggle-button {
-            /* display: none; /* Hidden by default, shown on smaller screens */
+            background-color: var(--card-bg); /* Set specific background for the button */
+            border-radius: 8px; /* Adjusted: Square-ish rounded corners */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for dark mode */
             margin-right: 0.5rem; /* Space between hamburger and logo/tab name */
             padding: 0.75rem; /* Adjusted padding here */
+            color: var(--white); /* Set icon color to white for dark mode */
         }
         #sidebar-toggle-button i {
             font-size: 1.5rem; /* Adjusted font size here */
         }
 
+        body.light-mode #sidebar-toggle-button {
+             background-color: var(--card-bg); /* Use light mode card background */
+             border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border for light mode */
+             color: var(--black); /* Set icon color to black for light mode */
+        }
+
         body.light-mode header .icon-buttons button {
              color: var(--icon-color-default-light); /* Default icon color for light mode */
-             background-color: rgba(0, 0, 0, 0.05); /* Added subtle background for light mode */
+             /* background-color: rgba(0, 0, 0, 0.05); Removed from here, specific to #sidebar-toggle-button */
         }
 
         header .icon-buttons button:hover {
@@ -317,22 +337,20 @@
         }
 
         .hero-section button {
-            background-color: var(--science-blue);
+            background-color: var(--black);
             color: var(--white);
             font-weight: 600; /* font-semibold */
             padding: 0.5rem 1.5rem; /* py-2 px-6 */
             border-radius: 9999px; /* rounded-full */
             border: none;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* transition duration-300 ease-in-out transform */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
         }
 
         .hero-section button:hover {
-            background-color: var(--science-blue-darker);
+            background-color: #222; /* Darker black on hover */
             transform: scale(1.05);
-            box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.15), 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover */
-
         }
 
         /* Item Detail Modal (New Section) */
@@ -742,17 +760,17 @@
             font-size: 1rem;
             font-family: 'Inter', sans-serif;
             font-weight: 500;
-            background-color: var(--science-blue);
+            background-color: var(--black); /* Changed from --science-blue */
             color: var(--white);
-            border: 1px solid var(--science-blue);
+            border: 1px solid var(--black); /* Changed from --science-blue */
             border-radius: 10px; /* Match input border-radius */
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
             margin-bottom: 1rem; /* Keep existing margin */
         }
         #search-button:hover {
-            background-color: var(--science-blue-darker);
-            border-color: var(--science-blue-darker);
+            background-color: #222; /* Darker shade of black for hover */
+            border-color: #222; /* Darker shade of black for hover */
         }
         /* Search Results Grid Styles */
         .search-results-grid {
@@ -789,9 +807,9 @@
             padding: 0.75em 1em;
             font-size: 1rem;
             font-family: 'Inter', sans-serif;
-            background-color: var(--card-bg);
+            background-color: var(--input-bg-color);
             color: var(--text-primary);
-            border: 1px solid var(--border-color, #333);
+            border: 1px solid var(--input-border-color);
             border-radius: 8px;
             box-sizing: border-box;
             transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -817,18 +835,18 @@
         .auth-submit-button {
             width: 100%;
             padding: 0.75em 1.5em;
-            margin-top: 1.5rem; /* Keep existing margin */
-            background-color: var(--science-blue);
+            margin-top: 1.5rem;
+            background-color: var(--black);
             color: var(--white);
-            border: 1px solid var(--science-blue);
+            border: 1px solid var(--black);
             border-radius: 10px;
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
         .auth-submit-button:hover {
-            background-color: var(--science-blue-darker);
-            border-color: var(--science-blue-darker);
+            background-color: #222;
+            border-color: #222;
         }
 
         /* Seen Action Button in Modal */
@@ -943,10 +961,6 @@
         }
 
         /* Styles for the dropdown content (the actual navigation links) */
-        .nav-dropdown-content {
-            /* These styles are now part of header nav for sidebar */
-        }
-
         /* This class was for dropdown, sidebar uses .sidebar-open on nav element */
         .nav-dropdown-content.show {
             display: flex;
@@ -966,14 +980,18 @@
             background-color: rgba(0, 0, 0, 0.05);
         }
 
-        /* Ensure active link styling within dropdown */
-        .nav-dropdown-content a.active-nav-link {
-            background-color: rgba(var(--science-blue-rgb, 0, 102, 204), 0.1); /* Subtle blue background for active */
+        /* Ensure active link styling within sidebar (was .nav-dropdown-content) */
+        #main-nav a.active-nav-link {
+            background-color: rgba(255, 255, 255, 0.08); /* Adjusted: Neutral, less transparent background for active state */
             color: var(--science-blue) !important; /* Ensure active color overrides hover */
             font-weight: 600;
             border-bottom: none; /* Remove bottom border from original nav styling */
             border-radius: 0.5rem; /* Slightly rounded for individual items */
-            margin: 0 0.5rem; /* Little margin to look inset within sidebar */
+            /* Removed margin: 0 0.5rem; to ensure full-width highlight */
+        }
+
+        body.light-mode .nav-dropdown-content a.active-nav-link {
+            background-color: rgba(0, 0, 0, 0.08); /* Active link background in light mode */
         }
 
         /* Sidebar Overlay */
@@ -982,15 +1000,13 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
             background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
-            z-index: 999; /* Below sidebar, above main content */
-            transition: opacity 0.3s ease-in-out;
+            z-index: 1049; /* Below main sidebar, above content */
         }
         #sidebar-overlay.active {
             display: block;
-            opacity: 1;
         }
 
         /* Adjustments for different screen sizes */
@@ -1012,12 +1028,147 @@
         .icon-buttons {
             flex-shrink: 0; /* Prevent icon buttons from shrinking */
         }
+        /* Bonus Fix: Ensure header children can shrink and truncate */
+        header * {
+            flex-shrink: 1; /* Allow children to shrink if needed */
+            min-width: 0;   /* Allow children to shrink below their content size */
+        }
+
+        /* Styles for smaller devices (e.g., mobile phones) - Replaced 480px with 600px */
+        @media (max-width: 600px) {
+            header {
+                height: 60px; /* Lock top bar height */
+                flex-wrap: nowrap; /* Removed !important, ensure specificity handles it */
+                overflow: hidden;
+                padding: 0 1rem; /* Add horizontal padding */
+                align-items: center;
+                justify-content: space-between;
+                /* white-space: nowrap; /* Removed, handled by children if needed */
+            }
+
+            #header-main {
+                flex: 1;
+                flex-wrap: nowrap !important;
+                align-items: center;
+                gap: 0.5rem;
+                overflow: hidden;
+            }
+
+            #current-tab-name-display {
+                /* Styles for current-tab-name-display might need adjustment
+                   if it's too long and causes overflow with the new fixed header.
+                   Consider hiding or truncating it further if needed. */
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap; /* Added to make ellipsis work */
+                max-width: 100px; /* Or adjust */
+                display: inline-block; /* Necessary for text-overflow to work with width */
+            }
+
+            .icon-buttons { /* This targets the container for theme, filter, search, profile */
+                display: none; /* Hides filter, theme, search, profile icons */
+            }
+
+            #secondary-sidebar-button { /* For a potential future right-side drawer button */
+                display: inline-flex !important; /* Ensure it's visible, overriding .icon-buttons display:none */
+                background: none;
+                border: none;
+                font-size: 1.25rem;
+                color: var(--text-primary);
+                align-items: center;
+                justify-content: center;
+                padding: 0.75rem;
+            }
+            /* Ensure children of header can shrink on small screens */
+            header * {
+                min-width: 0;
+                flex-shrink: 1;
+            }
+        }
+
+        /* Secondary Sidebar Styles */
+        .secondary-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%; /* Start off-screen */
+            width: 240px;
+            height: 100%;
+            background-color: var(--card-bg);
+            z-index: 1100; /* Higher than primary sidebar and overlay */
+            padding: 1rem;
+            transition: right 0.3s ease-in-out;
+            box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .secondary-sidebar.open {
+            right: 0; /* Slide in */
+        }
+
+        .close-secondary-sidebar {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            margin-bottom: 1rem;
+            float: right;
+        }
+
+        .secondary-sidebar-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem; /* Space below close button */
+        }
+
+        .secondary-sidebar-content button {
+            background: none;
+            border: 1px solid var(--input-border-color);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            text-align: left; /* Ensure text aligns left */
+        }
+
+        .secondary-sidebar-content button i {
+            width: 20px; /* Give icons a fixed width for alignment */
+            text-align: center;
+        }
+
+        body.light-mode .secondary-sidebar {
+            background-color: var(--athens-gray); /* Light mode background */
+        }
+        body.light-mode .secondary-sidebar-content button {
+            border-color: var(--input-border-color); /* Light mode border */
+            color: var(--text-primary); /* Light mode text */
+        }
+        body.light-mode .close-secondary-sidebar {
+            color: var(--text-primary); /* Light mode text */
+        }
+
+        /* Ensure the new secondary-sidebar-button is part of .icon-buttons for styling consistency if needed,
+           or style it independently if it's outside that group in the HTML structure.
+           The provided CSS already styles it independently.
+        */
+        /* Hide the original .icon-buttons container on small screens,
+           but the #secondary-sidebar-button will be displayed due to its specific rule.
+        */
+        @media (max-width: 600px) {
+            header .icon-buttons { /* This is the original container for theme, filter, etc. */
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
         <div id="header-main">
-            <button id="sidebar-toggle-button" class="icon-buttons" title="Toggle Navigation Menu" aria-expanded="false" aria-controls="main-nav">
+            <button id="sidebar-toggle-button" title="Toggle Navigation Menu">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="logo"><img src="Sad Face.png" alt="Sad Face Logo" style="height: 1.5em; vertical-align: middle;"></h1>
@@ -1028,7 +1179,11 @@
             <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
             <a href="#" class="tab-link" data-tab="search-tab">Search</a>
         </nav>
-        <div class="icon-buttons">
+        <!-- This button is for small screens, to open the secondary sidebar -->
+        <button id="secondary-sidebar-button" title="More" style="display: none;"> <!-- Initially hidden, shown by CSS media query -->
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div class="icon-buttons"> <!-- This container will be hidden on small screens -->
             <button id="theme-toggle" class="toggle-button" title="Toggle Dark/Light Mode">
                 <i class="fas fa-sun sun-icon"></i>
                 <i class="fas fa-moon moon-icon" style="display: none;"></i>
@@ -1168,10 +1323,22 @@
         </div>
     </div>
 
+    <!-- Secondary Sidebar HTML (for mobile "More" options) -->
+    <div id="secondary-sidebar" class="secondary-sidebar">
+        <button class="close-secondary-sidebar" title="Close">&times;</button>
+        <div class="secondary-sidebar-content">
+            <button id="theme-toggle-mobile"><i class="fas fa-sun"></i> Theme</button>
+            <button id="filter-button-mobile"><i class="fas fa-filter"></i> Filter</button>
+            <button id="search-button-mobile"><i class="fas fa-search"></i> Search</button>
+            <button id="profile-button-mobile"><i class="fas fa-user-circle"></i> Profile</button>
+        </div>
+    </div>
+
 
     <script src="config.js" type="module"></script>
     <script src="api.js" type="module"></script>
     <script src="ui.js" type="module"></script>
     <script src="main.js" type="module"></script>
+
 </body>
 </html>
