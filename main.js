@@ -22,6 +22,9 @@ import {
     renderWatchlistOptionsInModal
 } from './ui.js';
 
+// Import constants from config.js
+import { TMDB_BACKDROP_BASE_URL } from './config.js';
+
 // Import auth-related functions from auth.js
 import { initAuthRefs, handleAuthStateChanged } from './SignIn/auth.js'; // Added handleAuthStateChanged
 
@@ -268,14 +271,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                         document.getElementById('trending-now-row').innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
                     }
 
-                    // Update hero section with the first trending item or a placeholder
+                    // Update the hero section with the first trending item or a placeholder
                     const heroSourceList = (filteredTrending.length > 0) ? filteredTrending : cachedTrendingMovies;
                     if (heroSourceList.length > 0) {
-                        updateHeroSection(heroSourceList[0], isLightMode); // Direct access via named import
+                        const heroItem = heroSourceList[0];
+                        const heroImageUrl = (typeof heroItem.backdrop_path === 'string' && heroItem.backdrop_path)
+                            ? `${TMDB_BACKDROP_BASE_URL}${heroItem.backdrop_path}`
+                            : '';
+                        const heroTitle = heroItem.title || heroItem.name || 'Featured Content';
+                        const heroOverview = heroItem.overview || 'No description available.';
+                        updateHeroSection(heroImageUrl, heroTitle, heroOverview);
                     } else {
-                        updateHeroSection(null, isLightMode); // Direct access via named import
+                        // Display a default hero state if no items are available
+                        updateHeroSection('', 'Content Not Available', 'Please check back later or try different filters.');
                     }
-
                     // Fetch trending TV shows if not cached (used for "Because You Watched...")
                     if (cachedRecommendedShows.length === 0) {
                         console.log("Fetching trending TV shows...");
@@ -1222,11 +1231,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
-
-// Example: When you want to set the hero image
-const heroItem = /* your featured movie/show object */;
-const heroImageUrl = (typeof heroItem.backdrop_path === 'string' && heroItem.backdrop_path)
-    ? `${TMDB_BACKDROP_BASE_URL}${heroItem.backdrop_path}`
-    : ''; // Empty string triggers fallback
-
-updateHeroSection(heroImageUrl, heroItem.title || heroItem.name, heroItem.overview);
