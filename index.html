@@ -116,14 +116,20 @@
         }
 
         header nav {
-            /* These styles are for the nav container itself */
-            /* Removed flex properties, now handled by dropdown classes */
-            font-size: 1.125rem; /* text-lg */
-            color: var(--text-secondary);
-            /* flex-wrap: wrap; */ /* No longer needed here as it's a vertical list */
-            display: none; /* Ensure original nav is hidden by default. Will be controlled by JS for dropdown */
-            gap: 0;
-            flex-wrap: nowrap;
+            /* Sidebar Styles */
+            position: fixed;
+            top: 0;
+            left: -280px; /* Start off-screen */
+            width: 280px;
+            height: 100%;
+            background-color: var(--card-bg); /* Or var(--bg-secondary) */
+            padding-top: 4rem; /* Space for header or close button */
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 1000; /* High z-index */
+            transition: left 0.3s ease-in-out;
+            display: flex; /* Use flex for vertical stacking of links */
+            flex-direction: column;
+            gap: 0.5rem; /* Gap between links */
         }
 
         header nav a {
@@ -132,14 +138,21 @@
             transition: color 0.2s ease-in-out; /* transition duration-200 ease-in-out */
         }
 
-        header nav a:hover {
-            color: var(--science-blue);
+        /* Sidebar open state */
+        header nav.sidebar-open {
+            left: 0; /* Slide in */
         }
 
-        header nav a.tab-link.active {
-            border-bottom: 2.5px solid var(--science-blue);
+        /* Styles for links within the sidebar */
+        header nav a {
+            padding: 0.75rem 1.5rem;
+            display: block;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        header nav a:hover {
             color: var(--science-blue);
-            font-weight: 600;
         }
 
         header .icon-buttons {
@@ -155,6 +168,15 @@
             border-radius: 9999px; /* rounded-full */
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; /* transition duration-200 */
             color: var(--icon-color-default-dark); /* Default icon color for dark mode */
+        }
+
+        /* Hamburger button specific style */
+        #sidebar-toggle-button {
+            /* display: none; /* Hidden by default, shown on smaller screens */
+            margin-right: 0.5rem; /* Space between hamburger and logo/tab name */
+        }
+        #sidebar-toggle-button i {
+            font-size: 1.25rem;
         }
 
         body.light-mode header .icon-buttons button {
@@ -263,6 +285,18 @@
             color: var(--text-primary);
             max-width: 32rem; /* max-w-lg */
         }
+        /* Span to display current tab name */
+        #current-tab-name-display {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 500; /* font-medium */
+            color: var(--text-secondary);
+            margin-left: 0.5rem; /* Space from logo */
+            transition: color 0.2s ease-in-out;
+        }
+        body.light-mode #current-tab-name-display {
+            color: var(--text-secondary);
+        }
+
 
         .hero-section h2 {
             font-size: 1.875rem; /* text-3xl */
@@ -860,7 +894,7 @@
         #explore-tab,
         #library-tab,
         #seen-tab,
-        #search-tab {
+        #search-tab { /* Watch-now tab doesn't need this as hero section handles spacing */
             padding-top: 4.5rem; /* Adjust this value as needed */
         }
 
@@ -869,7 +903,8 @@
             position: relative; /* For dropdown positioning */
             display: inline-block; /* Allows it to sit next to other header elements */
             z-index: 55; /* Ensure it's above other header elements */
-            margin-right: 1.5rem; /* Add some space if other header elements are on left */
+            /* margin-right: 1.5rem; /* Add some space if other header elements are on left */
+            /* No longer needed as it's part of the main flow now */
         }
 
         .nav-dropdown-button {
@@ -904,30 +939,18 @@
 
         /* Styles for the dropdown content (the actual navigation links) */
         .nav-dropdown-content {
-            display: none; /* Hidden by default, will be shown via JS */
-            position: absolute;
-            top: calc(100% + 5px); /* Position 5px below the button */
-            left: 0; /* Align with the left edge of the button */
-            background-color: var(--card-bg); /* Use card background for the dropdown */
-            min-width: 200px; /* Minimum width for the dropdown */
-            box-shadow: 0 8px 16px 0px rgba(0,0,0,0.2);
-            border-radius: 0.75rem; /* Rounded corners */
-            padding: 0.5rem 0;
-            z-index: 100; /* Ensure it's above other content */
+            /* These styles are now part of header nav for sidebar */
+        }
 
-            flex-direction: column; /* Stack links vertically */
-            gap: 0; /* No gap between links within the dropdown */
+        /* This class was for dropdown, sidebar uses .sidebar-open on nav element */
+        .nav-dropdown-content.show {
+            display: flex;
         }
 
         /* This targets the <a> tags within the .nav-dropdown-content */
         .nav-dropdown-content a {
             padding: 0.75rem 1rem; /* Padding for individual links */
-            text-decoration: none;
-            display: block; /* Make links full width */
-            color: var(--text-primary); /* Use primary text color */
-            font-size: 1rem; /* Slightly smaller than header nav for list look */
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-            white-space: nowrap; /* Prevent wrapping if text is long */
+            /* Styles moved to header nav a */
         }
 
         .nav-dropdown-content a:hover {
@@ -941,36 +964,43 @@
         /* Ensure active link styling within dropdown */
         .nav-dropdown-content a.active-nav-link {
             background-color: rgba(var(--science-blue-rgb, 0, 102, 204), 0.1); /* Subtle blue background for active */
-            color: var(--science-blue);
+            color: var(--science-blue) !important; /* Ensure active color overrides hover */
             font-weight: 600;
             border-bottom: none; /* Remove bottom border from original nav styling */
             border-radius: 0.5rem; /* Slightly rounded for individual items */
-            margin: 0 0.5rem; /* Little margin to look inset */
+            margin: 0 0.5rem; /* Little margin to look inset within sidebar */
+        }
+
+        /* Sidebar Overlay */
+        #sidebar-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+            z-index: 999; /* Below sidebar, above main content */
+            transition: opacity 0.3s ease-in-out;
+        }
+        #sidebar-overlay.active {
+            display: block;
+            opacity: 1;
         }
 
         /* Adjustments for different screen sizes */
-        @media (min-width: 640px) { /* On larger screens, the original horizontal nav was present */
-            header #header-main nav { /* The original horizontal nav should now be part of the dropdown */
-                display: none; /* Hide the old horizontal navigation */
-            }
-            .dropdown-nav-container {
-                display: inline-block; /* Make sure dropdown is visible on larger screens */
-            }
-        }
-        @media (max-width: 639px) { /* On smaller screens, header #header-main nav was full width below logo */
-            header #header-main nav { /* The original horizontal nav should now be part of the dropdown */
-                display: none; /* Hide the old horizontal navigation */
-            }
-            .dropdown-nav-container {
-                display: inline-block; /* Keep dropdown visible */
-            }
-        }
+        /* .dropdown-nav-container is no longer used for the main nav */
+        /* #sidebar-toggle-button will always be visible for sidebar functionality */
+
         /* Ensure icon-buttons align to the right of header */
         header {
             justify-content: space-between; /* Already set, but good to re-confirm */
         }
         header #header-main {
-            flex-grow: 1; /* Allow header-main to take available space */
+            /* flex-grow: 1; /* Allow header-main to take available space */
+            /* No longer needed, let space-between on header handle it */
+            display: flex; /* Ensure items inside align correctly */
+            align-items: center;
             justify-content: flex-start; /* Align logo and dropdown to start */
             gap: 1rem; /* Adjust gap if needed */
         }
@@ -982,20 +1012,19 @@
 <body>
     <header>
         <div id="header-main">
+            <button id="sidebar-toggle-button" class="icon-buttons" title="Toggle Navigation Menu">
+                <i class="fas fa-bars"></i>
+            </button>
             <h1 class="logo"><img src="Sad Face.png" alt="Sad Face Logo" style="height: 1.5em; vertical-align: middle;"></h1>
-            <div class="dropdown-nav-container">
-                <button id="nav-dropdown-toggle" class="nav-dropdown-button">
-                    Menu <i class="fas fa-chevron-down nav-arrow"></i>
-                </button>
-                <nav id="main-nav" class="nav-dropdown-content">
-                    <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
-                    <a href="#" class="tab-link" data-tab="explore-tab">Explore</a>
-                    <a href="#" class="tab-link" data-tab="library-tab">Library</a>
-                    <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
-                    <a href="#" class="tab-link" data-tab="search-tab">Search</a>
-                </nav>
-            </div>
+            <span id="current-tab-name-display">Watch TV+</span> <!-- To display current tab name -->
         </div>
+        <nav id="main-nav"> <!-- This is now the sidebar -->
+            <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
+            <a href="#" class="tab-link" data-tab="explore-tab">Explore</a>
+            <a href="#" class="tab-link" data-tab="library-tab">Library</a>
+            <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
+            <a href="#" class="tab-link" data-tab="search-tab">Search</a>
+        </nav>
         <div class="icon-buttons">
             <button id="theme-toggle" class="toggle-button" title="Toggle Dark/Light Mode">
                 <i class="fas fa-sun sun-icon"></i>
@@ -1030,6 +1059,8 @@
             </div>
         </div>
     </header>
+
+    <div id="sidebar-overlay"></div> <!-- Overlay for when sidebar is open -->
 
     <main>
         <section class="tab-content active-tab" id="watch-now-tab">

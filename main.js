@@ -70,6 +70,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterApplyBtn = document.getElementById('filter-apply-btn');
     const filterClearBtn = document.getElementById('filter-clear-btn');
     const body = document.body;
+    const sidebarToggleButton = document.getElementById('sidebar-toggle-button');
+    const currentTabNameDisplay = document.getElementById('current-tab-name-display');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
     const mainNav = document.getElementById('main-nav');
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
@@ -177,12 +180,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const activeTab = document.getElementById(tabId);
         if (activeTab) {
             activeTab.classList.add('active-tab');
+            // Update tab name display next to logo
+            const activeNavLinkForName = document.querySelector(`#main-nav a[data-tab="${tabId}"]`);
+            if (activeNavLinkForName) {
+                currentTabNameDisplay.textContent = activeNavLinkForName.textContent.trim();
+            }
         }
 
         // Update active navigation link styling
-        document.querySelectorAll('#main-nav a').forEach(link => {
-            link.classList.remove('active-nav-link');
-        });
+        mainNav.querySelectorAll('a.tab-link').forEach(link => link.classList.remove('active-nav-link'));
         const activeNavLink = document.querySelector(`#main-nav a[data-tab="${tabId}"]`);
         if (activeNavLink) {
             activeNavLink.classList.add('active-nav-link');
@@ -199,6 +205,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Re-populate content for the newly active tab
         populateCurrentTabContent();
+
+        // Close sidebar after tab selection
+        mainNav.classList.remove('sidebar-open');
+        sidebarOverlay.classList.remove('active');
     }
 
     /**
@@ -419,16 +429,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Event Listeners ---
 
-    // Navigation tab clicks
-    mainNav.querySelectorAll('a').forEach(link => {
+    // Sidebar Toggle Button
+    sidebarToggleButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        mainNav.classList.toggle('sidebar-open');
+        sidebarOverlay.classList.toggle('active');
+    });
+
+    // Sidebar Overlay Click to Close
+    sidebarOverlay.addEventListener('click', () => {
+        mainNav.classList.remove('sidebar-open');
+        sidebarOverlay.classList.remove('active');
+    });
+
+    // Sidebar Navigation tab clicks
+    mainNav.querySelectorAll('a.tab-link').forEach(link => {
         link.addEventListener('click', (event) => {
             event.preventDefault(); // Prevent default link behavior
-            const tabId = event.target.dataset.tab;
+            const tabId = link.dataset.tab; // Use link directly, not event.target
             if (tabId) {
                 switchTab(tabId); // Call switchTab function
             }
         });
     });
+
+    // Set initial tab name display
+    const initialActiveNavLink = mainNav.querySelector('a.tab-link.active-nav-link');
+    if (initialActiveNavLink) currentTabNameDisplay.textContent = initialActiveNavLink.textContent.trim();
+
 
     // Header search button click (also switches to search tab)
     const headerSearchButton = document.querySelector('.icon-buttons button[data-tab="search-tab"]');
