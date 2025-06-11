@@ -55,13 +55,14 @@ window.onload = async () => {
     }
 
     // --- Firebase Initialization and Auth Setup (Guaranteed availability with polling on window.onload) ---
-    // Poll for the presence of __firebase_config and __initial_auth_token
+    // Poll for Firebase configuration. __initial_auth_token may be absent when
+    // running outside of Canvas, so only wait for the config itself.
     const pollForFirebaseGlobals = setInterval(async () => {
-        if (typeof window.__firebase_config !== 'undefined' && typeof window.__initial_auth_token !== 'undefined') {
-            clearInterval(pollForFirebaseGlobals); // Stop polling once globals are found
+        if (typeof window.__firebase_config !== 'undefined' || typeof window.firebaseConfig !== 'undefined') {
+            clearInterval(pollForFirebaseGlobals); // Stop polling once config is available
             await initializeAndAuthFirebase();
         } else {
-            // console.warn("Firebase Canvas globals not yet available. Waiting on window.onload..."); // Keep commented to reduce noise
+            // console.warn("Firebase config not yet available. Waiting on window.onload..."); // Keep commented to reduce noise
         }
     }, 100); // Check every 100ms
 
