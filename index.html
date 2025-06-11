@@ -161,7 +161,7 @@
         }
 
         header .icon-buttons button {
-            background: none;
+            background-color: rgba(255, 255, 255, 0.05); /* Added subtle background for dark mode */
             border: none;
             cursor: pointer;
             padding: 0.5rem; /* p-2 */
@@ -182,6 +182,7 @@
 
         body.light-mode header .icon-buttons button {
              color: var(--icon-color-default-light); /* Default icon color for light mode */
+             background-color: rgba(0, 0, 0, 0.05); /* Added subtle background for light mode */
         }
 
         header .icon-buttons button:hover {
@@ -730,7 +731,7 @@
         #search-input:focus {
             outline: none;
             border-color: var(--science-blue);
-            box-shadow: 0 0 0 2px rgba(var(--science-blue-rgb, 0, 102, 204), 0.3); /* Science blue with opacity */
+            box-shadow: 0 0 0 2px rgba(var(--science-blue-rgb, 0, 102, 204), 0.3);
         }
         /* Apple-like Search Button Styles */
         #search-button {
