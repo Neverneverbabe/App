@@ -1,9 +1,9 @@
 // SignIn/firebase.js
 // Updated Firebase SDK imports to use CDN paths for browser compatibility
-import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
-import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js';
-import * as FirebaseAuthFunctions from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
-import * as FirebaseFirestoreFunctions from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+import { getAnalytics } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js';
+import * as FirebaseAuthFunctions from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+import * as FirebaseFirestoreFunctions from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
 
 let appInstance = null;
 let analyticsInstance = null;
