@@ -45,10 +45,9 @@ let authDropdownMenu;
  * Initializes references to UI elements and the custom alert function.
  * This function is called by main.js to provide auth.js with necessary external dependencies.
  * @param {object} elements - Object containing references to auth-related DOM elements (e.g., authDropdownMenu).
- * @param {object} _itemDetailsRef - Not directly used in auth.js, but kept for signature compatibility.
  * @param {function} showCustomAlertFn - The actual showCustomAlert function from ui.js.
  */
-export function initAuthRefs(elements, _itemDetailsRef, showCustomAlertFn) {
+export function initAuthRefs(elements, showCustomAlertFn) {
     authDropdownMenu = elements.authDropdownMenu;
     _showCustomAlert = showCustomAlertFn || console.log; // Assign the actual alert function
 }
@@ -62,22 +61,27 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
     if (!parentElement) return;
     parentElement.innerHTML = '';
 
+    const form = document.createElement('form');
+    form.addEventListener('submit', (e) => e.preventDefault()); // Prevent default form submission
+
     const instructionText = document.createElement('p');
     instructionText.className = 'text-sm text-gray-300 mb-3';
     instructionText.textContent = 'Sign in or sign up to manage watchlists:';
-    parentElement.appendChild(instructionText);
+    form.appendChild(instructionText);
 
     const emailField = document.createElement('input');
     emailField.type = 'email';
     emailField.placeholder = 'Email';
     emailField.className = 'auth-dropdown-input w-full mb-2';
-    parentElement.appendChild(emailField);
+    emailField.name = 'email'; // Good practice for forms
+    form.appendChild(emailField);
 
     const passwordField = document.createElement('input');
     passwordField.type = 'password';
     passwordField.placeholder = 'Password';
     passwordField.className = 'auth-dropdown-input w-full mb-3';
-    parentElement.appendChild(passwordField);
+    passwordField.name = 'password'; // Good practice for forms
+    form.appendChild(passwordField);
 
     const buttonContainer = document.createElement('div');
     buttonContainer.className = 'flex justify-between gap-2';
@@ -85,6 +89,7 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
     const signInButton = document.createElement('button');
     signInButton.textContent = 'Sign In';
     signInButton.className = 'auth-dropdown-button flex-grow';
+    signInButton.type = 'button'; // To prevent form submission if it was the first button
     signInButton.onclick = async () => {
         const email = emailField.value;
         const password = passwordField.value;
@@ -103,6 +108,7 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
     const signUpButton = document.createElement('button');
     signUpButton.textContent = 'Sign Up';
     signUpButton.className = 'auth-dropdown-button flex-grow';
+    signUpButton.type = 'button'; // To prevent form submission
     signUpButton.onclick = async () => {
         const email = emailField.value;
         const password = passwordField.value;
@@ -118,7 +124,8 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
         }
     };
     buttonContainer.appendChild(signUpButton);
-    parentElement.appendChild(buttonContainer);
+    form.appendChild(buttonContainer);
+    parentElement.appendChild(form);
 }
 
 export function updateAuthDropdownUI(user) {
