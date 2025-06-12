@@ -12,6 +12,7 @@ import * as ContentManager from './modules/contentManager.js';
 import * as SearchManager from './modules/search.js';
 import * as SeenItemsManager from './modules/seenItems.js';
 import * as LibraryManager from './modules/libraryManager.js';
+import * as TrackManager from './modules/track.js';
 
 // Import UI utility functions
 import {
@@ -187,6 +188,7 @@ window.onload = async () => {
                     isLightMode,
                     onCardClick // Pass onCardClick
                 );
+                TrackManager.initializeTrackListener(populateCurrentTabContent);
             } else {
                 console.log("Auth state changed: User signed out");
                 // Clear any local caches that depend on user being signed in
@@ -198,6 +200,7 @@ window.onload = async () => {
                     isLightMode,
                     onCardClick // Pass onCardClick
                 );
+                TrackManager.initializeTrackListener(populateCurrentTabContent);
             }
             populateCurrentTabContent();
         });
@@ -212,6 +215,7 @@ window.onload = async () => {
             isLightMode,
             onCardClick
         );
+        TrackManager.initializeTrackListener(populateCurrentTabContent);
 
         // Pre-load content caches for faster display
         await ContentManager.initializeContentCaches();
@@ -252,6 +256,9 @@ window.onload = async () => {
                 LibraryManager.addRemoveItemToFolder, // Pass the function
                 LibraryManager.createLibraryFolder // Pass the function
             );
+            if (type === 'tv') {
+                TrackManager.renderTrackSectionInModal(details);
+            }
         } catch (error) {
             console.error("Error fetching item details for modal:", error);
             showCustomAlert('Error', `Could not load item details. Error: ${error.message}`);
@@ -357,20 +364,6 @@ window.onload = async () => {
 
         try {
             switch (activeTabId) {
-                case 'watch-now-tab':
-                    await ContentManager.populateWatchNowTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
-                    break;
-                case 'explore-tab':
-                    await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
-                    break;
-                case 'library-tab':
-                    await LibraryManager.populateLibraryTab(SeenItemsManager.isItemSeen, isLightMode, onCardClick);
-                    break;
-                case 'seen-tab':
-                    SeenItemsManager.populateSeenTab(currentAgeRatingFilter, isLightMode, onCardClick);
-                    break;
-                case 'search-tab':
-                    SearchManager.populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 default:
                     console.log('Unknown tab:', activeTabId);
