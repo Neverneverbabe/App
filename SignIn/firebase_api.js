@@ -137,8 +137,8 @@ export function getCurrentUser() {
 function getUserCollectionRef(collectionName, userId) {
     const db = getFirestoreInstance();
     if (!db) throw new Error("Firestore is not initialized.");
-    // Path: /artifacts/{appId}/users/{userId}/{collectionName}
-    return firebaseFirestoreFunctions.collection(db, "artifacts", appId, "users", userId, collectionName);
+    // Path: /users/{userId}/{collectionName}
+    return firebaseFirestoreFunctions.collection(db, "users", userId, collectionName);
 }
 
 /**
