@@ -1,7 +1,7 @@
 // modules/seenItems.js
 
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
-import { showCustomAlert, updateSeenButtonStateInModal, showLoadingIndicator, hideLoadingIndicator } from '../ui.js';
+import { showCustomAlert, updateSeenButtonStateInModal, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
 
 // Local cache for user's seen items
 let localUserSeenItemsCache = [];
@@ -79,7 +79,7 @@ export async function toggleSeenStatus(itemDetails, itemType) {
         showLoadingIndicator('Updating seen status...');
         if (isCurrentlySeen) {
             await deleteUserData('seenItems', String(itemId));
-            showCustomAlert('Success', `"${itemDetails.title || itemDetails.name}" marked as unseen.`);
+            showToast(`"${itemDetails.title || itemDetails.name}" marked as unseen.`);
         } else {
             const seenItemData = {
                 type: itemType,
@@ -93,7 +93,7 @@ export async function toggleSeenStatus(itemDetails, itemType) {
                 addedAt: new Date().toISOString()
             };
             await saveUserData('seenItems', String(itemId), seenItemData);
-            showCustomAlert('Success', `"${itemDetails.title || itemDetails.name}" marked as seen.`);
+            showToast(`"${itemDetails.title || itemDetails.name}" marked as seen.`);
         }
     } catch (error) {
         console.error("Error toggling seen status in Firestore:", error);
