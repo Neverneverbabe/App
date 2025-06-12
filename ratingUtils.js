@@ -32,6 +32,12 @@ export function checkRatingCompatibility(itemCertification, filterCertifications
     if (!filterCertifications || filterCertifications.length === 0 || filterCertifications.includes("")) {
         return true;
     }
+    // If the certification is unknown, assume compatibility since some API
+    // responses (e.g., discover or search) do not include rating data even
+    // when a certification filter was applied at the request level.
+    if (itemCertification === 'N/A') {
+        return true;
+    }
     // Check if the item's certification is present in the list of selected filters
     return filterCertifications.includes(itemCertification);
 }
