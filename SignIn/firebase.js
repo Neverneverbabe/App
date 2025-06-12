@@ -1,10 +1,12 @@
 // SignIn/firebase.js
 // Updated Firebase SDK imports to use CDN paths for browser compatibility
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
+import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js';
 import * as FirebaseAuthFunctions from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
 import * as FirebaseFirestoreFunctions from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
 
 let appInstance = null;
+let analyticsInstance = null;
 let authInstance = null;
 let dbInstance = null;
 
@@ -28,8 +30,9 @@ export function initializeFirebaseServices(config) {
 
     authInstance = FirebaseAuthFunctions.getAuth(appInstance);
     dbInstance = FirebaseFirestoreFunctions.getFirestore(appInstance);
+    analyticsInstance = getAnalytics(appInstance); // Initialize Analytics
 
-    console.log("Firebase services initialized.");
+    console.log("Firebase services (App, Auth, Firestore, Analytics) initialized.");
 }
 
 // Export getters for the initialized instances
@@ -39,6 +42,10 @@ export function getFirebaseAuth() {
 
 export function getFirebaseFirestore() {
     return dbInstance;
+}
+
+export function getFirebaseAnalytics() {
+    return analyticsInstance;
 }
 
 // Re-export specific Firebase functions for convenience
