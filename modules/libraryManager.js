@@ -168,11 +168,17 @@ export async function addRemoveItemToFolder(folderId, itemDetails, itemType) {
             showCustomAlert('Success', `Added "${normalizedItem.title}" to "${targetWatchlist.name}".`);
         }
 
-        // Save the updated items array back to Firestore
-        await saveUserData('watchlists', folderId, { name: targetWatchlist.name, items: itemsArray });
+        // Update the local cache immediately so UI reflects the change
+        targetWatchlist.items = itemsArray;
 
-        // The real-time listener will update firestoreWatchlistsCache automatically
-        // and trigger the necessary UI re-renders.
+        // Save the updated items array back to Firestore
+        await saveUserData('watchlists', folderId, {
+            name: targetWatchlist.name,
+            items: itemsArray
+        });
+
+        // The real-time listener will also update firestoreWatchlistsCache,
+        // but we update the local object first to avoid dropdown flicker.
     } catch (error) {
         console.error('Error updating watchlist folder:', error);
         showCustomAlert('Error', `Failed to update watchlist: ${error.message}`);
