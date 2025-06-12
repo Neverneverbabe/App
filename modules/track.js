@@ -77,6 +77,7 @@ export function renderTrackSectionInModal(showDetails) {
             <input type="number" id="track-season-input" placeholder="Season" min="1" style="width:60px" value="${seasonVal}">
             <input type="number" id="track-episode-input" placeholder="Episode" min="1" style="width:70px" value="${episodeVal}">
             <button id="track-save-btn" style="padding:0.3em 0.8em;">Save</button>
+            ${tracked ? '<button id="track-remove-btn" style="padding:0.3em 0.8em;">Remove</button>' : ''}
         </div>
     `;
     document.getElementById('track-save-btn').onclick = async () => {
@@ -84,6 +85,11 @@ export function renderTrackSectionInModal(showDetails) {
         const e = parseInt(document.getElementById('track-episode-input').value) || 1;
         await addOrUpdateTrackedShow(showDetails, s, e);
     };
+    if (tracked) {
+        document.getElementById('track-remove-btn').onclick = async () => {
+            await removeTrackedShow(showDetails.id);
+        };
+    }
 }
 
 export function populateTrackTab(isLightMode, onCardClick) {
