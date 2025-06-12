@@ -1,7 +1,7 @@
 // modules/libraryManager.js
 
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
-import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator } from '../ui.js';
+import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
 import { createContentCardHtml } from '../ui.js'; // Import directly from ui.js
 
 // Local cache for user's watchlists
@@ -141,7 +141,6 @@ export async function addRemoveItemToFolder(folderId, itemDetails, itemType) {
     }
 
     try {
-        showLoadingIndicator('Updating watchlist...');
 
         // Find the target watchlist in the current cache
         const targetWatchlist = firestoreWatchlistsCache.find(wl => wl.id === folderId);
@@ -162,10 +161,10 @@ export async function addRemoveItemToFolder(folderId, itemDetails, itemType) {
 
         if (existingIndex > -1) {
             itemsArray.splice(existingIndex, 1);
-            showCustomAlert('Success', `Removed "${normalizedItem.title}" from "${targetWatchlist.name}".`);
+            showToast(`Removed "${normalizedItem.title}" from "${targetWatchlist.name}"`);
         } else {
             itemsArray.push(normalizedItem);
-            showCustomAlert('Success', `Added "${normalizedItem.title}" to "${targetWatchlist.name}".`);
+            showToast(`Added "${normalizedItem.title}" to "${targetWatchlist.name}"`);
         }
 
         // Update the local cache immediately so UI reflects the change
@@ -182,8 +181,6 @@ export async function addRemoveItemToFolder(folderId, itemDetails, itemType) {
     } catch (error) {
         console.error('Error updating watchlist folder:', error);
         showCustomAlert('Error', `Failed to update watchlist: ${error.message}`);
-    } finally {
-        hideLoadingIndicator();
     }
 }
 

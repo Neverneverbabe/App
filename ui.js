@@ -558,3 +558,32 @@ export function updateThemeDependentElements(isLightMode) {
         }
     });
 }
+
+// --- Toast Notification ---
+const toastContainer = document.createElement('div');
+toastContainer.id = 'toast-container';
+toastContainer.style.position = 'fixed';
+toastContainer.style.bottom = '20px';
+toastContainer.style.left = '50%';
+toastContainer.style.transform = 'translateX(-50%)';
+toastContainer.style.zIndex = '1000';
+document.body.appendChild(toastContainer);
+
+/**
+ * Shows a temporary toast notification.
+ * @param {string} message - Message to display.
+ * @param {number} [duration=2000] - Duration in ms.
+ */
+export function showToast(message, duration = 2000) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.background = 'rgba(0, 0, 0, 0.85)';
+    toast.style.color = '#fff';
+    toast.style.padding = '0.5rem 1rem';
+    toast.style.marginTop = '0.5rem';
+    toast.style.borderRadius = '4px';
+    toast.style.fontSize = '0.9rem';
+    toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+}
