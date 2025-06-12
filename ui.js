@@ -1,6 +1,7 @@
 // App/ui.js
 import { TMDB_IMG_BASE_URL, TMDB_BACKDROP_BASE_URL, VIDSRC_PROVIDERS } from './config.js';
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
+import { getWatchlistsCache } from './modules/libraryManager.js';
 
 // --- Global DOM References ---
 const itemDetailModal = document.getElementById('item-detail-modal');
@@ -400,6 +401,9 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
     const currentItemId = currentItemDetails.id;
     const currentItemType = currentItemDetails.media_type || (currentItemDetails.title ? 'movie' : 'tv');
 
+    // Ensure we always start with the most up-to-date watchlist cache
+    watchlistsCache = getWatchlistsCache();
+
     /**
      * Determines which folders the current item is in.
      * @returns {string[]} An array of folder IDs that contain the current item.
@@ -416,6 +420,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
      * Updates the HTML display of the dropdown list and the selected text based on current item's watchlist status.
      */
     function updateDropdownDisplay() {
+        watchlistsCache = getWatchlistsCache(); // Ensure we have the latest cache
         currentlySelectedWatchlistIds = getFoldersContainingCurrentItem(); // Refresh selection status
         const allWatchlists = watchlistsCache || [];
 
