@@ -36,6 +36,7 @@ export async function initializeContentCaches() {
 /**
  * Populates the content of the 'Watch Now' tab.
  * @param {string[]} currentAgeRatingFilter - Array of selected age rating filters.
+ * @param {string} currentTypeFilter - Selected media type ('movie', 'tv' or '').
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
@@ -119,6 +120,7 @@ export async function populateWatchNowTab(currentAgeRatingFilter, isLightMode, o
 /**
  * Populates the content of the 'Explore' tab.
  * @param {string[]} currentAgeRatingFilter - Array of selected age rating filters.
+ * @param {string} currentTypeFilter - Selected media type ('movie', 'tv' or '').
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
@@ -149,11 +151,12 @@ export async function populateExploreTab(currentAgeRatingFilter, currentTypeFilt
 /**
  * Loads more items for the Explore tab using infinite scrolling.
  * @param {string[]} currentAgeRatingFilter - Array of selected age rating filters.
+ * @param {string} currentTypeFilter - Selected media type ('movie', 'tv' or '').
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function loadMoreExploreItems(currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function loadMoreExploreItems(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick, isItemSeenFn) {
     if (exploreIsLoading || !exploreHasMore) return;
 
     exploreIsLoading = true;
