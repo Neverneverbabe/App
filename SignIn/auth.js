@@ -74,6 +74,7 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
     emailField.placeholder = 'Email';
     emailField.className = 'auth-dropdown-input w-full mb-2';
     emailField.name = 'email'; // Good practice for forms
+    emailField.autocomplete = 'email';
     form.appendChild(emailField);
 
     const passwordField = document.createElement('input');
@@ -81,6 +82,7 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
     passwordField.placeholder = 'Password';
     passwordField.className = 'auth-dropdown-input w-full mb-3';
     passwordField.name = 'password'; // Good practice for forms
+    passwordField.autocomplete = 'current-password';
     form.appendChild(passwordField);
 
     const buttonContainer = document.createElement('div');
