@@ -393,10 +393,10 @@ export function updateSeenButtonStateInModal(itemId, itemType, isItemSeenFn) {
  */
 export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCache, addRemoveItemToFolderFn, createLibraryFolderFn) {
     const dropdownContainerModal = document.getElementById('add-to-folder-dropdown-modal');
-    const dropdownSelectedTextModal = document.getElementById('dropdown-selected-text-modal');
-    const dropdownListModal = document.getElementById('dropdown-list-modal');
+    let dropdownSelectedTextModal = document.getElementById('dropdown-selected-text-modal');
+    let dropdownListModal = document.getElementById('dropdown-list-modal');
     const dropdownFooterModal = document.getElementById('dropdown-footer-modal');
-    const addNewFolderBtnModal = document.getElementById('add-new-folder-btn-modal');
+    let addNewFolderBtnModal = document.getElementById('add-new-folder-btn-modal');
     const currentItemId = currentItemDetails.id;
     const currentItemType = currentItemDetails.media_type || (currentItemDetails.title ? 'movie' : 'tv');
 
@@ -443,7 +443,8 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
     // Remove existing listeners to prevent duplicates before adding new ones
     const oldDropdownSelectedTextModal = dropdownSelectedTextModal.cloneNode(true);
     dropdownSelectedTextModal.parentNode.replaceChild(oldDropdownSelectedTextModal, dropdownSelectedTextModal);
-    const newDropdownSelectedTextModal = oldDropdownSelectedTextModal;
+    dropdownSelectedTextModal = oldDropdownSelectedTextModal;
+    const newDropdownSelectedTextModal = dropdownSelectedTextModal;
 
     newDropdownSelectedTextModal.onclick = (event) => {
         event.stopPropagation();
@@ -459,7 +460,8 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
     // Remove existing listener for dropdown list to prevent duplicates
     const oldDropdownListModal = dropdownListModal.cloneNode(true);
     dropdownListModal.parentNode.replaceChild(oldDropdownListModal, dropdownListModal);
-    const newDropdownListModal = oldDropdownListModal;
+    dropdownListModal = oldDropdownListModal;
+    const newDropdownListModal = dropdownListModal;
 
     newDropdownListModal.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -476,7 +478,8 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
     // Remove existing listener for add new folder button to prevent duplicates
     const oldAddNewFolderBtnModal = addNewFolderBtnModal.cloneNode(true);
     addNewFolderBtnModal.parentNode.replaceChild(oldAddNewFolderBtnModal, addNewFolderBtnModal);
-    const newAddNewFolderBtnModal = oldAddNewFolderBtnModal;
+    addNewFolderBtnModal = oldAddNewFolderBtnModal;
+    const newAddNewFolderBtnModal = addNewFolderBtnModal;
 
     newAddNewFolderBtnModal.addEventListener('click', async (e) => {
         e.stopPropagation();
