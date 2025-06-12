@@ -63,3 +63,29 @@ export async function fetchDiscoveredItems(mediaType, certificationFilters = [],
     const data = await response.json();
     return data.results || [];
 }
+
+/**
+ * Fetch discovered items until at least a desired number of results are gathered.
+ * This is useful when filters reduce the amount of content returned by a single page.
+ * @param {'movie'|'tv'} mediaType
+ * @param {string[]} certificationFilters
+ * @param {number} desiredCount - Minimum number of items desired.
+ * @param {number} [startPage=1] - Page number to start fetching from.
+ * @returns {Promise<{items: Array, pagesFetched: number}>}
+ */
+export async function fetchEnoughDiscoveredItems(mediaType, certificationFilters = [], desiredCount = 20, startPage = 1) {
+    let results = [];
+    let page = startPage;
+    let pagesFetched = 0;
+
+    while (results.length < desiredCount) {
+        const items = await fetchDiscoveredItems(mediaType, certificationFilters, page);
+        if (items.length === 0) break;
+        results = results.concat(items);
+        if (items.length < 20) break; // Reached end of available items
+        page++;
+        pagesFetched++;
+    }
+
+    return { items: results.slice(0, desiredCount), pagesFetched: pagesFetched || 1 };
+}

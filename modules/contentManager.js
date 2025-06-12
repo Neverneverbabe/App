@@ -1,7 +1,7 @@
 // modules/contentManager.js
 
 // Imports necessary functions from the API and utilities
-import { fetchTrendingItems, fetchDiscoveredItems } from '../api.js';
+import { fetchTrendingItems, fetchDiscoveredItems, fetchEnoughDiscoveredItems } from '../api.js';
 import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, displayContentRow, appendItemsToGrid, updateHeroSection } from '../ui.js';
 import { TMDB_BACKDROP_BASE_URL } from '../config.js';
@@ -63,9 +63,13 @@ export async function populateWatchNowTab(currentAgeRatingFilter, isLightMode, o
 
     if (currentAgeRatingFilter.length > 0) {
         try {
-            trendingSource = await fetchDiscoveredItems('movie', currentAgeRatingFilter, 1);
-            recommendedSource = await fetchDiscoveredItems('tv', currentAgeRatingFilter, 1);
-            newReleaseSource = await fetchDiscoveredItems('movie', currentAgeRatingFilter, 1);
+            const desiredCount = cachedTrendingMovies.length || 20;
+            const trendingData = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount);
+            trendingSource = trendingData.items;
+            const recommendedData = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, desiredCount);
+            recommendedSource = recommendedData.items;
+            const newReleaseData = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount);
+            newReleaseSource = newReleaseData.items;
         } catch (err) {
             console.error('Error fetching filtered watch now content:', err);
         }
@@ -155,17 +159,18 @@ export async function loadMoreExploreItems(currentAgeRatingFilter, isLightMode, 
     const exploreGridContainer = document.getElementById('explore-grid-container');
 
     try {
-        const items = await fetchDiscoveredItems('movie', currentAgeRatingFilter, exploreCurrentPage);
-        cachedExploreItems = cachedExploreItems.concat(items);
+        const desiredCount = 20;
+        const { items: newItems, pagesFetched } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount, exploreCurrentPage);
+        cachedExploreItems = cachedExploreItems.concat(newItems);
 
-        if (items.length > 0) {
+        if (newItems.length > 0) {
             const itemsToDisplay = currentAgeRatingFilter.length > 0
-                ? items.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter))
-                : items; // Only display newly fetched items, filtering them if needed.
+                ? newItems.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter))
+                : newItems;
 
             appendItemsToGrid(exploreGridContainer, itemsToDisplay, isLightMode, onCardClick, isItemSeenFn);
-            exploreCurrentPage++;
-            if (items.length < 20) { // Assuming 20 items per page from TMDB discover API
+            exploreCurrentPage += pagesFetched;
+            if (newItems.length < desiredCount) {
                 exploreHasMore = false;
             }
         } else {
