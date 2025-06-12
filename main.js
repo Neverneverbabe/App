@@ -115,7 +115,7 @@ window.onload = async () => {
                 console.log("Auth state changed: User signed out");
                 localUserSeenItemsCache = [];
                 firestoreWatchlistsCache = [];
-                window.firestoreWatchlistsCache = [];
+                window.firestoreWatchlistsCache = []; // Ensure global cache is also cleared on sign out
             }
             populateCurrentTabContent();
         });
@@ -213,7 +213,7 @@ window.onload = async () => {
     // Initialize auth.js with necessary UI elements and the showCustomAlert function from ui.js
     initAuthRefs({
         authDropdownMenu: profileDropdown,
-    }, null, showCustomAlert);
+    }, showCustomAlert);
 
     // Set the current year in the footer dynamically
     document.getElementById('current-year').textContent = new Date().getFullYear();
@@ -1193,8 +1193,8 @@ window.onload = async () => {
                     ...wl,
                     items: Array.isArray(wl.items) ? wl.items : []
                 }));
-                console.log("Initial load: User watchlists from Firestore:", firestoreWatchlistsCache);
-                window.firestoreWatchlistsCache = firestoreWatchlistsCache;
+                window.firestoreWatchlistsCache = firestoreWatchlistsCache; // Make cache globally available if ui.js relies on it
+                console.log("Initial load: User watchlists from Firestore:", firestoreWatchlistsCache); 
 
                 if (document.getElementById('library-tab').classList.contains('active-tab')) {
                     await renderLibraryFolderCards();
@@ -1205,11 +1205,9 @@ window.onload = async () => {
             } catch (error) {
                 console.error("Error loading watchlists from Firestore:", error);
                 firestoreWatchlistsCache = [];
-                window.firestoreWatchlistsCache = [];
             }
         } else {
             firestoreWatchlistsCache = [];
-            window.firestoreWatchlistsCache = [];
         }
     }
 
@@ -1386,7 +1384,6 @@ window.onload = async () => {
 
                 librarySelectedFolderMoviesRow.appendChild(movieCardElement);
             });
-            window.attachSeenToggleListenersToCards(librarySelectedFolderMoviesRow);
         }
     }
 };
