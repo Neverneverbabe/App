@@ -13,7 +13,8 @@ let cachedNewReleaseMovies = [];
 let cachedExploreItems = [];
 
 // State variables for infinite scrolling in the explore tab
-let exploreCurrentPage = 1;
+let exploreMoviePage = 1;
+let exploreTvPage = 1;
 let exploreIsLoading = false;
 let exploreHasMore = true;
 
@@ -125,8 +126,8 @@ export async function populateWatchNowTab(currentAgeRatingFilter, isLightMode, o
  */
 export async function populateExploreTab(currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
     const exploreGrid = document.getElementById('explore-grid-container');
-    if (exploreCurrentPage === 1 && exploreGrid.innerHTML.trim() === "") {
-        exploreGrid.innerHTML = '<p class="loading-message">Loading movies for you...</p>';
+    if (exploreMoviePage === 1 && exploreTvPage === 1 && exploreGrid.innerHTML.trim() === "") {
+        exploreGrid.innerHTML = '<p class="loading-message">Loading movies and shows for you...</p>';
         exploreHasMore = true;
         exploreIsLoading = false;
         await loadMoreExploreItems(currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
@@ -160,7 +161,13 @@ export async function loadMoreExploreItems(currentAgeRatingFilter, isLightMode, 
 
     try {
         const desiredCount = 20;
-        const { items: newItems, pagesFetched } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount, exploreCurrentPage);
+        const movieCount = Math.ceil(desiredCount / 2);
+        const tvCount = desiredCount - movieCount;
+
+        const { items: movieItems, pagesFetched: moviePages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, movieCount, exploreMoviePage);
+        const { items: tvItems, pagesFetched: tvPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, tvCount, exploreTvPage);
+
+        const newItems = movieItems.concat(tvItems).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
         cachedExploreItems = cachedExploreItems.concat(newItems);
 
         if (newItems.length > 0) {
@@ -169,8 +176,9 @@ export async function loadMoreExploreItems(currentAgeRatingFilter, isLightMode, 
                 : newItems;
 
             appendItemsToGrid(exploreGridContainer, itemsToDisplay, isLightMode, onCardClick, isItemSeenFn);
-            exploreCurrentPage += pagesFetched;
-            if (newItems.length < desiredCount) {
+            exploreMoviePage += moviePages;
+            exploreTvPage += tvPages;
+            if (movieItems.length < movieCount && tvItems.length < tvCount) {
                 exploreHasMore = false;
             }
         } else {
@@ -189,7 +197,8 @@ export async function loadMoreExploreItems(currentAgeRatingFilter, isLightMode, 
  * Resets the explore tab's pagination and cache.
  */
 export function resetExploreState() {
-    exploreCurrentPage = 1;
+    exploreMoviePage = 1;
+    exploreTvPage = 1;
     exploreIsLoading = false;
     exploreHasMore = true;
     cachedExploreItems = [];
