@@ -56,16 +56,31 @@ export async function populateWatchNowTab(currentAgeRatingFilter, isLightMode, o
         return items.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
     };
 
+    // When filters are applied, fetch new content that respects the rating
+    let trendingSource = cachedTrendingMovies;
+    let recommendedSource = cachedRecommendedShows;
+    let newReleaseSource = cachedNewReleaseMovies;
+
+    if (currentAgeRatingFilter.length > 0) {
+        try {
+            trendingSource = await fetchDiscoveredItems('movie', currentAgeRatingFilter, 1);
+            recommendedSource = await fetchDiscoveredItems('tv', currentAgeRatingFilter, 1);
+            newReleaseSource = await fetchDiscoveredItems('movie', currentAgeRatingFilter, 1);
+        } catch (err) {
+            console.error('Error fetching filtered watch now content:', err);
+        }
+    }
+
     try {
         // Trending Movies
-        const filteredTrending = filterItems(cachedTrendingMovies);
+        const filteredTrending = filterItems(trendingSource);
         displayContentRow('trending-now-row', filteredTrending, isLightMode, onCardClick, isItemSeenFn);
         if (filteredTrending.length === 0 && currentAgeRatingFilter.length > 0) {
             trendingNowRow.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
         }
 
         // Update Hero Section with the first trending item
-        const heroSourceList = (filteredTrending.length > 0) ? filteredTrending : cachedTrendingMovies;
+        const heroSourceList = (filteredTrending.length > 0) ? filteredTrending : trendingSource;
         if (heroSourceList.length > 0) {
             const heroItem = heroSourceList[0];
             const heroImageUrl = (typeof heroItem.backdrop_path === 'string' && heroItem.backdrop_path)
@@ -79,14 +94,14 @@ export async function populateWatchNowTab(currentAgeRatingFilter, isLightMode, o
         }
 
         // Recommended TV Shows
-        const filteredRecommended = filterItems(cachedRecommendedShows);
+        const filteredRecommended = filterItems(recommendedSource);
         displayContentRow('recommended-row', filteredRecommended, isLightMode, onCardClick, isItemSeenFn);
         if (filteredRecommended.length === 0 && currentAgeRatingFilter.length > 0) {
             recommendedRow.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
         }
 
         // New Releases (Daily Trending Movies)
-        const filteredNewReleases = filterItems(cachedNewReleaseMovies);
+        const filteredNewReleases = filterItems(newReleaseSource);
         displayContentRow('new-releases-row', filteredNewReleases, isLightMode, onCardClick, isItemSeenFn);
         if (filteredNewReleases.length === 0 && currentAgeRatingFilter.length > 0) {
             newReleasesRow.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
