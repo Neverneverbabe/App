@@ -348,6 +348,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
             <p style="margin-bottom: 0.5rem; font-size: 1rem; line-height: 1.5;"><strong>Genres:</strong> ${genres}</p>
             ${imdbLinkHtml}
             ${streamingLinksHtml}
+            ${itemType === 'tv' ? '<div id="track-progress-container" style="margin-top:1rem;"></div>' : ''}
         </div>
     </div>
     `;
