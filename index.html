@@ -726,6 +726,18 @@
             background: #e0e8f0; /* Lighter selected background for light mode */
             color: var(--science-blue);
         }
+        /* Selected style for filter modal items */
+        .dropdown-list .dropdown-item.item-selected {
+            background: var(--dropdown-hover, #2a2a2e);
+            color: var(--science-blue);
+        }
+        .dropdown-list .dropdown-item.item-selected .checkmark {
+            opacity: 1;
+        }
+        .light-mode .dropdown-list .dropdown-item.item-selected {
+            background: #e0e8f0;
+            color: var(--science-blue);
+        }
         /* Style for filter button when a filter is active */
         .icon-buttons #filter-button.filter-active i {
             color: var(--science-blue); /* Highlight icon when filter is active */
