@@ -123,6 +123,41 @@ window.onload = async () => {
         // Initial content population if already authenticated (e.g., after a quick reload)
         // or if a user was previously signed in.
         populateCurrentTabContent();
+
+        setupDelegatedSeenToggleListener();
+    }
+
+    /**
+     * Sets up a delegated event listener for seen toggle icons on content cards.
+     * This listener is attached to the body and handles clicks on '.seen-toggle-icon'.
+     */
+    function setupDelegatedSeenToggleListener() {
+        document.body.addEventListener('click', async (event) => {
+            const seenToggleIcon = event.target.closest('.seen-toggle-icon');
+            if (seenToggleIcon) {
+                event.stopPropagation(); // Prevent card click if the icon itself was clicked
+                const card = seenToggleIcon.closest('.content-card');
+                if (!card) return;
+
+                const itemId = parseInt(card.dataset.id);
+                const itemType = card.dataset.type;
+
+                if (isNaN(itemId) || !itemType) return;
+
+                try {
+                    // Fetch details as toggleSeenStatus expects the full itemDetails object
+                    const details = await fetchItemDetails(itemId, itemType);
+                    await toggleSeenStatus(details, itemType); // toggleSeenStatus is globally available
+
+                    const newSeenStatus = isItemSeen(itemId, itemType);
+                    seenToggleIcon.classList.toggle('item-is-seen', newSeenStatus);
+                    seenToggleIcon.title = newSeenStatus ? 'Mark as Unseen' : 'Mark as Seen';
+                } catch (error) {
+                    console.error("Error handling seen toggle on card (delegated):", error);
+                    showCustomAlert('Error', `Could not update seen status: ${error.message}`);
+                }
+            }
+        });
     }
 
     // --- DOM Element References (rest of window.onload) ---
@@ -265,35 +300,6 @@ window.onload = async () => {
     }
 
     /**
-     * Attaches event listeners to the seen toggle icons on all content cards within a given container.
-     * @param {HTMLElement} containerElement - The DOM element whose children contain content cards.
-     */
-    window.attachSeenToggleListenersToCards = (containerElement) => {
-        containerElement.querySelectorAll('.seen-toggle-icon').forEach(icon => {
-            const newIcon = icon.cloneNode(true);
-            icon.parentNode.replaceChild(newIcon, icon);
-
-            newIcon.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const card = newIcon.closest('.content-card');
-                const itemId = parseInt(card.dataset.id);
-                const itemType = card.dataset.type;
-
-                try {
-                    const details = await fetchItemDetails(itemId, itemType);
-                    await toggleSeenStatus(details, itemType);
-                    const newSeenStatus = isItemSeen(itemId, itemType);
-                    newIcon.classList.toggle('item-is-seen', newSeenStatus);
-                    newIcon.title = newSeenStatus ? 'Mark as Unseen' : 'Mark as Seen';
-                } catch (error) {
-                    console.error("Error fetching details for seen toggle on card:", error);
-                    showCustomAlert('Error', `Could not update seen status: ${error.message}`);
-                }
-            });
-        });
-    };
-
-    /**
      * Populates the content of the currently active tab.
      */
     async function populateCurrentTabContent() {
@@ -363,10 +369,6 @@ window.onload = async () => {
                     if (filteredNewReleases.length === 0 && currentAgeRatingFilter.length > 0) {
                         document.getElementById('new-releases-row').innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
                     }
-
-                    window.attachSeenToggleListenersToCards(document.getElementById('trending-now-row'));
-                    window.attachSeenToggleListenersToCards(document.getElementById('recommended-row'));
-                    window.attachSeenToggleListenersToCards(document.getElementById('new-releases-row'));
                     break;
 
                 case 'explore-tab':
@@ -416,7 +418,6 @@ window.onload = async () => {
                                 gridContainer.innerHTML += createContentCardHtml(displayItem, isLightMode, isItemSeen);
                             });
                             seenContentDiv.appendChild(gridContainer);
-                            window.attachSeenToggleListenersToCards(gridContainer);
                         }
                     }
                     break;

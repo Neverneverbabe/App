@@ -5,19 +5,18 @@
  * @returns {string} The certification string (e.g., 'PG-13', 'TV-MA') or 'N/A'.
  */
 export function getCertification(item) {
-    // For movies, check release_dates
-    if (item.release_dates && item.release_dates.results) {
-        const usRelease = item.release_dates.results.find(r => r.iso_3166_1 === 'US');
-        if (usRelease && usRelease.release_dates) {
-            const certification = usRelease.release_dates.find(rd => rd.certification)?.certification;
-            if (certification) return certification;
-        }
-    }
-    // For TV shows, check content_ratings
-    if (item.content_ratings && item.content_ratings.results) {
-        const usRating = item.content_ratings.results.find(r => r.iso_3166_1 === 'US');
-        if (usRating && usRating.rating) return usRating.rating;
-    }
+    // For movies
+    const movieCert = item.release_dates?.results
+        ?.find(r => r.iso_3166_1 === 'US')
+        ?.release_dates?.find(rd => rd.certification)?.certification;
+    if (movieCert) return movieCert;
+
+    // For TV shows
+    const tvCert = item.content_ratings?.results
+        ?.find(r => r.iso_3166_1 === 'US')
+        ?.rating;
+    if (tvCert) return tvCert;
+
     return 'N/A';
 }
 

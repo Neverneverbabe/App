@@ -198,10 +198,6 @@ export function displayContentRow(elementId, items, isLightMode, onCardClick, is
     } else {
         rowElement.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No content found in this category.</p>`;
     }
-
-    if (window.attachSeenToggleListenersToCards) {
-        window.attachSeenToggleListenersToCards(rowElement);
-    }
 }
 
 /**
@@ -238,7 +234,6 @@ export function appendItemsToGrid(gridElement, items, isLightMode, onCardClick, 
                 gridElement.appendChild(cardElement);
             }
         });
-        if (window.attachSeenToggleListenersToCards) window.attachSeenToggleListenersToCards(gridElement);
     } else if (gridElement.children.length === 0) {
         gridElement.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No more content to load.</p>`;
     }
@@ -282,7 +277,6 @@ export function displaySearchResults(elementId, results, isLightMode, onCardClic
         });
         if (grid.children.length > 0) {
             container.appendChild(grid);
-            if (window.attachSeenToggleListenersToCards) window.attachSeenToggleListenersToCards(grid);
         } else {
             container.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No movies or TV shows found matching your criteria.</p>`;
         }

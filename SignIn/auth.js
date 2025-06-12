@@ -9,7 +9,7 @@ let _showCustomAlert = console.log; // Default to console.log as a fallback if n
 
 // Global variable to hold the current authenticated user's ID
 let currentUserId = null;
-let firebaseAuthInstance = null; // Will be set by canvasSignIn
+// let firebaseAuthInstance = null; // No longer needed globally here
 
 /**
  * Signs in with a custom token if available. If no token is provided,
@@ -23,11 +23,11 @@ export async function canvasSignIn(authInstanceParam, initialAuthToken) {
         console.error("Firebase Auth instance is not provided to canvasSignIn. Cannot perform sign-in.");
         return;
     }
-    firebaseAuthInstance = authInstanceParam; // Store the instance for later use by other functions
+    // firebaseAuthInstance = authInstanceParam; // Not needed if only used here
 
     try {
         if (initialAuthToken && typeof initialAuthToken === 'string') {
-            await firebaseAuthFunctions.signInWithCustomToken(firebaseAuthInstance, initialAuthToken);
+            await firebaseAuthFunctions.signInWithCustomToken(authInstanceParam, initialAuthToken);
             console.log("Signed in with custom token.");
         } else {
             console.log("No custom auth token provided; skipping automatic sign-in.");
