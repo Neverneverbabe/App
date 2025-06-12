@@ -12,7 +12,7 @@ export async function fetchTrendingItems(mediaType = 'movie', timeWindow = 'week
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch trending items');
     const data = await response.json();
-    return data.results || [];
+    return (data.results || []).map(item => ({ ...item, media_type: mediaType }));
 }
 
 /**
@@ -39,7 +39,7 @@ export async function fetchSearchResults(query, type = 'multi') {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch search results');
     const data = await response.json();
-    return data.results || [];
+    return (data.results || []).map(item => ({ ...item, media_type: item.media_type || (type !== 'multi' ? type : (item.title ? 'movie' : 'tv')) }));
 }
 
 /**
@@ -61,7 +61,7 @@ export async function fetchDiscoveredItems(mediaType, certificationFilters = [],
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to fetch discovered ${mediaType} items`);
     const data = await response.json();
-    return data.results || [];
+    return (data.results || []).map(item => ({ ...item, media_type: mediaType }));
 }
 
 /**

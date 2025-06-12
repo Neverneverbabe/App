@@ -21,7 +21,7 @@ const SEARCH_DEBOUNCE_DELAY = 500;
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function performSearch(query, reRenderOnly, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function performSearch(query, reRenderOnly, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
     const searchResultsContainer = document.getElementById('search-results-container');
 
     if (!reRenderOnly && query.length < 3) {
@@ -31,9 +31,13 @@ export async function performSearch(query, reRenderOnly, currentAgeRatingFilter,
     }
 
     if (reRenderOnly && cachedSearchResults.length > 0) {
-        const filteredResults = currentAgeRatingFilter.length > 0
-            ? cachedSearchResults.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter))
-            : cachedSearchResults;
+        let filteredResults = cachedSearchResults;
+        if (currentMediaTypeFilter) {
+            filteredResults = filteredResults.filter(item => (item.media_type || (item.title ? 'movie' : 'tv')) === currentMediaTypeFilter);
+        }
+        if (currentAgeRatingFilter.length > 0) {
+            filteredResults = filteredResults.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+        }
         displaySearchResults('search-results-container', filteredResults, isLightMode, onCardClick, isItemSeenFn);
         if (filteredResults.length === 0 && currentAgeRatingFilter.length > 0) {
             searchResultsContainer.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items from your search matched the selected filter.</p>`;
@@ -43,12 +47,17 @@ export async function performSearch(query, reRenderOnly, currentAgeRatingFilter,
         searchResultsContainer.innerHTML = `<p class="loading-message">Searching for "${query}"...</p>`;
         try {
             showLoadingIndicator('Searching...');
-            const results = await fetchSearchResults(query, 'multi');
+            const searchType = currentMediaTypeFilter === '' ? 'multi' : currentMediaTypeFilter;
+            const results = await fetchSearchResults(query, searchType);
             cachedSearchResults = results;
 
-            const filteredResults = currentAgeRatingFilter.length > 0
-                ? cachedSearchResults.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter))
-                : cachedSearchResults;
+            let filteredResults = cachedSearchResults;
+            if (currentMediaTypeFilter) {
+                filteredResults = filteredResults.filter(item => (item.media_type || (item.title ? 'movie' : 'tv')) === currentMediaTypeFilter);
+            }
+            if (currentAgeRatingFilter.length > 0) {
+                filteredResults = filteredResults.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+            }
 
             displaySearchResults('search-results-container', filteredResults, isLightMode, onCardClick, isItemSeenFn);
             if (filteredResults.length === 0 && currentAgeRatingFilter.length > 0) {
@@ -73,12 +82,12 @@ export async function performSearch(query, reRenderOnly, currentAgeRatingFilter,
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export function setupSearchListeners(searchInput, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export function setupSearchListeners(searchInput, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
     // Debounce search input to avoid excessive API calls
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(() => {
-            performSearch(searchInput.value.trim(), false, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+            performSearch(searchInput.value.trim(), false, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
         }, SEARCH_DEBOUNCE_DELAY);
     });
 
@@ -87,7 +96,7 @@ export function setupSearchListeners(searchInput, currentAgeRatingFilter, isLigh
     if (searchButton) {
         searchButton.addEventListener('click', () => {
             clearTimeout(searchTimer);
-            performSearch(searchInput.value.trim(), false, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+            performSearch(searchInput.value.trim(), false, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
         });
     }
 }
@@ -99,10 +108,10 @@ export function setupSearchListeners(searchInput, currentAgeRatingFilter, isLigh
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export function populateSearchTab(currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export function populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
     const searchInput = document.getElementById('search-input');
     if (searchInput.value.trim().length >= 3 && cachedSearchResults.length > 0) {
-        performSearch(searchInput.value.trim(), true, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+        performSearch(searchInput.value.trim(), true, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
     } else {
         const searchResultsContainer = document.getElementById('search-results-container');
         searchResultsContainer.innerHTML = `<p style="color: var(--text-secondary);">Start typing to find movies and TV shows!</p>`;
