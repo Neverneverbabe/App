@@ -772,6 +772,14 @@
         .filter-action-button.apply {
             background: var(--science-blue); color: white; border-color: var(--science-blue);
         }
+        .filter-section {
+            margin-bottom: 1rem;
+        }
+        .filter-section-title {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
         /* Apple-like Search Input Styles */
         #search-input {
             width: 100%;
@@ -1376,8 +1384,17 @@
         <div class="item-detail-modal-content" style="max-width: 350px; padding: 1.5rem;">
             <button class="close-button" aria-label="Close">&times;</button>
             <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">Filter Content</h2>
-            <div id="filter-options-items-container-modal" class="dropdown-list hide-scrollbar" style="position: static; max-height: 250px; overflow-y: auto; border: none; box-shadow: none;">
-                <!-- Filter options will be rendered here by JavaScript -->
+            <div class="filter-section">
+                <h3 class="filter-section-title">Media Type</h3>
+                <div id="filter-media-type-container" class="dropdown-list hide-scrollbar" style="position: static; max-height: 120px; overflow-y: auto; border: none; box-shadow: none;">
+                    <!-- Media type options rendered by JavaScript -->
+                </div>
+            </div>
+            <div class="filter-section">
+                <h3 class="filter-section-title">Age Rating</h3>
+                <div id="filter-options-items-container-modal" class="dropdown-list hide-scrollbar" style="position: static; max-height: 250px; overflow-y: auto; border: none; box-shadow: none;">
+                    <!-- Age rating options rendered here -->
+                </div>
             </div>
             <div class="filter-dropdown-footer" style="border-radius: 0.75rem;">
                 <button id="filter-clear-btn-modal" class="filter-action-button">Clear</button>
