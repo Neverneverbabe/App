@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch TV - Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        /* Custom CSS Variables for Colors (Apple Palette) */
+        :root {
+            --science-blue: #0066CC;
+            --science-blue-rgb: 0, 102, 204; /* Added RGB version for rgba() */
+            --shark: #1D1D1F;
+            --athens-gray: #F5F5F7;
+            --white: #FFFFFF;
+            --black: #000000;
+
+            /* Default (Dark Mode) colors */
+            --bg-primary: var(--shark);
+            --bg-secondary: #0a0a0a; /* Slightly darker than shark for contrast */
+            --text-primary: var(--white);
+            --text-secondary: #e0e0e0;
+            --icon-color-default-dark: #999999; /* Adjusted: Darker for better blending in dark mode */
+            --header-icon-color-dark: var(--white); /* White for clear visibility */
+            --card-bg: #2d2d2d;
+            --gradient-start: #6b21a8; /* purple-800 */
+            --gradient-end: #3730a3; /* indigo-900 */
+            --header-footer-bg-dark-rgb: 13, 13, 13; /* RGB for #0d0d0d */
+            --header-footer-bg: rgba(var(--header-footer-bg-dark-rgb), 0.9);
+            /* Input specific variables for dark mode */
+            --input-bg-color: var(--card-bg); /* #2d2d2d */
+            --input-border-color: #454545; /* Subtle dark border */
+        }
+
+        /* Light Mode Variables - Overrides defaults when .light-mode is active */
+        body.light-mode {
+            --bg-primary: var(--athens-gray);
+            --bg-secondary: #f0f0f0;
+            --text-primary: var(--black);
+            --text-secondary: #4a4a4a;
+            --icon-color-default-light: #505050; /* Slightly darker for default visibility */
+            --header-icon-color-light: var(--black); /* Black for clear visibility */
+            --card-bg: #e0e0e0;
+            --gradient-start: #bfdbfe; /* blue-200 */
+            --gradient-end: #818cf8; /* indigo-400 */
+            --header-footer-bg-light-rgb: 253, 253, 253; /* RGB for #fdfdfd */
+            --header-footer-bg: rgba(var(--header-footer-bg-light-rgb), 0.9);
+            /* Input specific variables for light mode */
+            --input-bg-color: var(--white);
+            --input-border-color: #D1D1D6; /* Apple light gray border */
+        }
+
+        /* Base styles */
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hide scrollbars for Webkit browsers (Chrome, Safari) */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbars for Firefox */
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Header Styles */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            /* Place header below the sidebar overlay */
+            z-index: 1048;
+            padding: 1rem 1rem; /* p-4 */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+            background-color: var(--header-footer-bg); /* Use the single variable */
+            backdrop-filter: blur(8px); /* backdrop-blur-md */
+            color: var(--text-primary);
+        }
+
+        /* Fixed top bar wrapper */
+        #top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;             /* or matching header height */
+            z-index: 999;
+            background-color: var(--header-footer-bg);
+        }
+        #main-content { padding-top: 56px; }
+
+        /* Container for logo and navigation */
+        header #header-main {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 640px) {
+            header #header-main nav {
+                width: 100%;
+                order: 2;
+                margin-top: 0.5rem;
+            }
+        }
+
+
+        header .logo {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            color: var(--text-primary);
+            letter-spacing: 0.025em; /* tracking-wide */
+        }
+
+        /* Updated styles for #main-nav (left sidebar) */
+        #main-nav {
+            /* Sidebar Styles */
+            position: fixed;
+            display: flex; /* Keep sidebar rendered */
+            visibility: hidden;
+            pointer-events: none;
+            top: 0;
+            left: 0; /* Initial position for transform */
+            width: 280px; /* Consistent width */
+            height: 100vh; /* Full viewport height */
+            background-color: var(--card-bg); /* Or var(--bg-secondary) */
+            padding: 1rem; /* Changed from padding-top: 4rem */
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4); /* Updated shadow */
+            z-index: 1050;
+            transform: translateX(-100%); /* Start off-screen */
+            transition: transform 0.3s ease-in-out; /* Only transition transform */
+            flex-direction: column;
+            gap: 1rem; /* Adjusted gap */
+        }
+
+        /* Sidebar open state */
+        #main-nav.sidebar-open {
+            transform: translateX(0); /* Slide in */
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        /* Styles for links within the sidebar */
+        #main-nav a {
+            background-color: #3a3a3a; /* Match example */
+            padding: 0.75rem 1rem; /* Adjusted padding */
+            border-radius: 10px; /* Rounded corners for links */
+            font-size: 1rem; /* Adjusted font size */
+            color: #fff; /* Match example */
+            text-decoration: none;
+            display: flex; /* For icon alignment if added later */
+            align-items: center; /* For icon alignment */
+            transition: background-color 0.2s ease-in-out;
+            width: 100%; /* Ensure full width for consistent background */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        #main-nav a:hover {
+            background-color: rgba(255, 255, 255, 0.1); /* Match example hover */
+            color: var(--science-blue); /* Accent color for text on hover */
+        }
+
+        header .icon-buttons {
+            display: flex;
+            gap: 1rem; /* space-x-4 */
+        }
+
+        header .icon-buttons button {
+            background-color: var(--card-bg); /* Default background for icon buttons */
+            border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle border for dark mode */
+            cursor: pointer;
+            padding: 0.75rem; /* Consistent padding for a better touch target */
+            border-radius: 9999px; /* rounded-full */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            color: var(--text-primary); /* Icon color for visibility against card-bg */
+        }
+
+        /* Hamburger button specific style */
+        #sidebar-toggle-button {
+            background-color: var(--card-bg); /* Set specific background for the button */
+            border-radius: 8px; /* Adjusted: Square-ish rounded corners */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for dark mode */
+            margin-right: 0.5rem; /* Space between hamburger and logo/tab name */
+            padding: 0.75rem; /* Adjusted padding here */
+            color: var(--white); /* Set icon color to white for dark mode */
+        }
+        #sidebar-toggle-button i {
+            font-size: 1.5rem; /* Adjusted font size here */
+        }
+
+        body.light-mode #sidebar-toggle-button {
+             background-color: var(--card-bg); /* Use light mode card background */
+             border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border for light mode */
+             color: var(--black); /* Set icon color to black for light mode */
+        }
+
+        body.light-mode header .icon-buttons button {
+             color: var(--icon-color-default-light); /* Default icon color for light mode */
+             /* background-color: rgba(0, 0, 0, 0.05); Removed from here, specific to #sidebar-toggle-button */
+        }
+
+        header .icon-buttons button:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Increased opacity for hover background */
+            color: var(--science-blue) !important; /* Force science-blue color on hover */
+        }
+        body.light-mode header .icon-buttons button:hover {
+            background-color: rgba(0, 0, 0, 0.2); /* Increased opacity for hover background */
+        }
+
+        /* Profile Dropdown Styles (New) */
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 5px); /* Position below the button */
+            right: 0;
+            background-color: var(--card-bg); /* Use a suitable background */
+            border-radius: 0.75rem; /* rounded-lg */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            padding: 0.5rem 0;
+            min-width: 180px;
+            z-index: 100; /* Ensure it's above other header elements */
+            display: none; /* Hidden by default */
+            animation: fadeInDropdown 0.2s ease-out forwards;
+        }
+        .profile-dropdown.show {
+            display: block;
+        }
+
+        @keyframes fadeInDropdown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-dropdown p {
+            padding: 0.5rem 1rem;
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--card-bg); /* Subtle separator */
+        }
+        .profile-dropdown p:last-of-type {
+            border-bottom: none;
+        }
+        .profile-dropdown button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border-radius: 0; /* No border-radius on individual items */
+        }
+        .profile-dropdown button:hover {
+            background-color: rgba(var(--text-primary-rgb, 255, 255, 255), 0.1); /* Subtle hover */
+            color: var(--text-primary);
+        }
+        .light-mode .profile-dropdown button:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+
+        /* Main Content Area */
+        main {
+            flex-grow: 1; /* Allow main content to take available space */
+            padding-top: 0; /* top padding handled by #main-content */
+            padding-bottom: 2rem; /* pb-8 */
+            padding-left: 1rem; /* px-4 */
+            padding-right: 1rem;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 20rem; /* h-80 */
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end; /* items-end */
+            padding: 1.5rem; /* p-6 */
+            margin-bottom: 3rem; /* mb-12 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            background: linear-gradient(to bottom right, var(--gradient-start), var(--gradient-end)); /* dynamic gradient */
+        }
+
+        .hero-section img {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            opacity: 0.7;
+        }
+
+        .hero-section .content {
+            position: relative;
+            z-index: 10;
+            color: var(--text-primary);
+            max-width: 32rem; /* max-w-lg */
+        }
+        /* Span to display current tab name */
+        #current-tab-name-display {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 500; /* font-medium */
+            color: var(--text-secondary);
+            margin-left: 0.5rem; /* Space from logo */
+            transition: color 0.2s ease-in-out;
+        }
+        body.light-mode #current-tab-name-display {
+            color: var(--text-secondary);
+        }
+
+
+        .hero-section h2 {
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 800; /* font-extrabold */
+            margin-bottom: 0.5rem; /* mb-2 */
+            line-height: 1.25; /* leading-tight */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* drop-shadow-lg */
+        }
+
+        .hero-section p {
+            font-size: 1.125rem; /* text-lg */
+            margin-bottom: 1rem; /* mb-4 */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* drop-shadow-md */
+            display: none; /* hidden by default, shown on sm screens */
+        }
+
+        .hero-section button {
+            background-color: var(--black);
+            color: var(--white);
+            font-weight: 600; /* font-semibold */
+            padding: 0.5rem 1.5rem; /* py-2 px-6 */
+            border-radius: 9999px; /* rounded-full */
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* transition duration-300 ease-in-out transform */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+        }
+
+        .hero-section button:hover {
+            background-color: #222; /* Darker black on hover */
+            transform: scale(1.05);
+        }
+
+        /* Item Detail Modal (New Section) */
+        .item-detail-modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto; /* Allow scrolling for content */
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .item-detail-modal-content {
+            background-color: var(--bg-primary);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 100vw;
+            max-height: 100vh;
+            width: 95%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeInModal 0.3s forwards;
+            color: var(--text-primary);
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInModal {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .item-detail-modal-content .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .item-detail-modal-content .close-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        body.light-mode .item-detail-modal-content .close-button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+
+        .item-detail-modal-content h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .item-detail-modal-content .details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .item-detail-modal-content .details-grid .poster {
+            width: 100%;
+            max-width: 300px; /* Limit poster width */
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin: 0 auto; /* Center poster on smaller screens */
+        }
+
+        .item-detail-modal-content .details-info p {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        .item-detail-modal-content .details-info strong {
+            color: var(--text-primary);
+        }
+
+        .item-detail-modal-content .details-info .streaming-links a {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--science-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .item-detail-modal-content .details-info .streaming-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Content Rows */
+        .content-section {
+            margin-bottom: 2.5rem; /* mb-10 */
+        }
+
+        .content-section h3 {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            margin-bottom: 1.25rem; /* mb-5 */
+            color: var(--text-primary);
+        }
+
+        .content-row {
+            display: flex;
+            overflow-x: auto;
+            gap: 1rem; /* space-x-4 */
+            padding-bottom: 1rem; /* pb-4 */
+        }
+
+        /* Content Card */
+        .content-card {
+            flex-shrink: 0;
+            width: 10rem; /* w-40 */
+            transition: transform 0.3s ease-in-out; /* transform hover:scale-105 transition duration-300 ease-in-out */
+            cursor: pointer;
+            /* Added for consistent background with item detail modal */
+            background-color: var(--bg-primary); /* Use primary background for consistent look */
+            border-radius: 0.5rem; /* inherited from image-container */
+        }
+
+        .content-card:hover {
+            transform: scale(1.05);
+        }
+
+        .content-card .image-container {
+            position: relative;
+            width: 100%;
+            height: 14rem; /* h-56 */
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            background-color: var(--card-bg);
+        }
+
+        .content-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s ease-in-out; /* group-hover:opacity-80 transition duration-300 ease-in-out */
+        }
+
+        .content-card:hover img {
+            opacity: 0.8;
+        }
+
+        .content-card .overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0); /* bg-black bg-opacity-0 */
+            transition: background-color 0.3s ease-in-out; /* group-hover:bg-opacity-20 transition-opacity duration-300 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content-card:hover .overlay {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .content-card svg {
+            height: 2.5rem; /* h-10 */
+            width: 2.5rem; /* w-10 */
+            color: var(--white);
+            opacity: 0; /* opacity-0 */
+            transition: opacity 0.3s ease-in-out; /* group-hover:opacity-100 transition-opacity duration-300 */
+        }
+
+        .content-card:hover svg {
+            opacity: 1;
+        }
+        /* Seen Toggle Icon on Card */
+        .seen-toggle-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background-color: var(--card-bg); /* Matches page background initially */
+            border: 2px solid var(--white);    /* White circle border */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5; /* Above the overlay's play icon */
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .seen-toggle-icon i { /* Font Awesome check icon */
+            color: var(--white);
+            font-size: 14px;
+        }
+        .seen-toggle-icon.item-is-seen {
+            background-color: #28a745; /* Green background when seen */
+            border-color: #28a745; /* Green border to match */
+        }
+
+        .content-card p {
+            margin-top: 0.75rem; /* mt-3 */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            color: var(--text-secondary);
+            text-align: center;
+            white-space: nowrap; /* truncate */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Footer */
+        footer {
+            padding: 1.5rem; /* p-6 */
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+            background-color: var(--header-footer-bg);
+            backdrop-filter: blur(4px); /* backdrop-blur-sm */
+            color: var(--text-secondary);
+            margin-top: auto; /* Push footer to bottom */
+        }
+
+
+        footer div {
+            margin-top: 0.5rem; /* mt-2 */
+            display: flex;
+            justify-content: center;
+            gap: 1rem; /* space-x-4 */
+        }
+
+        footer a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.2s ease-in-out; /* transition duration-200 */
+        }
+
+        footer a:hover {
+            color: var(--science-blue);
+        }
+
+        /* Apple-style dropdown for folders with theme support */
+        .apple-dropdown {
+            position: relative;
+            width: 220px;
+            font-family: inherit;
+            user-select: none;
+        }
+        .dropdown-selected {
+            background: var(--dropdown-bg, #232326);
+            border-radius: 14px;
+            padding: 0.7em 1em;
+            border: 1px solid var(--border-color, #333);
+            color: var(--text-primary, #fff);
+            font-weight: 500;
+            cursor: pointer;
+            transition: border 0.2s;
+            box-shadow: 0 1px 3px rgba(60,60,67,0.03);
+        }
+        .dropdown-selected:after {
+            content: '';
+            margin-top: 0.4em;
+            border: solid #888;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 3px;
+            transform: rotate(45deg);
+            float: none;
+            /* Optionally, add margin-left: auto; if using flexbox on parent */
+        }
+        .dropdown-list {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            right: 0;
+            background: var(--dropdown-bg, #232326);
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(60,60,67,0.08);
+            border: 1px solid var(--border-color, #333);
+            z-index: 10;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 4px;
+        }
+        .dropdown-list .dropdown-item {
+            padding: 0.7em 1em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            color: var(--text-primary, #fff);
+            transition: background 0.15s;
+            border-radius: 8px;
+        }
+        .dropdown-list .dropdown-item:hover {
+            background: var(--dropdown-hover, #2a2a2e);
+        }
+        .dropdown-list .dropdown-item.selected {
+            color: #0071e3;
+            font-weight: 600;
+            background: #1a2636;
+        }
+        .dropdown-list .dropdown-item .checkmark {
+            margin-left: auto;
+            font-size: 1.1em;
+            color: #0071e3;
+            opacity: 1;
+            transition: opacity 0.2s;
+        }
+        .dropdown-list .dropdown-item:not(.selected) .checkmark {
+            opacity: 0;
+        }
+        .dropdown-footer {
+            border-top: 1px solid var(--border-color, #333);
+            background: var(--dropdown-bg, #232326);
+        }
+        .light-mode .dropdown-selected,
+        .light-mode .dropdown-list,
+        .light-mode .dropdown-footer {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            border-color: #d1d1d6;
+        }
+        .light-mode .dropdown-list .dropdown-item {
+            color: #1d1d1f;
+        }
+        .light-mode .dropdown-list .dropdown-item.selected {
+            background: #eaf6ff;
+            color: #0071e3;
+        }
+        .light-mode .dropdown-list .dropdown-item:hover {
+            background: #f0f0f5;
+        }
+        /* Styles for selected items in multi-select dropdown */
+        .apple-dropdown .dropdown-list .dropdown-item.item-selected {
+            background: var(--dropdown-hover, #2a2a2e); /* Use hover color or a specific selected color */
+            color: var(--science-blue); /* Highlight selected text */
+        }
+        .apple-dropdown .dropdown-list .dropdown-item.item-selected .checkmark {
+            opacity: 1;
+        }
+        .light-mode .apple-dropdown .dropdown-list .dropdown-item.item-selected {
+            background: #e0e8f0; /* Lighter selected background for light mode */
+            color: var(--science-blue);
+        }
+        /* Style for filter button when a filter is active */
+        .icon-buttons #filter-button.filter-active i {
+            color: var(--science-blue); /* Highlight icon when filter is active */
+        }
+        /* Positioning for the filter dropdown (deprecated for modal) */
+        /*
+        #filter-options-list {
+            position: absolute;
+            top: calc(100% + 5px);
+            right: 0;
+            width: 180px;
+            z-index: 1050;
+        }
+        */
+        .filter-dropdown-footer {
+            padding: 0.5em 1em;
+            border-top: 1px solid var(--border-color, #333);
+            display: flex;
+            justify-content: space-between;
+            background: var(--dropdown-bg, #232326); /* Match dropdown background */
+        }
+        .filter-action-button {
+            background: none; border: 1px solid var(--text-secondary); color: var(--text-secondary);
+            padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.9em; cursor: pointer;
+        }
+        .filter-action-button.apply {
+            background: var(--science-blue); color: white; border-color: var(--science-blue);
+        }
+        /* Apple-like Search Input Styles */
+        #search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.75em 1em;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--card-bg); /* Use card background for consistency */
+            color: var(--text-primary);
+            border: 1px solid var(--border-color, #333); /* Use dropdown border color or similar */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            margin-bottom: 1rem;
+        }
+        #search-input:focus {
+            outline: none;
+            border-color: var(--science-blue);
+            box-shadow: 0 0 0 2px rgba(var(--science-blue-rgb, 0, 102, 204), 0.3);
+        }
+        /* Apple-like Search Button Styles */
+        #search-button {
+            padding: 0.75em 1.5em; /* Match input padding vertically, more horizontally */
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            background-color: var(--black); /* Changed from --science-blue */
+            color: var(--white);
+            border: 1px solid var(--black); /* Changed from --science-blue */
+            border-radius: 10px; /* Match input border-radius */
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            margin-bottom: 1rem; /* Keep existing margin */
+        }
+        #search-button:hover {
+            background-color: #222; /* Darker shade of black for hover */
+            border-color: #222; /* Darker shade of black for hover */
+        }
+        /* Search Results Grid Styles */
+        .search-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); /* Responsive grid columns */
+            gap: 1rem; /* Spacing between cards */
+            padding-top: 1rem; /* Add some padding above the grid */
+        }
+        @media (min-width: 768px) { /* md: equivalent */
+            .search-results-grid { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+        }
+        /* Sign-In Modal Styles */
+        /* Changed to combine sign-in/sign-up forms */
+        .auth-form-container {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* Space between form groups */
+        }
+
+        .auth-form-group {
+            margin-bottom: 1rem;
+        }
+
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .auth-form-group input {
+            width: 100%;
+            padding: 0.75em 1em;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--input-bg-color);
+            color: var(--text-primary);
+            border: 1px solid var(--input-border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .auth-form-group input:focus {
+            outline: none;
+            border-color: var(--science-blue);
+            box-shadow: 0 0 0 2px rgba(var(--science-blue-rgb, 0, 102, 204), 0.3);
+        }
+
+        .auth-switch-link {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+        .auth-switch-link:hover {
+            color: var(--science-blue);
+        }
+
+        .auth-submit-button {
+            width: 100%;
+            padding: 0.75em 1.5em;
+            margin-top: 1.5rem;
+            background-color: var(--black);
+            color: var(--white);
+            border: 1px solid var(--black);
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .auth-submit-button:hover {
+            background-color: #222;
+            border-color: #222;
+        }
+
+        /* Seen Action Button in Modal */
+        .seen-action-button {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .seen-action-button.is-seen {
+            background-color: var(--science-blue);
+            color: var(--white);
+            border-color: var(--science-blue);
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (min-width: 768px) { /* md: equivalent */
+            header {
+                padding-left: 2rem; /* px-8 */
+                padding-right: 2rem;
+            }
+            main {
+                padding-left: 2rem; /* px-8 */
+                padding-right: 2rem;
+            }
+            .hero-section {
+                height: 24rem; /* md:h-96 */
+            }
+            .hero-section h2 {
+                font-size: 3rem; /* md:text-5xl */
+            }
+            .hero-section p {
+                display: block; /* sm:block */
+            }
+            .content-section h3 {
+                font-size: 1.875rem; /* md:text-3xl */
+            }
+            .content-card {
+                width: 13rem; /* md:w-52 */
+            }
+            .content-card .image-container {
+                height: 18rem; /* md:h-72 */
+            }
+            .item-detail-modal-content .details-grid {
+                grid-template-columns: 300px 1fr; /* Two columns for larger screens */
+            }
+        }
+
+        @media (min-width: 1024px) { /* lg: equivalent */
+            .hero-section {
+                height: 31.25rem; /* lg:h-[500px] */
+            }
+            .content-card {
+                width: 16rem; /* lg:w-64 */
+            }
+            .content-card .image-container {
+                height: 20rem; /* lg:h-80 */
+            }
+        }
+
+        /* Tab Content Styles */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active-tab {
+            display: block;
+        }
+        /* Add top padding to specific tabs to clear the fixed header */
+        #explore-tab,
+        #library-tab,
+        #seen-tab,
+        #search-tab { /* Watch-now tab doesn't need this as hero section handles spacing */
+            padding-top: 4.5rem; /* Adjust this value as needed */
+        }
+
+        /* NEW: Styles for the dropdown navigation container and trigger */
+        .dropdown-nav-container {
+            position: relative; /* For dropdown positioning */
+            display: inline-block; /* Allows it to sit next to other header elements */
+            z-index: 55; /* Ensure it's above other header elements */
+            /* margin-right: 1.5rem; /* Add some space if other header elements are on left */
+            /* No longer needed as it's part of the main flow now */
+        }
+
+        .nav-dropdown-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem; /* text-lg, consistent with original nav */
+            color: var(--text-secondary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            display: flex; /* To align text and arrow */
+            align-items: center;
+            gap: 0.5rem; /* Space between text and arrow */
+        }
+
+        .nav-dropdown-button:hover {
+            color: var(--science-blue);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        body.light-mode .nav-dropdown-button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-arrow {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .nav-dropdown-button.active .nav-arrow {
+            transform: rotate(180deg); /* Rotate arrow when dropdown is open */
+        }
+
+        /* Styles for the dropdown content (the actual navigation links) */
+        /* This class was for dropdown, sidebar uses .sidebar-open on nav element */
+        .nav-dropdown-content.show {
+            display: flex;
+        }
+
+        /* This targets the <a> tags within the .nav-dropdown-content */
+        .nav-dropdown-content a {
+            padding: 0.75rem 1rem; /* Padding for individual links */
+            /* Styles moved to header nav a */
+        }
+
+        .nav-dropdown-content a:hover {
+            background-color: rgba(var(--text-primary-rgb, 255, 255, 255), 0.1); /* Subtle hover effect */
+            color: var(--science-blue);
+        }
+        body.light-mode .nav-dropdown-content a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Ensure active link styling within sidebar (was .nav-dropdown-content) */
+        #main-nav a.active-nav-link {
+            background-color: rgba(255, 255, 255, 0.08); /* Adjusted: Neutral, less transparent background for active state */
+            color: var(--science-blue) !important; /* Ensure active color overrides hover */
+            font-weight: 600;
+            border-bottom: none; /* Remove bottom border from original nav styling */
+            border-radius: 0.5rem; /* Slightly rounded for individual items */
+            /* Removed margin: 0 0.5rem; to ensure full-width highlight */
+        }
+
+        body.light-mode .nav-dropdown-content a.active-nav-link {
+            background-color: rgba(0, 0, 0, 0.08); /* Active link background in light mode */
+        }
+
+        /* Sidebar Overlay */
+        #sidebar-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+            z-index: 1049; /* Below sidebars, above header and content */
+        }
+        #sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Adjustments for different screen sizes */
+        /* .dropdown-nav-container is no longer used for the main nav */
+        /* #sidebar-toggle-button will always be visible for sidebar functionality */
+
+        /* Ensure icon-buttons align to the right of header */
+        header {
+            justify-content: space-between; /* Already set, but good to re-confirm */
+        }
+        header #header-main {
+            /* flex-grow: 1; /* Allow header-main to take available space */
+            /* No longer needed, let space-between on header handle it */
+            display: flex; /* Ensure items inside align correctly */
+            align-items: center;
+            justify-content: flex-start; /* Align logo and dropdown to start */
+            gap: 1rem; /* Adjust gap if needed */
+        }
+        .icon-buttons {
+            flex-shrink: 0; /* Prevent icon buttons from shrinking */
+        }
+        /* Bonus Fix: Ensure header children can shrink and truncate */
+        header * {
+            flex-shrink: 1; /* Allow children to shrink if needed */
+            min-width: 0;   /* Allow children to shrink below their content size */
+        }
+
+        /* Styles for smaller devices (e.g., mobile phones) - Replaced 480px with 600px */
+        @media (max-width: 600px) {
+            header {
+                height: 60px; /* Lock top bar height */
+                flex-wrap: nowrap; /* Removed !important, ensure specificity handles it */
+                overflow: hidden;
+                padding: 0 1rem; /* Add horizontal padding */
+                align-items: center;
+                justify-content: space-between;
+                /* white-space: nowrap; /* Removed, handled by children if needed */
+            }
+
+            #header-main {
+                flex: 1;
+                flex-wrap: nowrap !important;
+                align-items: center;
+                gap: 0.5rem;
+                overflow: hidden;
+            }
+
+            #current-tab-name-display {
+                /* Styles for current-tab-name-display might need adjustment
+                   if it's too long and causes overflow with the new fixed header.
+                   Consider hiding or truncating it further if needed. */
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap; /* Added to make ellipsis work */
+                max-width: 100px; /* Or adjust */
+                display: inline-block; /* Necessary for text-overflow to work with width */
+            }
+
+            .icon-buttons { /* This targets the container for theme, filter, search, profile */
+                display: none; /* Hides filter, theme, search, profile icons */
+            }
+
+            #secondary-sidebar-button { /* For a potential future right-side drawer button */
+                display: inline-flex !important; /* Ensure it's visible, overriding .icon-buttons display:none */
+                background: none;
+                border: none;
+                font-size: 1.25rem;
+                color: var(--text-primary);
+                align-items: center;
+                justify-content: center;
+                padding: 0.75rem;
+            }
+            /* Ensure children of header can shrink on small screens */
+            header * {
+                min-width: 0;
+                flex-shrink: 1;
+            }
+        }
+
+        /* Secondary Sidebar Styles */
+        .secondary-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%; /* Start off-screen */
+            width: 240px;
+            height: 100%;
+            background-color: var(--card-bg);
+            z-index: 1100; /* Higher than primary sidebar and overlay */
+            padding: 1rem;
+            transition: right 0.3s ease-in-out;
+            box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .secondary-sidebar.open {
+            right: 0; /* Slide in */
+        }
+
+        .close-secondary-sidebar {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            margin-bottom: 1rem;
+            float: right;
+        }
+
+        .secondary-sidebar-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem; /* Space below close button */
+        }
+
+        .secondary-sidebar-content button {
+            background: none;
+            border: 1px solid var(--input-border-color);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            text-align: left; /* Ensure text aligns left */
+        }
+
+        .secondary-sidebar-content button i {
+            width: 20px; /* Give icons a fixed width for alignment */
+            text-align: center;
+        }
+
+        body.light-mode .secondary-sidebar {
+            background-color: var(--athens-gray); /* Light mode background */
+        }
+        body.light-mode .secondary-sidebar-content button {
+            border-color: var(--input-border-color); /* Light mode border */
+            color: var(--text-primary); /* Light mode text */
+        }
+        body.light-mode .close-secondary-sidebar {
+            color: var(--text-primary); /* Light mode text */
+        }
+
+        /* Ensure the new secondary-sidebar-button is part of .icon-buttons for styling consistency if needed,
+           or style it independently if it's outside that group in the HTML structure.
+           The provided CSS already styles it independently.
+        */
+        /* Hide the original .icon-buttons container on small screens,
+           but the #secondary-sidebar-button will be displayed due to its specific rule.
+        */
+        @media (max-width: 600px) {
+            header .icon-buttons { /* This is the original container for theme, filter, etc. */
+                display: none;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            .item-detail-modal-content {
+                width: 100%;
+                height: 100%;
+                max-width: none;
+                max-height: none;
+                border-radius: 0;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="top-bar">
+        <div id="header-main">
+            <button id="sidebar-toggle-button" title="Toggle Navigation Menu" aria-controls="main-nav" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="logo"><img src="Sad Face.png" alt="Sad Face Logo" style="height: 1.5em; vertical-align: middle;"></h1>
+            <span id="current-tab-name-display">Watch TV+</span> </div>
+        <!-- This button is for small screens, to open the secondary sidebar -->
+        <button id="secondary-sidebar-button" title="More" style="display: none;"> <!-- Initially hidden, shown by CSS media query -->
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div class="icon-buttons"> <!-- This container will be hidden on small screens -->
+            <button id="theme-toggle" class="toggle-button" title="Toggle Dark/Light Mode">
+                <i class="fas fa-sun sun-icon"></i>
+                <i class="fas fa-moon moon-icon" style="display: none;"></i>
+            </button>
+            <div id="filter-button-container">
+                <button id="filter-button" title="Filter Content">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+            <button data-tab="search-tab" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+            <div id="profile-menu-container" style="position: relative;">
+                <button id="profile-menu-button" title="User Profile">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <div id="profile-dropdown" class="profile-dropdown">
+                    <p id="profile-status">Not Signed In</p>
+                    <button id="profile-signin-btn">Sign In</button>
+                    <button id="profile-signup-btn">Sign Up</button>
+                    <button id="profile-signout-btn" style="display: none;">Sign Out</button>
+                    </div>
+            </div>
+        </div>
+    </header>
+<nav id="main-nav" aria-hidden="true">
+  <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
+  <a href="#" class="tab-link" data-tab="explore-tab">Explore</a>
+  <a href="#" class="tab-link" data-tab="library-tab">Library</a>
+  <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
+  <a href="#" class="tab-link" data-tab="search-tab">Search</a>
+</nav>
+
+    <div id="sidebar-overlay"></div> <main id="main-content">
+        <section class="tab-content active-tab" id="watch-now-tab">
+            <section class="hero-section">
+                <img id="hero-image-element" src="" alt="Featured Show"
+                    onerror="this.onerror=null;this.src='https://placehold.co/1200x600/3B0764/F3F4F6?text=Fallback+Image';">
+                <div class="content">
+                    <h2 id="hero-title">Featured Content</h2>
+                    <p id="hero-overview">Discover the latest blockbusters and critically acclaimed series.</p>
+                    <button>Watch Now</button>
+                </div>
+            </section> <section class="content-section">
+                <h3>Trending Now</h3>
+                <div class="content-row hide-scrollbar" id="trending-now-row">
+                    <p class="loading-message">Loading trending movies...</p>
+                </div>
+            </section>
+            <section class="content-section">
+                <h3>Because You Watched...</h3>
+                <div class="content-row hide-scrollbar" id="recommended-row">
+                    <p class="loading-message">Loading recommended content...</p>
+                </div>
+            </section>
+            <section class="content-section">
+                <h3>New Releases</h3>
+                <div class="content-row hide-scrollbar" id="new-releases-row">
+                    <p class="loading-message">Loading new releases...</p>
+                </div>
+            </section>
+        </section> <section class="tab-content" id="explore-tab">
+            <div id="explore-grid-container" class="search-results-grid">
+                </div>
+            <p id="explore-loading-indicator">Loading more movies...</p>
+        </section>
+        <section class="tab-content" id="library-tab">
+            <section class="content-section">
+                <h3>Your Folders</h3>
+                <div class="content-row hide-scrollbar" id="library-folders-row">
+                    <p class="loading-message">Loading folders...</p>
+                </div>
+            </section>
+            <section class="content-section">
+                <h3 id="selected-folder-title">Movies in Folder</h3>
+                <div class="content-row hide-scrollbar" id="library-selected-folder-movies-row">
+                    <p>Select a folder above to see its contents.</p>
+                </div>
+            </section>
+        </section>
+        <section class="tab-content" id="seen-tab">
+            <div id="seen-content">
+                <p>Track what you've already watched.</p>
+            </div>
+        </section>
+        <section class="tab-content" id="search-tab">
+            <input id="search-input" type="text" placeholder="Search for movies or TV shows...">
+            <button id="search-button">Search</button>
+            <div id="search-results-container">
+                <p>Find your favorite shows and movies.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; <span id="current-year"></span> Apple Inc. All rights reserved. This is a design concept for educational purposes only.</p>
+        <div>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Use</a>
+            <a href="#">Support</a>
+        </div>
+    </footer>
+
+    <div id="item-detail-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content">
+            <button class="close-button">&times;</button>
+            <div id="modal-content-area">
+                </div>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 400px;">
+            <button class="close-button" aria-label="Close">&times;</button>
+            <h2 id="auth-modal-title">Sign In</h2>
+            <form id="auth-form" class="auth-form-container">
+                <div class="auth-form-group" id="signup-name-group" style="display: none;">
+                    <label for="name-input">Full Name</label>
+                    <input type="text" id="name-input" name="name" autocomplete="name">
+                </div>
+                <div class="auth-form-group">
+                    <label for="auth-email-input">Email</label>
+                    <input type="email" id="auth-email-input" name="email" required autocomplete="username">
+                </div>
+                <div class="auth-form-group">
+                    <label for="auth-password-input">Password</label>
+                    <input type="password" id="auth-password-input" name="password" required autocomplete="current-password">
+                </div>
+                <div class="auth-form-group" id="signup-confirm-password-group" style="display: none;">
+                    <label for="confirm-password-input">Confirm Password</label>
+                    <input type="password" id="confirm-password-input" name="confirm_password" autocomplete="new-password">
+                </div>
+                <button type="submit" id="auth-submit-button" class="auth-submit-button">Sign In</button>
+            </form>
+            <p id="auth-switch-link" class="auth-switch-link">Don't have an account? Sign Up</p>
+        </div>
+    </div>
+
+    <!-- Filter Modal (New) -->
+    <div id="filter-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 350px; padding: 1.5rem;">
+            <button class="close-button" aria-label="Close">&times;</button>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">Filter Content</h2>
+            <div id="filter-options-items-container-modal" class="dropdown-list hide-scrollbar" style="position: static; max-height: 250px; overflow-y: auto; border: none; box-shadow: none;">
+                <!-- Filter options will be rendered here by JavaScript -->
+            </div>
+            <div class="filter-dropdown-footer" style="border-radius: 0.75rem;">
+                <button id="filter-clear-btn-modal" class="filter-action-button">Clear</button>
+                <button id="filter-apply-btn-modal" class="filter-action-button apply">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Sidebar HTML (for mobile "More" options) -->
+    <div id="secondary-sidebar" class="secondary-sidebar">
+        <button class="close-secondary-sidebar" title="Close">&times;</button>
+        <div class="secondary-sidebar-content">
+            <button id="theme-toggle-mobile"><i class="fas fa-sun"></i> Theme</button>
+            <button id="filter-button-mobile"><i class="fas fa-filter"></i> Filter</button>
+            <button id="search-button-mobile"><i class="fas fa-search"></i> Search</button>
+            <button id="profile-button-mobile"><i class="fas fa-user-circle"></i> Profile</button>
+        </div>
+    </div>
+
+
+    <script src="firebase-config.js"></script>
+    <script src="config.js" type="module"></script>
+    <script src="api.js" type="module"></script>
+    <script src="ui.js" type="module"></script>
+    <script src="SignIn/auth.js" type="module"></script>
+    <script src="SignIn/firebase.js" type="module"></script>
+    <script src="SignIn/firebase_api.js" type="module"></script>
+    <script src="ratingUtils.js" type="module"></script>
+
+    <!-- New Modules -->
+    <script src="modules/contentManager.js" type="module"></script>
+    <script src="modules/search.js" type="module"></script>
+    <script src="modules/seenItems.js" type="module"></script>
+    <script src="modules/libraryManager.js" type="module"></script>
+
+    <script src="main.js" type="module"></script>
+
+</body>
+</html>
