@@ -28,6 +28,22 @@ import {
 
 // Global state variables
 let currentAgeRatingFilter = [];
+
+// Supported age rating options for filtering (movies and TV)
+const AGE_RATING_OPTIONS = [
+    { value: "", label: "All Ratings" },
+    { value: "G", label: "G" },
+    { value: "PG", label: "PG" },
+    { value: "PG-13", label: "PG-13" },
+    { value: "R", label: "R" },
+    { value: "NC-17", label: "NC-17" },
+    { value: "TV-Y", label: "TV-Y" },
+    { value: "TV-Y7", label: "TV-Y7" },
+    { value: "TV-G", label: "TV-G" },
+    { value: "TV-PG", label: "TV-PG" },
+    { value: "TV-14", label: "TV-14" },
+    { value: "TV-MA", label: "TV-MA" }
+];
 let isLightMode = false; // Initial theme state
 
 // DOM Element References (will be initialized in window.onload)
@@ -529,14 +545,10 @@ window.onload = async () => {
      * @param {string[]} selectedFilters - Array of currently selected filter values.
      */
     function renderFilterDropdownOptions(container, selectedFilters) {
-        container.innerHTML = `
-            <div class="dropdown-item filter-option-item" data-rating="">All Ratings <span class="checkmark">✔</span></div>
-            <div class="dropdown-item filter-option-item" data-rating="G">G <span class="checkmark">✔</span></div>
-            <div class="dropdown-item filter-option-item" data-rating="PG">PG <span class="checkmark">✔</span></div>
-            <div class="dropdown-item filter-option-item" data-rating="PG-13">PG-13 <span class="checkmark">✔</span></div>
-            <div class="dropdown-item filter-option-item" data-rating="R">R <span class="checkmark">✔</span></div>
-            <div class="dropdown-item filter-option-item" data-rating="NC-17">NC-17 <span class="checkmark">✔</span></div>
-        `;
+        container.innerHTML = AGE_RATING_OPTIONS.map(opt =>
+            `<div class="dropdown-item filter-option-item" data-rating="${opt.value}">${opt.label} <span class="checkmark">✔</span></div>`
+        ).join('');
+
         container.querySelectorAll('.filter-option-item').forEach(item => {
             const ratingValue = item.dataset.rating;
             if (selectedFilters.includes(ratingValue) || (selectedFilters.length === 0 && ratingValue === "")) {
