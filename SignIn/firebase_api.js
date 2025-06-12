@@ -4,7 +4,11 @@ import { getFirebaseAuth, getFirebaseFirestore, firebaseAuthFunctions, firebaseF
 import { showCustomAlert } from '../ui.js';
 
 // Define appId globally using the __app_id provided by the Canvas environment
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+// or fall back to window.firebaseConfig.projectId if available.
+const appId =
+    (typeof __app_id !== 'undefined' && __app_id) ||
+    (window.firebaseConfig && window.firebaseConfig.projectId) ||
+    'default-app-id';
 
 /**
  * Helper to get the authenticated user.
