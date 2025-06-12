@@ -151,7 +151,7 @@ export function setupDelegatedSeenToggleListener(onCardClickCallback) {
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  */
-export function populateSeenTab(currentAgeRatingFilter, isLightMode, onCardClick) {
+export function populateSeenTab(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick) {
     const seenContentDiv = document.getElementById('seen-content');
     const seenItems = getSeenItems();
     seenContentDiv.innerHTML = '';
@@ -162,9 +162,13 @@ export function populateSeenTab(currentAgeRatingFilter, isLightMode, onCardClick
         const gridContainer = document.createElement('div');
         gridContainer.className = 'search-results-grid';
 
-        const filteredSeenItems = currentAgeRatingFilter.length > 0
-            ? seenItems.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter))
-            : seenItems;
+        let filteredSeenItems = seenItems;
+        if (currentTypeFilter) {
+            filteredSeenItems = filteredSeenItems.filter(item => item.type === currentTypeFilter);
+        }
+        if (currentAgeRatingFilter.length > 0) {
+            filteredSeenItems = filteredSeenItems.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+        }
 
         if (filteredSeenItems.length === 0 && currentAgeRatingFilter.length > 0) {
             seenContentDiv.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No seen items matched the selected filter.</p>`;

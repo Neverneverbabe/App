@@ -28,6 +28,7 @@ import {
 
 // Global state variables
 let currentAgeRatingFilter = [];
+let currentTypeFilter = '';
 
 // Supported age rating options for filtering (movies and TV)
 const AGE_RATING_OPTIONS = [
@@ -44,6 +45,11 @@ const AGE_RATING_OPTIONS = [
     { value: "TV-14", label: "TV-14" },
     { value: "TV-MA", label: "TV-MA" }
 ];
+const MEDIA_TYPE_OPTIONS = [
+    { value: '', label: 'All Types' },
+    { value: 'movie', label: 'Movies' },
+    { value: 'tv', label: 'TV Shows' }
+];
 let isLightMode = false; // Initial theme state
 
 // DOM Element References (will be initialized in window.onload)
@@ -55,8 +61,8 @@ let themeToggleBtn, filterButton, body, sidebarToggleButton, sidebarToggleIcon, 
     profileStatus, profileSignInBtn, profileSignUpBtn, profileSignOutBtn, authModal,
     authModalCloseButton, authModalTitle, authForm, nameInputGroup, nameInput, authEmailInput,
     authPasswordInput, confirmPasswordGroup, confirmPasswordInput, authSubmitButton, authSwitchLink,
-    filterModal, filterModalCloseButton, filterOptionsItemsContainerModal, filterApplyBtnModal,
-    filterClearBtnModal;
+    filterModal, filterModalCloseButton, filterOptionsItemsContainerModal, filterTypeOptionsContainer,
+    filterApplyBtnModal, filterClearBtnModal;
 
 
 // Shift the main initialization logic to window.onload
@@ -116,6 +122,7 @@ window.onload = async () => {
     filterModal = document.getElementById('filter-modal');
     filterModalCloseButton = filterModal.querySelector('.close-button');
     filterOptionsItemsContainerModal = document.getElementById('filter-options-items-container-modal');
+    filterTypeOptionsContainer = document.getElementById('filter-type-options-container');
     filterApplyBtnModal = document.getElementById('filter-apply-btn-modal');
     filterClearBtnModal = document.getElementById('filter-clear-btn-modal');
 
@@ -354,16 +361,16 @@ window.onload = async () => {
                     await ContentManager.populateWatchNowTab(currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'explore-tab':
-                    await ContentManager.populateExploreTab(currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    await ContentManager.populateExploreTab(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'library-tab':
                     await LibraryManager.populateLibraryTab(SeenItemsManager.isItemSeen, isLightMode, onCardClick);
                     break;
                 case 'seen-tab':
-                    SeenItemsManager.populateSeenTab(currentAgeRatingFilter, isLightMode, onCardClick);
+                    SeenItemsManager.populateSeenTab(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick);
                     break;
                 case 'search-tab':
-                    SearchManager.populateSearchTab(currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    SearchManager.populateSearchTab(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 default:
                     console.log('Unknown tab:', activeTabId);
@@ -538,6 +545,7 @@ window.onload = async () => {
 
     // --- Filter Modal Logic & State ---
     let tempSelectedFilters = [];
+    let tempSelectedType = '';
 
     /**
      * Renders filter options in the dropdown/modal, marking currently selected ones.
@@ -559,6 +567,21 @@ window.onload = async () => {
         });
     }
 
+    function renderTypeOptions(container, selectedType) {
+        container.innerHTML = MEDIA_TYPE_OPTIONS.map(opt =>
+            `<div class="dropdown-item filter-type-option" data-type="${opt.value}">${opt.label} <span class="checkmark">✔</span></div>`
+        ).join('');
+
+        container.querySelectorAll('.filter-type-option').forEach(item => {
+            const val = item.dataset.type;
+            if (val === selectedType) {
+                item.classList.add('item-selected');
+            } else {
+                item.classList.remove('item-selected');
+            }
+        });
+    }
+
     /**
      * Opens the filter modal and populates it with current filter selections.
      */
@@ -566,6 +589,8 @@ window.onload = async () => {
         filterModal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         tempSelectedFilters = currentAgeRatingFilter.length === 0 ? [""] : [...currentAgeRatingFilter];
+        tempSelectedType = currentTypeFilter || '';
+        renderTypeOptions(filterTypeOptionsContainer, tempSelectedType);
         renderFilterDropdownOptions(filterOptionsItemsContainerModal, tempSelectedFilters);
     }
 
@@ -583,7 +608,7 @@ window.onload = async () => {
         openFilterModal();
     });
 
-    // Click handler for individual filter options within the modal
+    // Click handler for individual age rating filter options within the modal
     filterOptionsItemsContainerModal.addEventListener('click', (event) => {
         event.stopPropagation();
         const target = event.target.closest('.filter-option-item');
@@ -611,6 +636,15 @@ window.onload = async () => {
         renderFilterDropdownOptions(filterOptionsItemsContainerModal, tempSelectedFilters);
     });
 
+    // Click handler for type filter options
+    filterTypeOptionsContainer.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const target = event.target.closest('.filter-type-option');
+        if (!target || target.dataset.type === undefined) return;
+        tempSelectedType = target.dataset.type;
+        renderTypeOptions(filterTypeOptionsContainer, tempSelectedType);
+    });
+
     // Apply filters button click handler for the modal
     filterApplyBtnModal.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -619,8 +653,9 @@ window.onload = async () => {
         } else {
             currentAgeRatingFilter = [...tempSelectedFilters];
         }
+        currentTypeFilter = tempSelectedType;
         closeFilterModal();
-        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0);
+        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0 || currentTypeFilter !== '');
         // Reset explore tab state to reload content with new filters
         ContentManager.resetExploreState();
         populateCurrentTabContent();
@@ -630,6 +665,8 @@ window.onload = async () => {
     filterClearBtnModal.addEventListener('click', (event) => {
         event.stopPropagation();
         tempSelectedFilters = [""];
+        tempSelectedType = '';
+        renderTypeOptions(filterTypeOptionsContainer, tempSelectedType);
         renderFilterDropdownOptions(filterOptionsItemsContainerModal, tempSelectedFilters);
     });
 
@@ -645,7 +682,7 @@ window.onload = async () => {
 
     // Initial check to set filter button active state if any filter is already applied
     if (filterButton) {
-        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0);
+        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0 || currentTypeFilter !== '');
     }
 
     // --- Explore Tab Infinite Scroll ---
@@ -654,7 +691,7 @@ window.onload = async () => {
         if (!exploreTab || !exploreTab.classList.contains('active-tab')) return;
 
         if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 300) {
-            ContentManager.loadMoreExploreItems(currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+            ContentManager.loadMoreExploreItems(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
         }
     });
 
@@ -801,5 +838,5 @@ window.onload = async () => {
     });
 
     // --- Search Functionality Setup ---
-    SearchManager.setupSearchListeners(searchInput, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+    SearchManager.setupSearchListeners(searchInput, currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
 };

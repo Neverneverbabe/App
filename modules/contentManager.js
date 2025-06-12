@@ -123,17 +123,21 @@ export async function populateWatchNowTab(currentAgeRatingFilter, isLightMode, o
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function populateExploreTab(currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function populateExploreTab(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick, isItemSeenFn) {
     const exploreGrid = document.getElementById('explore-grid-container');
     if (exploreCurrentPage === 1 && exploreGrid.innerHTML.trim() === "") {
         exploreGrid.innerHTML = '<p class="loading-message">Loading movies for you...</p>';
         exploreHasMore = true;
         exploreIsLoading = false;
-        await loadMoreExploreItems(currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+        await loadMoreExploreItems(currentAgeRatingFilter, currentTypeFilter, isLightMode, onCardClick, isItemSeenFn);
     } else {
-        const filteredExploreItems = currentAgeRatingFilter.length > 0
-            ? cachedExploreItems.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter))
-            : cachedExploreItems;
+        let filteredExploreItems = cachedExploreItems;
+        if (currentTypeFilter) {
+            filteredExploreItems = filteredExploreItems.filter(item => item.media_type === currentTypeFilter);
+        }
+        if (currentAgeRatingFilter.length > 0) {
+            filteredExploreItems = filteredExploreItems.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+        }
         exploreGrid.innerHTML = ''; // Clear before re-appending filtered items
         appendItemsToGrid(exploreGrid, filteredExploreItems, isLightMode, onCardClick, isItemSeenFn);
         if (filteredExploreItems.length === 0 && currentAgeRatingFilter.length > 0) {
@@ -160,13 +164,15 @@ export async function loadMoreExploreItems(currentAgeRatingFilter, isLightMode, 
 
     try {
         const desiredCount = 20;
-        const { items: newItems, pagesFetched } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount, exploreCurrentPage);
+        const mediaType = currentTypeFilter || 'movie';
+        const { items: newItems, pagesFetched } = await fetchEnoughDiscoveredItems(mediaType, currentAgeRatingFilter, desiredCount, exploreCurrentPage);
         cachedExploreItems = cachedExploreItems.concat(newItems);
 
         if (newItems.length > 0) {
-            const itemsToDisplay = currentAgeRatingFilter.length > 0
-                ? newItems.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter))
-                : newItems;
+            let itemsToDisplay = newItems;
+            if (currentAgeRatingFilter.length > 0) {
+                itemsToDisplay = itemsToDisplay.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+            }
 
             appendItemsToGrid(exploreGridContainer, itemsToDisplay, isLightMode, onCardClick, isItemSeenFn);
             exploreCurrentPage += pagesFetched;
