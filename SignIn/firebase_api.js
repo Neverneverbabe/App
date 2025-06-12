@@ -142,6 +142,28 @@ function getUserCollectionRef(collectionName, userId) {
 }
 
 /**
+ * Recursively removes undefined values from an object. Firestore does not
+ * allow fields with `undefined` values, so sanitize data before saving.
+ * @param {any} data - The data object to sanitize.
+ * @returns {any} The sanitized object.
+ */
+function removeUndefinedFields(data) {
+    if (Array.isArray(data)) {
+        return data.map((item) => removeUndefinedFields(item));
+    } else if (data !== null && typeof data === 'object') {
+        const sanitized = {};
+        Object.keys(data).forEach((key) => {
+            const value = data[key];
+            if (value !== undefined) {
+                sanitized[key] = removeUndefinedFields(value);
+            }
+        });
+        return sanitized;
+    }
+    return data;
+}
+
+/**
  * Saves data to a specific document within a user's collection.
  * Creates the document if it doesn't exist, merges data if it does.
  * @param {string} collectionName - The name of the sub-collection (e.g., 'seenItems', 'watchlists').
@@ -156,8 +178,10 @@ export async function saveUserData(collectionName, docId, data) {
         throw new Error("User not signed in.");
     }
     const docRef = firebaseFirestoreFunctions.doc(getUserCollectionRef(collectionName, user.uid), docId);
+    // Remove any undefined values to avoid Firestore errors
+    const sanitizedData = removeUndefinedFields(data);
     // Use setDoc with { merge: true } to create or update fields non-destructively
-    return await firebaseFirestoreFunctions.setDoc(docRef, data, { merge: true });
+    return await firebaseFirestoreFunctions.setDoc(docRef, sanitizedData, { merge: true });
 }
 
 /**
