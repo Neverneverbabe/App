@@ -108,7 +108,9 @@ window.onload = async () => {
                 console.log("Auth state changed: User signed in - UID:", user.uid, "Display Name:", user.displayName);
                 await loadUserSeenItems();
                 await loadUserFirestoreWatchlists();
-                if (authModal.style.display === 'flex') {
+                // authModal is defined later in window.onload, so check for its existence
+                const authModalElement = document.getElementById('auth-modal');
+                if (authModalElement && authModalElement.style.display === 'flex') {
                     hideCustomAlert();
                 }
             } else {
@@ -1205,9 +1207,11 @@ window.onload = async () => {
             } catch (error) {
                 console.error("Error loading watchlists from Firestore:", error);
                 firestoreWatchlistsCache = [];
+                window.firestoreWatchlistsCache = []; // Ensure global cache is also cleared on error
             }
         } else {
             firestoreWatchlistsCache = [];
+            window.firestoreWatchlistsCache = []; // Ensure global cache is also cleared if no user
         }
     }
 
