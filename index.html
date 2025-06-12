@@ -35,6 +35,8 @@
             /* Input specific variables for dark mode */
             --input-bg-color: var(--card-bg); /* #2d2d2d */
             --input-border-color: #454545; /* Subtle dark border */
+            --dropdown-bg: #232326; /* Default dropdown background */
+            --border-color: #333; /* Default border color */
         }
 
         /* Light Mode Variables - Overrides defaults when .light-mode is active */
@@ -53,6 +55,8 @@
             /* Input specific variables for light mode */
             --input-bg-color: var(--white);
             --input-border-color: #D1D1D6; /* Apple light gray border */
+            --dropdown-bg: #f5f5f7; /* Light mode dropdown background */
+            --border-color: #d1d1d6; /* Light mode border color */
         }
 
         /* Base styles */
@@ -235,7 +239,7 @@
             position: absolute;
             top: calc(100% + 5px); /* Position below the button */
             right: 0;
-            background-color: var(--card-bg); /* Use a suitable background */
+            background: var(--dropdown-bg, var(--card-bg));
             border-radius: 0.75rem; /* rounded-lg */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             padding: 0.5rem 0;
@@ -243,6 +247,7 @@
             z-index: 100; /* Ensure it's above other header elements */
             display: none; /* Hidden by default */
             animation: fadeInDropdown 0.2s ease-out forwards;
+            border: 1px solid var(--border-color, #333);
         }
         .profile-dropdown.show {
             display: block;
@@ -258,7 +263,7 @@
             margin: 0;
             font-size: 0.9rem;
             color: var(--text-secondary);
-            border-bottom: 1px solid var(--card-bg); /* Subtle separator */
+            border-bottom: 1px solid var(--border-color, #333); /* Subtle separator */
         }
         .profile-dropdown p:last-of-type {
             border-bottom: none;
@@ -270,6 +275,7 @@
             padding: 0.75rem 1rem;
             background: none;
             border: none;
+            outline: none;
             color: var(--text-primary);
             font-size: 1rem;
             cursor: pointer;
