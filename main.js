@@ -1217,6 +1217,71 @@ window.onload = async () => {
 
 
     /**
+     * Adds or removes an item from a specific watchlist folder in Firestore.
+     * If the item already exists in the folder it will be removed, otherwise it
+     * will be appended. The local cache and UI are updated after the change.
+     * @param {string} folderId - The ID of the watchlist folder.
+     * @param {object} item - The item details object.
+     * @param {string} itemType - The media type ('movie' or 'tv').
+     */
+    async function handleAddRemoveItemToFolder(folderId, item, itemType) {
+        const user = getCurrentUser();
+        if (!user) {
+            showCustomAlert('Info', 'Please sign in to manage watchlists.');
+            return;
+        }
+
+        try {
+            showLoadingIndicator('Updating watchlist...');
+
+            // Fetch the latest watchlists and locate the target folder
+            const watchlists = await getUserCollection('watchlists');
+            const target = watchlists.find(wl => wl.id === folderId);
+            if (!target) {
+                showCustomAlert('Error', 'Watchlist not found.');
+                return;
+            }
+
+            const normalizedItem = {
+                tmdb_id: item.id || item.tmdb_id,
+                item_type: itemType,
+                title: item.title || item.name,
+                poster_path: item.poster_path
+            };
+
+            const itemsArray = Array.isArray(target.items) ? [...target.items] : [];
+            const existingIndex = itemsArray.findIndex(i => String(i.tmdb_id) === String(normalizedItem.tmdb_id) && i.item_type === normalizedItem.item_type);
+
+            if (existingIndex > -1) {
+                itemsArray.splice(existingIndex, 1);
+            } else {
+                itemsArray.push(normalizedItem);
+            }
+
+            await saveUserData('watchlists', folderId, { name: target.name, items: itemsArray });
+
+            // Update local cache with the modified folder
+            firestoreWatchlistsCache = watchlists.map(wl => wl.id === folderId ? { ...wl, items: itemsArray } : wl);
+            window.firestoreWatchlistsCache = firestoreWatchlistsCache;
+
+            // Re-render library section to reflect updates
+            await renderLibraryFolderCards();
+            if (currentSelectedLibraryFolder === folderId) {
+                await renderMoviesInSelectedFolder(folderId);
+            }
+        } catch (error) {
+            console.error('Error updating watchlist folder:', error);
+            showCustomAlert('Error', `Failed to update watchlist: ${error.message}`);
+        } finally {
+            hideLoadingIndicator();
+        }
+    }
+
+    // Expose globally for ui.js and other modules
+    window.handleAddRemoveItemToFolder = handleAddRemoveItemToFolder;
+
+
+    /**
      * Renders the library folder (watchlist) cards in the Library tab.
      */
     async function renderLibraryFolderCards() {
