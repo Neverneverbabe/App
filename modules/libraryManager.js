@@ -3,10 +3,23 @@
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast, updateBookmarkIconStates, updateBookmarkIconForItem } from '../ui.js';
 import { createContentCardHtml } from '../ui.js'; // Import directly from ui.js
+import { fetchItemDetails } from '../api.js';
+import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
 
 // Local cache for user's watchlists
 let firestoreWatchlistsCache = [];
 let unsubscribeWatchlists = null; // Holds the unsubscribe function for the Firestore listener
+
+// Cache for item details fetched from TMDB to minimize network requests
+const itemDetailsCache = {};
+
+async function getItemDetailsCached(id, type) {
+    const key = `${type}_${id}`;
+    if (!itemDetailsCache[key]) {
+        itemDetailsCache[key] = await fetchItemDetails(id, type);
+    }
+    return itemDetailsCache[key];
+}
 
 // State for the currently selected library folder
 let currentSelectedLibraryFolder = null;
@@ -195,7 +208,14 @@ export async function addRemoveItemToFolder(folderId, itemDetails, itemType) {
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClickCallback - Callback for when a card is clicked.
  */
-export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickCallback) {
+export function renderLibraryFolderCards(
+    isItemSeenFn,
+    isLightMode,
+    onCardClickCallback,
+    currentMediaTypeFilter = '',
+    currentAgeRatingFilter = [],
+    currentCategoryFilter = []
+) {
     const libraryFoldersRow = document.getElementById('library-folders-row');
     if (!libraryFoldersRow) return;
 
@@ -279,7 +299,15 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
         card.addEventListener('click', (e) => {
             if (e.target === deleteBtn) return;
             currentSelectedLibraryFolder = folder.id; // Update selected folder state
-            renderMoviesInSelectedFolder(folder.id, isItemSeenFn, isLightMode, onCardClickCallback); // Render movies in this folder
+            renderMoviesInSelectedFolder(
+                folder.id,
+                isItemSeenFn,
+                isLightMode,
+                onCardClickCallback,
+                currentMediaTypeFilter,
+                currentAgeRatingFilter,
+                currentCategoryFilter
+            ); // Render movies in this folder
             libraryFoldersRow.querySelectorAll('.folder-card').forEach(fc => {
                 fc.style.border = '2px solid transparent';
                 fc.style.boxShadow = '0 4px 6px -1px rgba(var(--black-rgb), 0.1)';
@@ -308,7 +336,15 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClickCallback - Callback for when a card is clicked.
  */
-export async function renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLightMode, onCardClickCallback) {
+export async function renderMoviesInSelectedFolder(
+    folderId,
+    isItemSeenFn,
+    isLightMode,
+    onCardClickCallback,
+    currentMediaTypeFilter = '',
+    currentAgeRatingFilter = [],
+    currentCategoryFilter = []
+) {
     const selectedFolderTitleElement = document.getElementById('selected-folder-title');
     const librarySelectedFolderMoviesRow = document.getElementById('library-selected-folder-movies-row');
 
@@ -335,13 +371,36 @@ export async function renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLig
         librarySelectedFolderMoviesRow.innerHTML = `<p style="color:var(--text-secondary); padding: 1rem;">This watchlist is empty.</p>`;
     } else {
         librarySelectedFolderMoviesRow.innerHTML = '';
-        items.forEach(item => {
+        let added = 0;
+        for (const item of items) {
+            if (currentMediaTypeFilter && item.item_type !== currentMediaTypeFilter) {
+                continue;
+            }
+
+            let details = null;
+            if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+                try {
+                    details = await getItemDetailsCached(item.tmdb_id, item.item_type);
+                } catch (err) {
+                    console.error('Failed to fetch item details', err);
+                }
+                if (details) {
+                    const ratingOk = currentAgeRatingFilter.length === 0 ||
+                        checkRatingCompatibility(getCertification(details), currentAgeRatingFilter);
+                    const genreIds = details.genre_ids || (details.genres ? details.genres.map(g => g.id) : []);
+                    const categoryOk = currentCategoryFilter.length === 0 ||
+                        genreIds.some(id => currentCategoryFilter.includes(String(id)));
+                    if (!ratingOk || !categoryOk) continue;
+                }
+            }
+
             const displayItem = {
-                id: item.tmdb_id, // Ensure id for `onCardClick`
+                id: item.tmdb_id,
                 media_type: item.item_type,
                 title: item.title,
                 poster_path: item.poster_path
             };
+
             const cardHtmlString = createContentCardHtml(displayItem, isLightMode, isItemSeenFn);
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = cardHtmlString;
@@ -349,7 +408,7 @@ export async function renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLig
 
             if (movieCardElement) {
                 movieCardElement.addEventListener('click', (e) => {
-                    if (e.target.closest('.seen-toggle-icon')) return; // Avoid re-triggering seen toggle
+                    if (e.target.closest('.seen-toggle-icon')) return;
                     if (!isNaN(displayItem.id) && displayItem.media_type) {
                         onCardClickCallback(displayItem.id, displayItem.media_type);
                     }
@@ -376,8 +435,13 @@ export async function renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLig
                 };
                 movieCardElement.querySelector('.image-container').appendChild(removeBtn);
                 librarySelectedFolderMoviesRow.appendChild(movieCardElement);
+                added++;
             }
-        });
+        }
+
+        if (added === 0) {
+            librarySelectedFolderMoviesRow.innerHTML = `<p style="color:var(--text-secondary); padding: 1rem;">No items matched your filter.</p>`;
+        }
     }
 }
 
@@ -387,7 +451,29 @@ export async function renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLig
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClick - Callback for when a card is clicked.
  */
-export async function populateLibraryTab(isItemSeenFn, isLightMode, onCardClick) {
-    await renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClick);
-    await renderMoviesInSelectedFolder(currentSelectedLibraryFolder, isItemSeenFn, isLightMode, onCardClick);
+export async function populateLibraryTab(
+    currentMediaTypeFilter,
+    currentAgeRatingFilter,
+    currentCategoryFilter,
+    isItemSeenFn,
+    isLightMode,
+    onCardClick
+) {
+    await renderLibraryFolderCards(
+        isItemSeenFn,
+        isLightMode,
+        onCardClick,
+        currentMediaTypeFilter,
+        currentAgeRatingFilter,
+        currentCategoryFilter
+    );
+    await renderMoviesInSelectedFolder(
+        currentSelectedLibraryFolder,
+        isItemSeenFn,
+        isLightMode,
+        onCardClick,
+        currentMediaTypeFilter,
+        currentAgeRatingFilter,
+        currentCategoryFilter
+    );
 }

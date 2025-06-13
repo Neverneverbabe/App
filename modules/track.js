@@ -1,10 +1,21 @@
 // modules/track.js
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
-import { fetchSeasonDetails } from '../api.js';
+import { fetchSeasonDetails, fetchItemDetails } from '../api.js';
+import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
 
 let trackedShowsCache = [];
 let unsubscribeTrack = null;
+
+// Cache for fetched item details
+const trackDetailsCache = {};
+
+async function getTrackDetailsCached(id) {
+    if (!trackDetailsCache[id]) {
+        trackDetailsCache[id] = await fetchItemDetails(id, 'tv');
+    }
+    return trackDetailsCache[id];
+}
 
 export function initializeTrackListener(onUpdateCallback) {
     if (unsubscribeTrack) {
@@ -182,7 +193,13 @@ export function renderTrackSectionInModal(showDetails) {
     }
 }
 
-export function populateTrackTab(isLightMode, onCardClick) {
+export async function populateTrackTab(
+    currentMediaTypeFilter,
+    currentAgeRatingFilter,
+    currentCategoryFilter,
+    isLightMode,
+    onCardClick
+) {
     const container = document.getElementById('track-content');
     const items = getTrackedShows();
     container.innerHTML = '';
@@ -191,34 +208,57 @@ export function populateTrackTab(isLightMode, onCardClick) {
     } else {
         const grid = document.createElement('div');
         grid.className = 'search-results-grid';
-        import('../ui.js').then(({ createContentCardHtml }) => {
-            items.forEach(item => {
-                const displayItem = { id: item.id, name: item.title, poster_path: item.poster_path, media_type: 'tv' };
-                const temp = document.createElement('div');
-                temp.innerHTML = createContentCardHtml(displayItem, isLightMode, () => false);
-                const card = temp.firstElementChild;
-                if (card) {
-                    const progressTag = document.createElement('div');
-                    progressTag.textContent = `S${item.season}:E${item.episode}`;
-                    progressTag.style.position = 'absolute';
-                    progressTag.style.bottom = '8px';
-                    progressTag.style.right = '8px';
-                    progressTag.style.backgroundColor = 'rgba(var(--black-rgb), 0.7)';
-                    progressTag.style.color = 'var(--white)';
-                    progressTag.style.padding = '2px 6px';
-                    progressTag.style.borderRadius = '4px';
-                    progressTag.style.fontSize = '0.75rem';
-                    card.querySelector('.image-container').appendChild(progressTag);
-                    card.addEventListener('click', (e) => {
-                        if (e.target.closest('.seen-toggle-icon')) return;
-                        const id = parseInt(card.dataset.id);
-                        if (!isNaN(id)) onCardClick(id, 'tv');
-                    });
-                    grid.appendChild(card);
+        const { createContentCardHtml } = await import('../ui.js');
+        let added = 0;
+        for (const item of items) {
+            if (currentMediaTypeFilter && currentMediaTypeFilter !== 'tv') {
+                continue;
+            }
+
+            if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+                try {
+                    const details = await getTrackDetailsCached(item.id);
+                    const ratingOk = currentAgeRatingFilter.length === 0 ||
+                        checkRatingCompatibility(getCertification(details), currentAgeRatingFilter);
+                    const genreIds = details.genres ? details.genres.map(g => g.id) : [];
+                    const categoryOk = currentCategoryFilter.length === 0 ||
+                        genreIds.some(id => currentCategoryFilter.includes(String(id)));
+                    if (!ratingOk || !categoryOk) continue;
+                } catch (err) {
+                    console.error('Failed to fetch track item details', err);
                 }
-            });
+            }
+
+            const displayItem = { id: item.id, name: item.title, poster_path: item.poster_path, media_type: 'tv' };
+            const temp = document.createElement('div');
+            temp.innerHTML = createContentCardHtml(displayItem, isLightMode, () => false);
+            const card = temp.firstElementChild;
+            if (card) {
+                const progressTag = document.createElement('div');
+                progressTag.textContent = `S${item.season}:E${item.episode}`;
+                progressTag.style.position = 'absolute';
+                progressTag.style.bottom = '8px';
+                progressTag.style.right = '8px';
+                progressTag.style.backgroundColor = 'rgba(var(--black-rgb), 0.7)';
+                progressTag.style.color = 'var(--white)';
+                progressTag.style.padding = '2px 6px';
+                progressTag.style.borderRadius = '4px';
+                progressTag.style.fontSize = '0.75rem';
+                card.querySelector('.image-container').appendChild(progressTag);
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.seen-toggle-icon')) return;
+                    const id = parseInt(card.dataset.id);
+                    if (!isNaN(id)) onCardClick(id, 'tv');
+                });
+                grid.appendChild(card);
+                added++;
+            }
+        }
+        if (added === 0) {
+            container.innerHTML = '<p style="padding:1rem;color:var(--text-secondary);">No tracked shows matched the selected filter.</p>';
+        } else {
             container.appendChild(grid);
-        });
+        }
     }
 }
 
