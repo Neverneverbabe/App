@@ -748,13 +748,14 @@
             background-color: var(--dropdown-bg, #141414);
             color: var(--accent-color);
             border: 1px solid var(--accent-color);
-            width: 36px;
-            height: 36px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            padding: 0;
             transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border 0.3s ease-in-out;
         }
         .netflix-modal-action-btn:hover,
@@ -998,27 +999,27 @@
         /* Apple-style dropdown for folders with theme support */
         .apple-dropdown {
             position: relative;
-            width: 44px;
+            width: 36px;
             font-family: inherit;
             user-select: none;
         }
         .dropdown-selected {
             background: var(--card-bg);
             border-radius: 50%;
-            padding: 0.5em;
-            width: 36px;
-            height: 36px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 1px solid var(--accent-color);
             color: var(--text-secondary);
             cursor: pointer;
+            padding: 0;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
             box-shadow: 0 1px 3px rgba(60,60,67,0.03);
         }
         .dropdown-selected i {
-            font-size: 1.1rem;
+            font-size: 14px;
         }
         .dropdown-selected:hover {
             color: var(--white);
@@ -1288,14 +1289,14 @@
             background-color: var(--card-bg);
             color: var(--text-secondary);
             border: 1px solid var(--accent-color);
-            padding: 0.5em;
-            width: 36px;
-            height: 36px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            padding: 0;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
         .seen-action-button.is-seen {
@@ -1311,18 +1312,23 @@
             background-color: rgba(var(--black-rgb), 0.2);
         }
 
+        .seen-action-button i,
+        #watch-links-toggle-btn i {
+            font-size: 14px;
+        }
+
         #watch-links-toggle-btn {
             background-color: var(--card-bg);
             color: var(--text-secondary);
             border: 1px solid var(--accent-color);
-            padding: 0.5em;
-            width: 36px;
-            height: 36px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            padding: 0;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
         #watch-links-toggle-btn:hover {
