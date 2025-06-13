@@ -88,7 +88,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;">
       <i class="fa-regular fa-bookmark"></i>
     </div>
-    <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; max-height: 200px; overflow-y: auto; border-radius: 10px; margin-top: 4px;"></div>
+    <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; border-radius: 10px; margin-top: 4px;"></div>
     <div class="dropdown-footer" id="dropdown-footer-modal" style="display:none; padding: 0.5em 1em; text-align: center; border-top: 1px solid var(--border-color); background: var(--dropdown-bg); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
       <button id="add-new-folder-btn-modal" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
     </div>`;
