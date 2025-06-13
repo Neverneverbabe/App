@@ -534,6 +534,111 @@
             margin-bottom: 1rem;
         }
 
+        /* Netflix Modal (vanilla JS version) */
+        .netflix-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .netflix-modal {
+            background-color: #111;
+            color: #fff;
+            width: 100%;
+            max-width: 45rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+            animation: netflixFadeIn 0.4s ease-out forwards;
+        }
+        .netflix-modal-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+        }
+        .netflix-modal-close:hover {
+            color: #f33;
+        }
+        .netflix-modal-image {
+            position: relative;
+            height: 15rem;
+            background-size: cover;
+            background-position: center;
+        }
+        .netflix-modal-image-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6), transparent);
+            animation: netflixSlideUp 0.4s ease-out forwards;
+        }
+        .netflix-modal-image-overlay h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .netflix-modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        .netflix-modal-tags span {
+            background-color: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            backdrop-filter: blur(4px);
+        }
+        .netflix-modal-body {
+            padding: 1rem 1.5rem 1.5rem 1.5rem;
+        }
+        .netflix-modal-description {
+            color: #ccc;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            font-size: 0.875rem;
+        }
+        .netflix-modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .netflix-modal-action-btn {
+            background-color: #555;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        .netflix-modal-action-btn.primary {
+            background-color: #2563eb; /* Tailwind blue-600 */
+        }
+        .netflix-modal-action-btn:hover {
+            opacity: 0.9;
+        }
+        @keyframes netflixFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes netflixSlideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* Content Rows */
         .content-section {
             margin-bottom: 2.5rem; /* mb-10 */
@@ -1485,6 +1590,7 @@
     <script src="modules/search.js" type="module"></script>
     <script src="modules/seenItems.js" type="module"></script>
     <script src="modules/libraryManager.js" type="module"></script>
+    <script src="modules/netflixModal.js" type="module"></script>
 
     <script src="main.js" type="module"></script>
 
