@@ -955,6 +955,28 @@
             font-size: 14px;
         }
 
+        /* Track Icon on Card */
+        .track-toggle-icon {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            width: 28px;
+            height: 28px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .track-toggle-icon i {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
         .content-card p {
             margin-top: 0.75rem; /* mt-3 */
             font-size: 0.875rem; /* text-sm */
@@ -1317,6 +1339,10 @@
             font-size: 14px;
         }
 
+        #track-progress-btn i {
+            font-size: 14px;
+        }
+
         #watch-links-toggle-btn {
             background-color: var(--card-bg);
             color: var(--text-secondary);
@@ -1336,6 +1362,30 @@
             background-color: rgba(var(--white-rgb), 0.2);
         }
         .light-mode #watch-links-toggle-btn:hover {
+            background-color: rgba(var(--black-rgb), 0.2);
+        }
+
+        #track-progress-btn {
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--accent-color);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+
+        #track-progress-btn:hover {
+            color: var(--white);
+            background-color: rgba(var(--white-rgb), 0.2);
+        }
+
+        .light-mode #track-progress-btn:hover {
             background-color: rgba(var(--black-rgb), 0.2);
         }
 

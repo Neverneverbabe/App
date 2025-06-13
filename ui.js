@@ -146,6 +146,9 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                 <div class="bookmark-toggle-icon" title="Add to Watchlist">
                     <i class="fa-regular fa-bookmark"></i>
                 </div>
+                <div class="track-toggle-icon" title="Track Progress">
+                    <i class="fas fa-pencil-alt"></i>
+                </div>
                 <img src="${posterPath || fallbackImageUrl}" alt="${title}"
                     onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}"
                     data-fallback="${fallbackImageUrl}">
@@ -383,6 +386,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     itemDetailModal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     setupWatchLinksToggle();
+    setupTrackProgressToggle(detailsObject);
 }
 
 /**
@@ -419,6 +423,23 @@ export function setupWatchLinksToggle() {
         toggleBtn.onclick = (e) => {
             e.stopPropagation();
             linksContainer.style.display = linksContainer.style.display === 'none' ? 'block' : 'none';
+        };
+    }
+}
+
+export function setupTrackProgressToggle(showDetails) {
+    const trackBtn = document.getElementById('track-progress-btn');
+    const trackContainer = document.getElementById('track-progress-container');
+    if (trackBtn && trackContainer) {
+        trackBtn.onclick = (e) => {
+            e.stopPropagation();
+            const shouldShow = trackContainer.style.display === 'none' || trackContainer.style.display === '';
+            trackContainer.style.display = shouldShow ? 'block' : 'none';
+            if (shouldShow) {
+                import('./modules/track.js').then(({ renderTrackSectionInModal }) => {
+                    renderTrackSectionInModal(showDetails);
+                });
+            }
         };
     }
 }

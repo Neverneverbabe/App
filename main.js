@@ -26,6 +26,8 @@ import {
     hideCustomAlert,
     showLoadingIndicator,
     hideLoadingIndicator,
+    displayItemDetails,
+    updateSeenButtonStateInModal
 } from './ui.js';
 
 // Global state variables
@@ -414,16 +416,40 @@ window.onload = async () => {
                 const poster = card.dataset.poster || '';
                 openWatchlistModal({ id, media_type: type, title, poster_path: poster });
             } else {
-                const heroBtn = event.target.closest('#hero-watch-now');
-                if (heroBtn) {
-                    event.preventDefault();
-                    await handleHeroWatchNowClick();
+                const trackIcon = event.target.closest('.track-toggle-icon');
+                if (trackIcon) {
+                    event.stopPropagation();
+                    const card = trackIcon.closest('.content-card');
+                    if (!card) return;
+                    const id = parseInt(card.dataset.id);
+                    const type = card.dataset.type;
+                    if (isNaN(id) || !type) return;
+                    try {
+                        showLoadingIndicator('Fetching item details...');
+                        const details = await fetchItemDetails(id, type);
+                        displayItemDetails(details, type, isLightMode);
+                        updateSeenButtonStateInModal(id, type, SeenItemsManager.isItemSeen);
+                        TrackManager.renderTrackSectionInModal(details);
+                        const c = document.getElementById('track-progress-container');
+                        if (c) c.style.display = 'block';
+                    } catch (error) {
+                        console.error('Error opening track modal:', error);
+                        showCustomAlert('Error', `Could not load item details. Error: ${error.message}`);
+                    } finally {
+                        hideLoadingIndicator();
+                    }
                 } else {
-                    const card = event.target.closest('.content-card');
-                    if (card) {
-                        const id = parseInt(card.dataset.id);
-                        const type = card.dataset.type;
-                        if (!isNaN(id) && type) onCardClick(id, type);
+                    const heroBtn = event.target.closest('#hero-watch-now');
+                    if (heroBtn) {
+                        event.preventDefault();
+                        await handleHeroWatchNowClick();
+                    } else {
+                        const card = event.target.closest('.content-card');
+                        if (card) {
+                            const id = parseInt(card.dataset.id);
+                            const type = card.dataset.type;
+                            if (!isNaN(id) && type) onCardClick(id, type);
+                        }
                     }
                 }
             }
