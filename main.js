@@ -14,17 +14,18 @@ import * as SeenItemsManager from './modules/seenItems.js';
 import * as LibraryManager from './modules/libraryManager.js';
 import * as TrackManager from './modules/track.js';
 
+// Import Netflix-style modal helpers
+import { openNetflixModal } from './modules/netflixModal.js';
+import { TMDB_BACKDROP_BASE_URL, TMDB_IMG_BASE_URL } from './config.js';
+import { getCertification } from './ratingUtils.js';
+
 // Import UI utility functions
 import {
-    displayItemDetails,
     updateThemeDependentElements,
     showCustomAlert,
     hideCustomAlert,
     showLoadingIndicator,
     hideLoadingIndicator,
-    updateSeenButtonStateInModal,
-    renderWatchlistOptionsInModal,
-    createContentCardHtml, // Keep for delegated click handler
 } from './ui.js';
 
 // Global state variables
@@ -248,30 +249,26 @@ window.onload = async () => {
         try {
             showLoadingIndicator('Fetching item details...');
             const details = await fetchItemDetails(id, type);
-            displayItemDetails(details, type, isLightMode);
-            updateSeenButtonStateInModal(details.id, type, SeenItemsManager.isItemSeen);
-            renderWatchlistOptionsInModal(
-                details,
-                LibraryManager.getWatchlistsCache(), // Pass the cache directly
-                LibraryManager.addRemoveItemToFolder, // Pass the function
-                LibraryManager.createLibraryFolder // Pass the function
-            );
-            if (type === 'tv') {
-                TrackManager.renderTrackSectionInModal(details);
-                const trackBtn = document.getElementById('track-progress-btn');
-                const trackContainer = document.getElementById('track-progress-container');
-                if (trackBtn && trackContainer) {
-                    trackBtn.addEventListener('click', () => {
-                        const isHidden = trackContainer.style.display === 'none' || trackContainer.style.display === '';
-                        if (isHidden) {
-                            TrackManager.renderTrackSectionInModal(details);
-                            trackContainer.style.display = 'block';
-                        } else {
-                            trackContainer.style.display = 'none';
-                        }
-                    });
-                }
+
+            const imageSrc = details.backdrop_path
+                ? `${TMDB_BACKDROP_BASE_URL}${details.backdrop_path}`
+                : (details.poster_path ? `${TMDB_IMG_BASE_URL}${details.poster_path}` : '');
+            const tags = [];
+            const year = (details.release_date || details.first_air_date || '').slice(0, 4);
+            if (year) tags.push(year);
+            const certification = getCertification(details);
+            if (certification && certification !== 'N/A') tags.push(certification);
+            tags.push(type === 'movie' ? 'Movie' : 'TV');
+            if (details.genres && details.genres.length > 0) {
+                tags.push(...details.genres.slice(0, 2).map(g => g.name));
             }
+
+            openNetflixModal({
+                imageSrc,
+                title: details.title || details.name || '',
+                tags,
+                description: details.overview || ''
+            });
         } catch (error) {
             console.error("Error fetching item details for modal:", error);
             showCustomAlert('Error', `Could not load item details. Error: ${error.message}`);
