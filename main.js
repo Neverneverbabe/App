@@ -16,7 +16,7 @@ import * as TrackManager from './modules/track.js';
 
 // Import Netflix-style modal helpers
 import { openNetflixModal } from './modules/netflixModal.js';
-import { TMDB_BACKDROP_BASE_URL, TMDB_IMG_BASE_URL } from './config.js';
+import { TMDB_BACKDROP_BASE_URL, TMDB_IMG_BASE_URL, VIDSRC_PROVIDERS } from './config.js';
 import { getCertification } from './ratingUtils.js';
 
 // Import UI utility functions
@@ -263,11 +263,29 @@ window.onload = async () => {
                 tags.push(...details.genres.slice(0, 2).map(g => g.name));
             }
 
+            const imdbId = details.external_ids && details.external_ids.imdb_id;
+            const imdbUrl = imdbId ? `https://www.imdb.com/title/${imdbId}/` : '';
+
+            const streamingLinks = [];
+            if (VIDSRC_PROVIDERS && VIDSRC_PROVIDERS.length > 0) {
+                VIDSRC_PROVIDERS.forEach(provider => {
+                    let url = '';
+                    if (type === 'movie') url = `${provider.movieUrl}${details.id}`;
+                    else if (type === 'tv') url = `${provider.tvUrl}${details.id}`;
+                    if (url) {
+                        const name = provider.name + (type === 'tv' ? ' (TV Series)' : '');
+                        streamingLinks.push({ name, url });
+                    }
+                });
+            }
+
             openNetflixModal({
                 imageSrc,
                 title: details.title || details.name || '',
                 tags,
-                description: details.overview || ''
+                description: details.overview || '',
+                imdbUrl,
+                streamingLinks
             });
         } catch (error) {
             console.error("Error fetching item details for modal:", error);
