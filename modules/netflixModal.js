@@ -208,6 +208,15 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
 
   if (itemDetails) {
     renderWatchlistOptionsInModal(itemDetails, getWatchlistsCache(), addRemoveItemToFolder, createLibraryFolder);
+    const watchlistBtn = document.getElementById('dropdown-selected-text-modal');
+    if (watchlistBtn) {
+      const clone = watchlistBtn.cloneNode(true);
+      watchlistBtn.parentNode.replaceChild(clone, watchlistBtn);
+      clone.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openWatchlistModal(itemDetails);
+      });
+    }
   }
 }
 
@@ -220,4 +229,78 @@ export function closeNetflixModal() {
     overlay.remove();
     document.body.style.overflow = '';
   }
+}
+
+export function openWatchlistModal(itemDetails) {
+  const overlay = document.getElementById('watchlist-modal');
+  if (!overlay) return;
+  let listEl = document.getElementById('watchlist-options-list');
+  let addBtn = document.getElementById('watchlist-add-btn');
+  let doneBtn = document.getElementById('watchlist-modal-done');
+  const closeBtn = overlay.querySelector('.close-button');
+
+  const itemType = itemDetails.media_type || (itemDetails.title ? 'movie' : 'tv');
+
+  function getSelectedIds(cache) {
+    return cache.filter(wl => wl.items.some(it => String(it.tmdb_id) === String(itemDetails.id) && it.item_type === itemType)).map(wl => wl.id);
+  }
+
+  function updateList() {
+    let cache = getWatchlistsCache();
+    const selected = getSelectedIds(cache);
+    listEl.innerHTML = cache.length
+      ? cache.map(wl => `<div class="dropdown-item ${selected.includes(wl.id) ? 'item-selected' : ''}" data-folder-id="${wl.id}">${wl.name}<span class="checkmark">✔</span></div>`).join('')
+      : `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No watchlists yet. Click '+' below.</div>`;
+  }
+
+  const newListEl = listEl.cloneNode(false);
+  listEl.parentNode.replaceChild(newListEl, listEl);
+  listEl = newListEl;
+
+  listEl.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const item = e.target.closest('.dropdown-item');
+    if (!item || !item.dataset.folderId) return;
+    await addRemoveItemToFolder(item.dataset.folderId, itemDetails, itemType);
+    updateList();
+  });
+
+  const newAddBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+  addBtn = newAddBtn;
+  addBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const name = prompt('Enter new watchlist name:');
+    if (name && name.trim() !== '') {
+      await createLibraryFolder(name.trim());
+      updateList();
+    }
+  });
+
+  function close() {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    renderWatchlistOptionsInModal(itemDetails, getWatchlistsCache(), addRemoveItemToFolder, createLibraryFolder);
+    const btn = document.getElementById('dropdown-selected-text-modal');
+    if (btn) {
+      const c = btn.cloneNode(true);
+      btn.parentNode.replaceChild(c, btn);
+      c.addEventListener('click', (ev) => { ev.stopPropagation(); openWatchlistModal(itemDetails); });
+    }
+  }
+
+  const newDoneBtn = doneBtn.cloneNode(true);
+  doneBtn.parentNode.replaceChild(newDoneBtn, doneBtn);
+  doneBtn = newDoneBtn;
+  doneBtn.addEventListener('click', close);
+
+  const newCloseBtn = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+  newCloseBtn.addEventListener('click', close);
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  updateList();
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }

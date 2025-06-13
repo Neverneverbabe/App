@@ -1724,6 +1724,19 @@
         </div>
     </div>
 
+    <!-- Watchlist Modal -->
+    <div id="watchlist-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 300px; padding: 1.5rem;">
+            <button class="close-button" aria-label="Close"><i class="fas fa-times"></i></button>
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Manage Watchlists</h2>
+            <div id="watchlist-options-list" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none; max-height: 300px; overflow-y: auto;"></div>
+            <div class="filter-dropdown-footer" style="border-radius: 0.75rem;">
+                <button id="watchlist-add-btn" class="filter-action-button">+</button>
+                <button id="watchlist-modal-done" class="filter-action-button apply">Done</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Secondary Sidebar HTML (for mobile "More" options) -->
     <div id="secondary-sidebar" class="secondary-sidebar">
         <button class="close-secondary-sidebar" title="Close"><i class="fas fa-times"></i></button>
