@@ -49,7 +49,7 @@ export async function fetchSearchResults(query, type = 'multi') {
  * @param {number} page - The page number to fetch.
  * @returns {Promise<Array>}
  */
-export async function fetchDiscoveredItems(mediaType, certificationFilters = [], page = 1) {
+export async function fetchDiscoveredItems(mediaType, certificationFilters = [], page = 1, genreFilters = []) {
     let certQueryParam = '';
     if (certificationFilters.length > 0) {
         const validFilters = certificationFilters.filter(f => f !== ""); // Exclude "All Ratings" placeholder
@@ -57,7 +57,14 @@ export async function fetchDiscoveredItems(mediaType, certificationFilters = [],
             certQueryParam = `&certification_country=US&certification=${validFilters.join('|')}`;
         }
     }
-    const url = `${TMDB_BASE_URL}/discover/${mediaType}?api_key=${API_KEY}&include_adult=false${certQueryParam}&sort_by=popularity.desc&vote_count.gte=100&page=${page}`;
+    let genreQueryParam = '';
+    if (genreFilters.length > 0) {
+        const validGenres = genreFilters.filter(g => g !== "");
+        if (validGenres.length > 0) {
+            genreQueryParam = `&with_genres=${validGenres.join(',')}`;
+        }
+    }
+    const url = `${TMDB_BASE_URL}/discover/${mediaType}?api_key=${API_KEY}&include_adult=false${certQueryParam}${genreQueryParam}&sort_by=popularity.desc&vote_count.gte=100&page=${page}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to fetch discovered ${mediaType} items`);
     const data = await response.json();
@@ -73,13 +80,13 @@ export async function fetchDiscoveredItems(mediaType, certificationFilters = [],
  * @param {number} [startPage=1] - Page number to start fetching from.
  * @returns {Promise<{items: Array, pagesFetched: number}>}
  */
-export async function fetchEnoughDiscoveredItems(mediaType, certificationFilters = [], desiredCount = 20, startPage = 1) {
+export async function fetchEnoughDiscoveredItems(mediaType, certificationFilters = [], desiredCount = 20, startPage = 1, genreFilters = []) {
     let results = [];
     let page = startPage;
     let pagesFetched = 0;
 
     while (results.length < desiredCount) {
-        const items = await fetchDiscoveredItems(mediaType, certificationFilters, page);
+        const items = await fetchDiscoveredItems(mediaType, certificationFilters, page, genreFilters);
         if (items.length === 0) break;
         results = results.concat(items);
         if (items.length < 20) break; // Reached end of available items

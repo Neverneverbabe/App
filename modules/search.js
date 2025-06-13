@@ -21,7 +21,7 @@ const SEARCH_DEBOUNCE_DELAY = 500;
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function performSearch(query, reRenderOnly, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function performSearch(query, reRenderOnly, currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
     const searchResultsContainer = document.getElementById('search-results-container');
 
     if (!reRenderOnly && query.length < 3) {
@@ -35,8 +35,13 @@ export async function performSearch(query, reRenderOnly, currentMediaTypeFilter,
         if (currentMediaTypeFilter) {
             filteredResults = filteredResults.filter(item => (item.media_type || (item.title ? 'movie' : 'tv')) === currentMediaTypeFilter);
         }
-        if (currentAgeRatingFilter.length > 0) {
-            filteredResults = filteredResults.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+        if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+            filteredResults = filteredResults.filter(item => {
+                const ratingOk = currentAgeRatingFilter.length === 0 || checkRatingCompatibility(getCertification(item), currentAgeRatingFilter);
+                const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+                const categoryOk = currentCategoryFilter.length === 0 || genreIds.some(id => currentCategoryFilter.includes(String(id)));
+                return ratingOk && categoryOk;
+            });
         }
         displaySearchResults('search-results-container', filteredResults, isLightMode, onCardClick, isItemSeenFn);
         if (filteredResults.length === 0 && currentAgeRatingFilter.length > 0) {
@@ -55,8 +60,13 @@ export async function performSearch(query, reRenderOnly, currentMediaTypeFilter,
             if (currentMediaTypeFilter) {
                 filteredResults = filteredResults.filter(item => (item.media_type || (item.title ? 'movie' : 'tv')) === currentMediaTypeFilter);
             }
-            if (currentAgeRatingFilter.length > 0) {
-                filteredResults = filteredResults.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+            if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+                filteredResults = filteredResults.filter(item => {
+                    const ratingOk = currentAgeRatingFilter.length === 0 || checkRatingCompatibility(getCertification(item), currentAgeRatingFilter);
+                    const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+                    const categoryOk = currentCategoryFilter.length === 0 || genreIds.some(id => currentCategoryFilter.includes(String(id)));
+                    return ratingOk && categoryOk;
+                });
             }
 
             displaySearchResults('search-results-container', filteredResults, isLightMode, onCardClick, isItemSeenFn);
@@ -82,12 +92,12 @@ export async function performSearch(query, reRenderOnly, currentMediaTypeFilter,
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export function setupSearchListeners(searchInput, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export function setupSearchListeners(searchInput, currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
     // Debounce search input to avoid excessive API calls
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(() => {
-            performSearch(searchInput.value.trim(), false, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+            performSearch(searchInput.value.trim(), false, currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn);
         }, SEARCH_DEBOUNCE_DELAY);
     });
 
@@ -96,7 +106,7 @@ export function setupSearchListeners(searchInput, currentMediaTypeFilter, curren
     if (searchButton) {
         searchButton.addEventListener('click', () => {
             clearTimeout(searchTimer);
-            performSearch(searchInput.value.trim(), false, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+            performSearch(searchInput.value.trim(), false, currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn);
         });
     }
 }
@@ -108,10 +118,10 @@ export function setupSearchListeners(searchInput, currentMediaTypeFilter, curren
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export function populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export function populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
     const searchInput = document.getElementById('search-input');
     if (searchInput.value.trim().length >= 3 && cachedSearchResults.length > 0) {
-        performSearch(searchInput.value.trim(), true, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+        performSearch(searchInput.value.trim(), true, currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn);
     } else {
         const searchResultsContainer = document.getElementById('search-results-container');
         searchResultsContainer.innerHTML = `<p style="color: var(--text-secondary);">Start typing to find movies and TV shows!</p>`;

@@ -285,6 +285,7 @@ export async function toggleSeenStatus(itemDetails, itemType) {
                 overview: itemDetails.overview,
                 release_date: itemDetails.release_date || itemDetails.first_air_date,
                 vote_average: itemDetails.vote_average,
+                genre_ids: itemDetails.genre_ids || (itemDetails.genres ? itemDetails.genres.map(g => g.id) : []),
                 addedAt: new Date().toISOString()
             };
             await saveUserData('seenItems', String(itemId), seenItemData);
@@ -347,7 +348,7 @@ export function setupDelegatedSeenToggleListener(onCardClickCallback) {
  * @param {boolean} isLightMode - True if light mode is active.
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  */
-export function populateSeenTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick) {
+export function populateSeenTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick) {
     const seenContentDiv = document.getElementById('seen-content');
     const seenItems = getSeenItems();
     seenContentDiv.innerHTML = '';
@@ -364,13 +365,16 @@ export function populateSeenTab(currentMediaTypeFilter, currentAgeRatingFilter, 
             filteredSeenItems = filteredSeenItems.filter(item => item.type === currentMediaTypeFilter);
         }
 
-        if (currentAgeRatingFilter.length > 0) {
-            filteredSeenItems = filteredSeenItems.filter(item =>
-                checkRatingCompatibility(getCertification(item), currentAgeRatingFilter)
-            );
+        if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+            filteredSeenItems = filteredSeenItems.filter(item => {
+                const ratingOk = currentAgeRatingFilter.length === 0 || checkRatingCompatibility(getCertification(item), currentAgeRatingFilter);
+                const genreIds = item.genre_ids || [];
+                const categoryOk = currentCategoryFilter.length === 0 || genreIds.some(id => currentCategoryFilter.includes(String(id)));
+                return ratingOk && categoryOk;
+            });
         }
 
-        if (filteredSeenItems.length === 0 && currentAgeRatingFilter.length > 0) {
+        if (filteredSeenItems.length === 0 && (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0)) {
             seenContentDiv.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No seen items matched the selected filter.</p>`;
         } else {
             // Use createContentCardHtml from ui.js
