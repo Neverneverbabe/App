@@ -1,5 +1,6 @@
 import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
+import { renderTrackSectionInModal } from './track.js';
 
 export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
@@ -109,6 +110,20 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   providerBtn.setAttribute('aria-label', 'Watch Links');
   providerBtn.dataset.selectedIndex = '0';
 
+  let showTrackButton = false;
+  if (itemDetails) {
+    const type = itemDetails.media_type || (itemDetails.title ? 'movie' : 'tv');
+    if (type === 'tv') showTrackButton = true;
+  }
+
+  const trackBtn = document.createElement('button');
+  if (showTrackButton) {
+    trackBtn.className = 'netflix-modal-action-btn';
+    trackBtn.innerHTML = '<i class="fas fa-bars-progress"></i>';
+    trackBtn.title = 'Track Progress';
+    trackBtn.setAttribute('aria-label', 'Track Progress');
+  }
+
   providerBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const currentIdx = parseInt(providerBtn.dataset.selectedIndex, 10) || 0;
@@ -118,6 +133,19 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
       if (streamingLinks[idx]) providerBtn.title = streamingLinks[idx].name;
     });
   });
+
+  if (showTrackButton) {
+    trackBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const container = document.getElementById('netflix-track-container');
+      if (!container) return;
+      const shouldShow = container.style.display === 'none' || container.style.display === '';
+      container.style.display = shouldShow ? 'block' : 'none';
+      if (shouldShow && itemDetails) {
+        renderTrackSectionInModal(itemDetails);
+      }
+    });
+  }
 
   // --- Button functionality ---
   let isSeen = false;
@@ -142,6 +170,9 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   if (streamingLinks && streamingLinks.length > 0) {
     actions.appendChild(providerBtn);
   }
+  if (showTrackButton) {
+    actions.appendChild(trackBtn);
+  }
 
   body.appendChild(actions);
 
@@ -149,6 +180,12 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   watchNowRow.className = 'netflix-modal-watch-row';
   watchNowRow.appendChild(watchNowBtn);
   body.appendChild(watchNowRow);
+
+  const trackContainer = document.createElement('div');
+  trackContainer.id = 'netflix-track-container';
+  trackContainer.style.display = 'none';
+  trackContainer.style.marginTop = '1rem';
+  body.appendChild(trackContainer);
 
   if (recommendations && recommendations.length > 0) {
     const recSection = document.createElement('div');
