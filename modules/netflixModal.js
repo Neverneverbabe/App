@@ -1,7 +1,7 @@
-import { renderWatchlistOptionsInModal } from '../ui.js';
+import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
 
-export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [] } = {}) {
+export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
   const overlay = document.createElement('div');
@@ -145,6 +145,54 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   actions.appendChild(watchNowWrapper);
 
   body.appendChild(actions);
+
+  if (recommendations && recommendations.length > 0) {
+    const recSection = document.createElement('div');
+    recSection.className = 'netflix-modal-section';
+    const recTitle = document.createElement('h3');
+    recTitle.textContent = 'Recommendations';
+    recSection.appendChild(recTitle);
+    const recRow = document.createElement('div');
+    recRow.className = 'content-row hide-scrollbar modal-row';
+    recommendations.slice(0, 10).forEach(rec => {
+      const temp = document.createElement('div');
+      temp.innerHTML = createContentCardHtml(rec, false, () => false);
+      const card = temp.firstElementChild;
+      if (card && onItemSelect) {
+        card.addEventListener('click', () => {
+          closeNetflixModal();
+          onItemSelect(rec.id, rec.media_type || (rec.title ? 'movie' : 'tv'));
+        });
+      }
+      recRow.appendChild(card);
+    });
+    recSection.appendChild(recRow);
+    body.appendChild(recSection);
+  }
+
+  if (series && series.length > 0) {
+    const seriesSection = document.createElement('div');
+    seriesSection.className = 'netflix-modal-section';
+    const seriesTitle = document.createElement('h3');
+    seriesTitle.textContent = 'Series';
+    seriesSection.appendChild(seriesTitle);
+    const seriesRow = document.createElement('div');
+    seriesRow.className = 'content-row hide-scrollbar modal-row';
+    series.forEach(part => {
+      const temp = document.createElement('div');
+      temp.innerHTML = createContentCardHtml(part, false, () => false);
+      const card = temp.firstElementChild;
+      if (card && onItemSelect) {
+        card.addEventListener('click', () => {
+          closeNetflixModal();
+          onItemSelect(part.id, part.media_type || (part.title ? 'movie' : 'tv'));
+        });
+      }
+      seriesRow.appendChild(card);
+    });
+    seriesSection.appendChild(seriesRow);
+    body.appendChild(seriesSection);
+  }
 
   // Optional list of streaming links was previously displayed under the
   // "Watch Now" button. The dropdown next to the button already provides

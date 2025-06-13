@@ -4,8 +4,8 @@
 import { initializeFirebaseServices, getFirebaseAuth, getFirebaseFirestore } from './SignIn/firebase.js';
 // Import auth related functions
 import { canvasSignIn, initAuthRefs, handleAuthStateChanged } from './SignIn/auth.js';
-// Import API calls for item details (needed by onCardClick)
-import { fetchItemDetails } from './api.js';
+// Import API calls for item details and related data
+import { fetchItemDetails, fetchRecommendations, fetchCollectionItems } from './api.js';
 
 // Import new modules for content, search, seen items, and library management
 import * as ContentManager from './modules/contentManager.js';
@@ -249,6 +249,18 @@ window.onload = async () => {
         try {
             showLoadingIndicator('Fetching item details...');
             const details = await fetchItemDetails(id, type);
+            const recommendations = await fetchRecommendations(id, type);
+            let seriesItems = [];
+            if (type === 'movie' && details.belongs_to_collection && details.belongs_to_collection.id) {
+                seriesItems = await fetchCollectionItems(details.belongs_to_collection.id);
+            } else if (type === 'tv' && Array.isArray(details.seasons)) {
+                seriesItems = details.seasons.map(season => ({
+                    id: season.id,
+                    title: season.name,
+                    poster_path: season.poster_path,
+                    media_type: 'tv'
+                }));
+            }
 
             const imageSrc = details.backdrop_path
                 ? `${TMDB_BACKDROP_BASE_URL}${details.backdrop_path}`
@@ -287,7 +299,10 @@ window.onload = async () => {
                 description: details.overview || '',
                 imdbUrl,
                 rating: details.vote_average ? details.vote_average.toFixed(1) : null,
-                streamingLinks
+                streamingLinks,
+                recommendations,
+                series: seriesItems,
+                onItemSelect: onCardClick
             });
         } catch (error) {
             console.error("Error fetching item details for modal:", error);
@@ -332,6 +347,18 @@ window.onload = async () => {
                     }
                 });
             }
+            const recommendations = await fetchRecommendations(id, type);
+            let seriesItems = [];
+            if (type === 'movie' && details.belongs_to_collection && details.belongs_to_collection.id) {
+                seriesItems = await fetchCollectionItems(details.belongs_to_collection.id);
+            } else if (type === 'tv' && Array.isArray(details.seasons)) {
+                seriesItems = details.seasons.map(season => ({
+                    id: season.id,
+                    title: season.name,
+                    poster_path: season.poster_path,
+                    media_type: 'tv'
+                }));
+            }
             openNetflixModal({
                 itemDetails: details,
                 imageSrc,
@@ -339,7 +366,10 @@ window.onload = async () => {
                 tags,
                 description: details.overview || '',
                 imdbUrl,
-                streamingLinks
+                streamingLinks,
+                recommendations,
+                series: seriesItems,
+                onItemSelect: onCardClick
             });
         } catch (error) {
             console.error('Error fetching hero item details:', error);
