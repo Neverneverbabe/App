@@ -285,6 +285,7 @@ window.onload = async () => {
                 tags,
                 description: details.overview || '',
                 imdbUrl,
+                rating: details.vote_average ? details.vote_average.toFixed(1) : null,
                 streamingLinks
             });
         } catch (error) {

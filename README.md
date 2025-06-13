@@ -17,7 +17,8 @@ openNetflixModal({
   imageSrc: 'poster.jpg',
   title: 'Example Movie',
   tags: ['Action', 'Drama'],
-  description: 'Short description here'
+  description: 'Short description here',
+  rating: '8.5'
 });
 ```
 
