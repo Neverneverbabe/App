@@ -121,6 +121,13 @@ itemDetailModal.addEventListener('click', (event) => {
  * @param {function} isItemSeenFn - Function from main.js (now seenItems.js) to check if item is currently marked as seen.
  * @returns {string} - The HTML string for the content card.
  */
+export function isItemInAnyWatchlist(itemId, itemType) {
+    const watchlists = getWatchlistsCache();
+    return watchlists.some(wl =>
+        wl.items.some(it => String(it.tmdb_id) === String(itemId) && it.item_type === itemType)
+    );
+}
+
 export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
     const posterPath = (typeof item.poster_path === 'string' && item.poster_path)
         ? `${TMDB_IMG_BASE_URL}${item.poster_path}`
@@ -137,14 +144,18 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
     const seenIconClass = isSeen ? 'item-is-seen' : '';
     const seenIconTitle = isSeen ? 'Mark as Unseen' : 'Mark as Seen';
 
+    const isBookmarked = isItemInAnyWatchlist(item.id, mediaType);
+    const bookmarkIconClass = isBookmarked ? 'item-in-watchlist' : '';
+    const bookmarkIconTitle = isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist';
+
     return `
         <div class="content-card" data-id="${item.id}" data-type="${mediaType}" data-certification="${certification}" data-title="${title}" data-poster="${item.poster_path || ''}">
             <div class="image-container">
                 <div class="seen-toggle-icon ${seenIconClass}" data-id="${item.id}" data-type="${mediaType}" title="${seenIconTitle}">
                     <i class="fas fa-check"></i>
                 </div>
-                <div class="bookmark-toggle-icon" title="Add to Watchlist">
-                    <i class="fa-regular fa-bookmark"></i>
+                <div class="bookmark-toggle-icon ${bookmarkIconClass}" title="${bookmarkIconTitle}">
+                    <i class="fa-${isBookmarked ? 'solid' : 'regular'} fa-bookmark"></i>
                 </div>
                 <img src="${posterPath || fallbackImageUrl}" alt="${title}"
                     onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}"
@@ -159,6 +170,27 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
             <p>${title}</p>
         </div>
     `;
+}
+
+export function updateBookmarkIconForItem(itemId, itemType) {
+    document.querySelectorAll(`.content-card[data-id="${itemId}"][data-type="${itemType}"] .bookmark-toggle-icon`).forEach(icon => {
+        const isSaved = isItemInAnyWatchlist(itemId, itemType);
+        icon.classList.toggle('item-in-watchlist', isSaved);
+        icon.title = isSaved ? 'Remove from Watchlist' : 'Add to Watchlist';
+        const i = icon.querySelector('i');
+        if (i) {
+            i.classList.toggle('fa-solid', isSaved);
+            i.classList.toggle('fa-regular', !isSaved);
+        }
+    });
+}
+
+export function updateBookmarkIconStates() {
+    document.querySelectorAll('.content-card').forEach(card => {
+        const id = card.dataset.id;
+        const type = card.dataset.type;
+        updateBookmarkIconForItem(id, type);
+    });
 }
 
 /**
