@@ -72,7 +72,7 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   if (imdbUrl) {
     const imdbP = document.createElement('p');
-    imdbP.innerHTML = `<strong>IMDb:</strong> <a href="${imdbUrl}" target="_blank">View on IMDb</a>`;
+    imdbP.innerHTML = `<strong>IMDb:</strong> <a href="${imdbUrl}" target="_blank"><img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;"></a>`;
     infoDiv.appendChild(imdbP);
   }
 

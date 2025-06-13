@@ -326,7 +326,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const imdbId = detailsObject.external_ids && detailsObject.external_ids.imdb_id;
     let imdbLinkHtmlSegment;
     if (imdbId) {
-        imdbLinkHtmlSegment = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" style="color: var(--science-blue); text-decoration: none;">View on IMDb</a>`;
+        imdbLinkHtmlSegment = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank"><img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;"></a>`;
     } else {
         imdbLinkHtmlSegment = `Not Available`;
     }
