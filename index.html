@@ -1950,6 +1950,16 @@
         </div>
     </div>
 
+    <!-- Episode Selection Modal -->
+    <div id="episode-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 500px; padding: 1.5rem;">
+            <button class="close-button" aria-label="Close"><i class="fas fa-times"></i></button>
+            <h2 id="episode-modal-title" style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Select Episode</h2>
+            <select id="episode-season-select" style="margin-bottom:1rem; width:100%; padding:0.5rem; background:var(--input-bg-color); color:var(--text-primary); border:1px solid var(--input-border-color); border-radius:4px;"></select>
+            <div id="episode-list" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
     <!-- Secondary Sidebar HTML (for mobile "More" options) -->
     <div id="secondary-sidebar" class="secondary-sidebar">
         <button class="close-secondary-sidebar" title="Close" aria-label="Close"><i class="fas fa-times"></i></button>

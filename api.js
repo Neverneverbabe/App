@@ -105,6 +105,19 @@ export async function fetchRecommendations(id, type) {
 }
 
 /**
+ * Fetch details for a specific season of a TV show, including episode info.
+ * @param {number} tvId - The TMDB TV show ID.
+ * @param {number} seasonNumber - The season number to fetch.
+ * @returns {Promise<Object>} Season details including episodes.
+ */
+export async function fetchSeasonDetails(tvId, seasonNumber) {
+    const url = `${TMDB_BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch season details');
+    return await response.json();
+}
+
+/**
  * Fetch all movies belonging to a collection.
  * @param {number} collectionId - The TMDB collection ID.
  * @returns {Promise<Array>} Array of collection parts (movies).
