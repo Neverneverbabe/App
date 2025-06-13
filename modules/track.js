@@ -113,8 +113,8 @@ export function populateTrackTab(isLightMode, onCardClick) {
                     progressTag.style.position = 'absolute';
                     progressTag.style.bottom = '8px';
                     progressTag.style.right = '8px';
-                    progressTag.style.backgroundColor = 'rgba(0,0,0,0.7)';
-                    progressTag.style.color = '#fff';
+                    progressTag.style.backgroundColor = 'rgba(var(--black-rgb), 0.7)';
+                    progressTag.style.color = 'var(--white)';
                     progressTag.style.padding = '2px 6px';
                     progressTag.style.borderRadius = '4px';
                     progressTag.style.fontSize = '0.75rem';
