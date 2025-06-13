@@ -66,7 +66,7 @@ let themeToggleBtn, filterButton, body, sidebarToggleButton, sidebarToggleIcon, 
     authModalCloseButton, authModalTitle, authForm, nameInputGroup, nameInput, authEmailInput,
     authPasswordInput, confirmPasswordGroup, confirmPasswordInput, authSubmitButton, authSwitchLink,
     filterModal, filterModalCloseButton, filterOptionsItemsContainerModal, filterMediaTypeContainerModal, filterApplyBtnModal,
-    filterClearBtnModal;
+    filterClearBtnModal, filterMediaTypeSection, filterAgeRatingSection;
 
 
 // Shift the main initialization logic to window.onload
@@ -129,6 +129,18 @@ window.onload = async () => {
     filterMediaTypeContainerModal = document.getElementById('filter-media-type-container');
     filterApplyBtnModal = document.getElementById('filter-apply-btn-modal');
     filterClearBtnModal = document.getElementById('filter-clear-btn-modal');
+    filterMediaTypeSection = document.getElementById('filter-media-type-section');
+    filterAgeRatingSection = document.getElementById('filter-age-rating-section');
+
+    // Toggle visibility of filter sections when their titles are clicked
+    filterMediaTypeSection.querySelector('.filter-section-title').addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterMediaTypeSection.classList.toggle('collapsed');
+    });
+    filterAgeRatingSection.querySelector('.filter-section-title').addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterAgeRatingSection.classList.toggle('collapsed');
+    });
 
 
     // --- Firebase Initialization and Auth Setup ---
@@ -754,6 +766,8 @@ window.onload = async () => {
     function openFilterModal() {
         filterModal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        filterMediaTypeSection.classList.add('collapsed');
+        filterAgeRatingSection.classList.add('collapsed');
         tempSelectedFilters = currentAgeRatingFilter.length === 0 ? [""] : [...currentAgeRatingFilter];
         tempSelectedMediaType = currentMediaTypeFilter;
         renderFilterDropdownOptions(filterOptionsItemsContainerModal, tempSelectedFilters);
