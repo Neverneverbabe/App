@@ -104,6 +104,23 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   watchNowBtn.className = 'watch-now-btn';
   watchNowBtn.innerHTML = '<i class="fas fa-play"></i> Watch Now';
 
+  let selectedLinkIndex = 0;
+
+  const watchNowSelect = document.createElement('select');
+  watchNowSelect.className = 'watch-now-select';
+  if (streamingLinks && streamingLinks.length > 0) {
+    streamingLinks.forEach((link, idx) => {
+      const opt = document.createElement('option');
+      opt.value = link.url;
+      opt.textContent = link.name;
+      if (idx === 0) opt.selected = true;
+      watchNowSelect.appendChild(opt);
+    });
+    watchNowSelect.addEventListener('change', (e) => {
+      selectedLinkIndex = e.target.selectedIndex;
+    });
+  }
+
   // --- Button functionality ---
   let isSeen = false;
 
@@ -116,13 +133,17 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
 
   watchNowBtn.addEventListener('click', () => {
     if (streamingLinks && streamingLinks.length > 0) {
-      window.open(streamingLinks[0].url, '_blank');
+      const url = watchNowSelect.options[selectedLinkIndex]?.value || streamingLinks[0].url;
+      window.open(url, '_blank');
     } else if (imdbUrl) {
       window.open(imdbUrl, '_blank');
     }
   });
 
   watchNowWrapper.appendChild(watchNowBtn);
+  if (streamingLinks && streamingLinks.length > 0) {
+    watchNowWrapper.appendChild(watchNowSelect);
+  }
   body.appendChild(watchNowWrapper);
 
   const infoDiv = document.createElement('div');
