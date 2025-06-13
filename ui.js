@@ -326,7 +326,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const imdbId = detailsObject.external_ids && detailsObject.external_ids.imdb_id;
     let imdbLogoHtml = '';
     if (imdbId) {
-        imdbLogoHtml = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank"><img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;"></a>`;
+        imdbLogoHtml = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" class="imdb-link"><img src="IMDb.png" alt="IMDb"></a>`;
     }
 
     let streamingLinksHtml = '<div id="watch-links-container" style="display:none;"><p style="margin-bottom: 0.5rem;"><strong>Watch On:</strong></p><div class="streaming-links">';

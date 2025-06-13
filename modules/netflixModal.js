@@ -42,7 +42,8 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
     const imdbLink = document.createElement('a');
     imdbLink.href = imdbUrl;
     imdbLink.target = '_blank';
-    imdbLink.innerHTML = `<img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;">`;
+    imdbLink.className = 'imdb-link';
+    imdbLink.innerHTML = `<img src="IMDb.png" alt="IMDb">`;
     tagsDiv.appendChild(imdbLink);
   }
   infoOverlay.appendChild(tagsDiv);
