@@ -387,6 +387,43 @@
             transform: scale(1.05);
         }
 
+        .action-row {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-row .icon-btn,
+        .action-row .watch-now-btn,
+        .action-row .action-dropdown {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .action-row .icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .action-row .action-dropdown {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .light-mode .action-row .action-dropdown {
+            background-color: var(--white);
+            color: var(--black);
+        }
+
         /* Item Detail Modal (New Section) */
         .item-detail-modal {
             display: none; /* Hidden by default */
@@ -1537,7 +1574,15 @@
                 <div class="content">
                     <h2 id="hero-title">Featured Content</h2>
                     <p id="hero-overview">Discover the latest blockbusters and critically acclaimed series.</p>
-                    <button>Watch Now</button>
+                    <div class="action-row">
+                        <button class="icon-btn" title="Mark as Seen"><i class="fas fa-check"></i></button>
+                        <button class="icon-btn" title="Add to Watchlist"><i class="fa-regular fa-bookmark"></i></button>
+                        <button class="watch-now-btn">Watch Now</button>
+                        <select class="action-dropdown">
+                            <option>Option 1</option>
+                            <option>Option 2</option>
+                        </select>
+                    </div>
                 </div>
             </section> <section class="content-section">
                 <h3>Trending Now</h3>
