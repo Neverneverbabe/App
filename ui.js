@@ -289,23 +289,23 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const fallbackPoster = `https://placehold.co/300x450/${isLightMode ? 'BBB' : '555'}/${isLightMode ? '333' : 'FFF'}?text=No+Poster`;
 
     const seenButtonHtml = `
-        <button id="toggle-seen-btn" class="seen-action-button" data-id="${detailsObject.id}" data-type="${itemType}" title="Mark as Seen">
+        <button id="toggle-seen-btn" class="seen-action-button" data-id="${detailsObject.id}" data-type="${itemType}" title="Mark as Seen" aria-label="Mark as Seen">
             <i class="fas fa-check"></i>
         </button>`;
 
     const folderDropdownHtml = `
         <div class="apple-dropdown" id="add-to-folder-dropdown-modal" style="width: 44px;">
-            <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;">
+            <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" aria-label="Add to Watchlist" role="button" tabindex="0" style="display:flex;align-items:center;justify-content:center;">
                 <i class="fa-regular fa-bookmark"></i>
             </div>
             <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; border-radius: 10px; margin-top: 4px;"></div>
             <div class="dropdown-footer" id="dropdown-footer-modal" style="display:none; padding: 0.5em 1em; text-align: center; border-top: 1px solid var(--border-color); background: var(--dropdown-bg); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
-                <button id="add-new-folder-btn-modal" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
+                <button id="add-new-folder-btn-modal" aria-label="Add New Watchlist" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
             </div>
         </div>`;
 
     const watchButtonHtml = `
-        <button id="watch-links-toggle-btn" title="Watch">
+        <button id="watch-links-toggle-btn" title="Watch" aria-label="Watch">
                 <i class="fas fa-play"></i>
         </button>`;
 
@@ -471,6 +471,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
         let titleText = '';
         if (currentlySelectedWatchlistIds.length === 0) {
             titleText = 'Add to Watchlist';
+            dropdownSelectedTextModal.classList.remove('is-selected');
             const icon = dropdownSelectedTextModal.querySelector('i');
             if (icon) {
                 icon.classList.remove('fa-solid');
@@ -479,6 +480,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
         } else if (currentlySelectedWatchlistIds.length === 1) {
             const selectedName = allWatchlists.find(wl => wl.id === currentlySelectedWatchlistIds[0])?.name || 'Selected';
             titleText = selectedName;
+            dropdownSelectedTextModal.classList.add('is-selected');
             const icon = dropdownSelectedTextModal.querySelector('i');
             if (icon) {
                 icon.classList.remove('fa-regular');
@@ -486,6 +488,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
             }
         } else {
             titleText = `${currentlySelectedWatchlistIds.length} watchlists selected`;
+            dropdownSelectedTextModal.classList.add('is-selected');
             const icon = dropdownSelectedTextModal.querySelector('i');
             if (icon) {
                 icon.classList.remove('fa-regular');
