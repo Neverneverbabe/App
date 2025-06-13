@@ -138,10 +138,13 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
     const seenIconTitle = isSeen ? 'Mark as Unseen' : 'Mark as Seen';
 
     return `
-        <div class="content-card" data-id="${item.id}" data-type="${mediaType}" data-certification="${certification}">
+        <div class="content-card" data-id="${item.id}" data-type="${mediaType}" data-certification="${certification}" data-title="${title}" data-poster="${item.poster_path || ''}">
             <div class="image-container">
                 <div class="seen-toggle-icon ${seenIconClass}" data-id="${item.id}" data-type="${mediaType}" title="${seenIconTitle}">
                     <i class="fas fa-check"></i>
+                </div>
+                <div class="bookmark-toggle-icon" title="Add to Watchlist">
+                    <i class="fa-regular fa-bookmark"></i>
                 </div>
                 <img src="${posterPath || fallbackImageUrl}" alt="${title}"
                     onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}"

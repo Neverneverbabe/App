@@ -15,7 +15,7 @@ import * as LibraryManager from './modules/libraryManager.js';
 import * as TrackManager from './modules/track.js';
 
 // Import Netflix-style modal helpers
-import { openNetflixModal } from './modules/netflixModal.js';
+import { openNetflixModal, openWatchlistModal } from './modules/netflixModal.js';
 import { TMDB_BACKDROP_BASE_URL, TMDB_IMG_BASE_URL, VIDSRC_PROVIDERS } from './config.js';
 import { getCertification } from './ratingUtils.js';
 
@@ -402,17 +402,29 @@ window.onload = async () => {
                 showCustomAlert('Error', `Could not update seen status: ${error.message}`);
             }
         } else {
-            const heroBtn = event.target.closest('#hero-watch-now');
-            if (heroBtn) {
-                event.preventDefault();
-                await handleHeroWatchNowClick();
+            const bookmarkIcon = event.target.closest('.bookmark-toggle-icon');
+            if (bookmarkIcon) {
+                event.stopPropagation();
+                const card = bookmarkIcon.closest('.content-card');
+                if (!card) return;
+                const id = parseInt(card.dataset.id);
+                const type = card.dataset.type;
+                if (isNaN(id) || !type) return;
+                const title = card.dataset.title || '';
+                const poster = card.dataset.poster || '';
+                openWatchlistModal({ id, media_type: type, title, poster_path: poster });
             } else {
-                // If it's a card click but not on the seen icon, handle as a normal card click
-                const card = event.target.closest('.content-card');
-                if (card) {
-                    const id = parseInt(card.dataset.id);
-                    const type = card.dataset.type;
-                    if (!isNaN(id) && type) onCardClick(id, type);
+                const heroBtn = event.target.closest('#hero-watch-now');
+                if (heroBtn) {
+                    event.preventDefault();
+                    await handleHeroWatchNowClick();
+                } else {
+                    const card = event.target.closest('.content-card');
+                    if (card) {
+                        const id = parseInt(card.dataset.id);
+                        const type = card.dataset.type;
+                        if (!isNaN(id) && type) onCardClick(id, type);
+                    }
                 }
             }
         }
