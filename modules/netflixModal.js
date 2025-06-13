@@ -78,6 +78,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   seenBtn.className = 'netflix-modal-action-btn';
   seenBtn.innerHTML = '<i class="fas fa-check"></i>';
   seenBtn.title = 'Mark as Seen';
+  seenBtn.setAttribute('aria-label', 'Mark as Seen');
   actions.appendChild(seenBtn);
 
   const watchlistDropdown = document.createElement('div');
@@ -85,12 +86,12 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   watchlistDropdown.id = 'add-to-folder-dropdown-modal';
   watchlistDropdown.style.width = '44px';
   watchlistDropdown.innerHTML = `
-    <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;">
+    <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" aria-label="Add to Watchlist" role="button" tabindex="0" style="display:flex;align-items:center;justify-content:center;">
       <i class="fa-regular fa-bookmark"></i>
     </div>
     <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; border-radius: 10px; margin-top: 4px;"></div>
     <div class="dropdown-footer" id="dropdown-footer-modal" style="display:none; padding: 0.5em 1em; text-align: center; border-top: 1px solid var(--border-color); background: var(--dropdown-bg); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
-      <button id="add-new-folder-btn-modal" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
+      <button id="add-new-folder-btn-modal" aria-label="Add New Watchlist" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
     </div>`;
   actions.appendChild(watchlistDropdown);
 

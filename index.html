@@ -424,9 +424,21 @@
             justify-content: center;
             width: 36px;
             height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--accent-color);
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
         .action-row .icon-btn i {
             font-size: 1.1rem;
+        }
+        .action-row .icon-btn:hover {
+            color: var(--white);
+            background-color: rgba(var(--white-rgb), 0.2);
+        }
+        .light-mode .action-row .icon-btn:hover {
+            background-color: rgba(var(--black-rgb), 0.2);
         }
 
         .action-row .action-dropdown {
@@ -886,19 +898,25 @@
             right: 8px;
             width: 28px;
             height: 28px;
-            background-color: var(--card-bg); /* Matches page background initially */
-            border: 2px solid var(--accent-color);
+            background-color: var(--card-bg);
+            border: 1px solid var(--accent-color);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 5; /* Above the overlay's play icon */
-            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
         .seen-toggle-icon i { /* Font Awesome check icon */
-            color: var(--accent-color);
+            color: var(--text-secondary);
             font-size: 14px;
+        }
+        .seen-toggle-icon:hover {
+            background-color: rgba(var(--white-rgb), 0.2);
+        }
+        .light-mode .seen-toggle-icon:hover {
+            background-color: rgba(var(--black-rgb), 0.2);
         }
         .seen-toggle-icon.item-is-seen {
             background-color: var(--accent-color);
@@ -957,7 +975,7 @@
             user-select: none;
         }
         .dropdown-selected {
-            background: var(--dropdown-bg, #141414);
+            background: var(--card-bg);
             border-radius: 50%;
             padding: 0.5em;
             width: 36px;
@@ -966,13 +984,28 @@
             align-items: center;
             justify-content: center;
             border: 1px solid var(--accent-color);
-            color: var(--accent-color);
+            color: var(--text-secondary);
             cursor: pointer;
-            transition: border 0.2s;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
             box-shadow: 0 1px 3px rgba(60,60,67,0.03);
         }
         .dropdown-selected i {
             font-size: 1.1rem;
+        }
+        .dropdown-selected:hover {
+            color: var(--white);
+            background-color: rgba(var(--white-rgb), 0.2);
+        }
+        .light-mode .dropdown-selected:hover {
+            background-color: rgba(var(--black-rgb), 0.2);
+        }
+        .dropdown-selected.is-selected {
+            background-color: var(--accent-color);
+            color: var(--white);
+            border-color: var(--accent-color);
+        }
+        .dropdown-selected.is-selected i.fa-solid {
+            color: var(--white);
         }
         .dropdown-selected:after { display: none; }
         .dropdown-list {
@@ -1224,8 +1257,8 @@
 
         /* Seen Action Button in Modal */
         .seen-action-button {
-            background-color: var(--dropdown-bg, #141414);
-            color: var(--accent-color);
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
             border: 1px solid var(--accent-color);
             padding: 0.5em;
             width: 36px;
@@ -1235,17 +1268,24 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background-color 0.2s, border 0.2s;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
         .seen-action-button.is-seen {
             background-color: var(--accent-color);
             color: var(--white);
             border-color: var(--accent-color);
         }
+        .seen-action-button:hover {
+            color: var(--white);
+            background-color: rgba(var(--white-rgb), 0.2);
+        }
+        .light-mode .seen-action-button:hover {
+            background-color: rgba(var(--black-rgb), 0.2);
+        }
 
         #watch-links-toggle-btn {
-            background-color: var(--dropdown-bg, #141414);
-            color: var(--accent-color);
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
             border: 1px solid var(--accent-color);
             padding: 0.5em;
             width: 36px;
@@ -1255,7 +1295,14 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background-color 0.2s, border 0.2s;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        #watch-links-toggle-btn:hover {
+            color: var(--white);
+            background-color: rgba(var(--white-rgb), 0.2);
+        }
+        .light-mode #watch-links-toggle-btn:hover {
+            background-color: rgba(var(--black-rgb), 0.2);
         }
 
         /* Media Queries for Responsiveness */
@@ -1576,30 +1623,30 @@
 <body>
     <header id="top-bar">
         <div id="header-main">
-            <button id="sidebar-toggle-button" title="Toggle Navigation Menu" aria-controls="main-nav" aria-expanded="false">
+            <button id="sidebar-toggle-button" title="Toggle Navigation Menu" aria-label="Toggle Navigation Menu" aria-controls="main-nav" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="logo"><img src="Sad Face.png" alt="Sad Face Logo" style="height: 1.5em; vertical-align: middle;"></h1>
             <span id="current-tab-name-display">Watch TV+</span> </div>
         <!-- This button is for small screens, to open the secondary sidebar -->
-        <button id="secondary-sidebar-button" title="More" style="display: none;"> <!-- Initially hidden, shown by CSS media query -->
+        <button id="secondary-sidebar-button" title="More" aria-label="More" style="display: none;"> <!-- Initially hidden, shown by CSS media query -->
             <i class="fas fa-ellipsis-v"></i>
         </button>
         <div class="icon-buttons"> <!-- This container will be hidden on small screens -->
-            <button id="theme-toggle" class="toggle-button" title="Toggle Dark/Light Mode">
+            <button id="theme-toggle" class="toggle-button" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Mode">
                 <i class="fas fa-sun sun-icon"></i>
                 <i class="fas fa-moon moon-icon" style="display: none;"></i>
             </button>
             <div id="filter-button-container">
-                <button id="filter-button" title="Filter Content">
+                <button id="filter-button" title="Filter Content" aria-label="Filter Content">
                     <i class="fas fa-filter"></i>
                 </button>
             </div>
-            <button data-tab="search-tab" title="Search">
+            <button data-tab="search-tab" title="Search" aria-label="Search">
                 <i class="fas fa-search"></i>
             </button>
             <div id="profile-menu-container" style="position: relative;">
-                <button id="profile-menu-button" title="User Profile">
+                <button id="profile-menu-button" title="User Profile" aria-label="User Profile">
                     <i class="fas fa-user-circle"></i>
                 </button>
                 <div id="profile-dropdown" class="profile-dropdown">
@@ -1629,8 +1676,8 @@
                     <h2 id="hero-title">Featured Content</h2>
                     <p id="hero-overview">Discover the latest blockbusters and critically acclaimed series.</p>
                     <div class="action-row">
-                        <button class="icon-btn" title="Mark as Seen"><i class="fas fa-check"></i></button>
-                        <button class="icon-btn" title="Add to Watchlist"><i class="fa-regular fa-bookmark"></i></button>
+                        <button class="icon-btn" title="Mark as Seen" aria-label="Mark as Seen"><i class="fas fa-check"></i></button>
+                        <button class="icon-btn" title="Add to Watchlist" aria-label="Add to Watchlist"><i class="fa-regular fa-bookmark"></i></button>
                         <button class="watch-now-btn">Watch Now</button>
                         <select class="action-dropdown">
                             <option>Option 1</option>
@@ -1772,7 +1819,7 @@
             <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Manage Watchlists</h2>
             <div id="watchlist-options-list" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none; max-height: 300px; overflow-y: auto;"></div>
             <div class="filter-dropdown-footer" style="border-radius: 0.75rem;">
-                <button id="watchlist-add-btn" class="filter-action-button">+</button>
+                <button id="watchlist-add-btn" class="filter-action-button" aria-label="Add New Watchlist">+</button>
                 <button id="watchlist-modal-done" class="filter-action-button apply">Done</button>
             </div>
         </div>
@@ -1780,7 +1827,7 @@
 
     <!-- Secondary Sidebar HTML (for mobile "More" options) -->
     <div id="secondary-sidebar" class="secondary-sidebar">
-        <button class="close-secondary-sidebar" title="Close"><i class="fas fa-times"></i></button>
+        <button class="close-secondary-sidebar" title="Close" aria-label="Close"><i class="fas fa-times"></i></button>
         <div class="secondary-sidebar-content">
             <button id="theme-toggle-mobile"><i class="fas fa-sun"></i> Theme</button>
             <button id="filter-button-mobile"><i class="fas fa-filter"></i> Filter</button>
