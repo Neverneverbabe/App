@@ -73,6 +73,7 @@ export async function openEpisodeModal(showDetails) {
 
     let seasonSelect = overlay.querySelector('#episode-season-select');
     let episodeList = overlay.querySelector('#episode-list');
+    let saveBtn = overlay.querySelector('#save-episodes-btn');
     const titleEl = overlay.querySelector('#episode-modal-title');
     const closeBtn = overlay.querySelector('.close-button');
 
@@ -84,8 +85,15 @@ export async function openEpisodeModal(showDetails) {
     episodeList.parentNode.replaceChild(newList, episodeList);
     episodeList = newList;
 
+    const newSave = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSave, saveBtn);
+    saveBtn = newSave;
+
     const newClose = closeBtn.cloneNode(true);
     closeBtn.parentNode.replaceChild(newClose, closeBtn);
+
+    let selectedSeason = null;
+    let selectedEpisode = null;
 
     function close() {
         overlay.style.display = 'none';
@@ -105,7 +113,8 @@ export async function openEpisodeModal(showDetails) {
             const seasonData = await fetchSeasonDetails(showDetails.id, num);
             episodeList.innerHTML = seasonData.episodes.map(ep => {
                 const overview = ep.overview ? ep.overview.slice(0, 100) + (ep.overview.length > 100 ? '...' : '') : '';
-                return `<div class="episode-item" data-season="${num}" data-episode="${ep.episode_number}" style="padding:0.5rem 0;border-bottom:1px solid var(--border-color);cursor:pointer;">
+                const selClass = (selectedSeason === num && selectedEpisode === ep.episode_number) ? 'selected' : '';
+                return `<div class="episode-item ${selClass}" data-season="${num}" data-episode="${ep.episode_number}" style="padding:0.5rem 0;border-bottom:1px solid var(--border-color);cursor:pointer;">
                             <strong>E${ep.episode_number} - ${ep.name}</strong>
                             <p style="margin:0.2rem 0 0;font-size:0.9rem;color:var(--text-secondary);">${overview}</p>
                         </div>`;
@@ -121,15 +130,22 @@ export async function openEpisodeModal(showDetails) {
         if (!isNaN(val)) loadSeason(val);
     });
 
-    episodeList.addEventListener('click', async (e) => {
+    episodeList.addEventListener('click', (e) => {
         const item = e.target.closest('.episode-item');
         if (!item) return;
-        const seasonNumber = parseInt(item.dataset.season, 10);
-        const episodeNumber = parseInt(item.dataset.episode, 10);
-        await addOrUpdateTrackedShow(showDetails, seasonNumber, episodeNumber);
-        close();
-        const container = document.getElementById('track-progress-container');
-        if (container) renderTrackSectionInModal(showDetails);
+        selectedSeason = parseInt(item.dataset.season, 10);
+        selectedEpisode = parseInt(item.dataset.episode, 10);
+        episodeList.querySelectorAll('.episode-item.selected').forEach(el => el.classList.remove('selected'));
+        item.classList.add('selected');
+    });
+
+    saveBtn.addEventListener('click', async () => {
+        if (selectedSeason && selectedEpisode) {
+            await addOrUpdateTrackedShow(showDetails, selectedSeason, selectedEpisode);
+            close();
+            const container = document.getElementById('track-progress-container');
+            if (container) renderTrackSectionInModal(showDetails);
+        }
     });
 
     if (seasons.length > 0) {
