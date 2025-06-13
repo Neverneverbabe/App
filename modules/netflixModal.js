@@ -102,18 +102,51 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
 
   let selectedLinkIndex = 0;
 
-  const watchNowSelect = document.createElement('select');
-  watchNowSelect.className = 'watch-now-select';
+  // Provider dropdown using icon trigger
+  const providerDropdown = document.createElement('div');
+  providerDropdown.className = 'apple-dropdown';
+  providerDropdown.id = 'provider-dropdown';
+  providerDropdown.style.width = '44px';
+  providerDropdown.innerHTML = `
+    <div class="dropdown-selected" id="provider-dropdown-selected" title="Streaming Providers" aria-label="Streaming Providers" role="button" tabindex="0" style="display:flex;align-items:center;justify-content:center;">
+      <i class="fas fa-link"></i>
+    </div>
+    <div class="dropdown-list hide-scrollbar" id="provider-dropdown-list" style="display:none; border-radius: 10px; margin-top: 4px;"></div>
+  `;
+
   if (streamingLinks && streamingLinks.length > 0) {
-    streamingLinks.forEach((link, idx) => {
-      const opt = document.createElement('option');
-      opt.value = link.url;
-      opt.textContent = link.name;
-      if (idx === 0) opt.selected = true;
-      watchNowSelect.appendChild(opt);
+    const list = providerDropdown.querySelector('#provider-dropdown-list');
+    list.innerHTML = streamingLinks
+      .map((link, idx) => `
+        <div class="dropdown-item${idx === 0 ? ' selected' : ''}" data-index="${idx}">
+          ${link.name}
+          <span class="checkmark">✔</span>
+        </div>
+      `).join('');
+
+    const selected = providerDropdown.querySelector('#provider-dropdown-selected');
+
+    selected.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = list.style.display === 'block';
+      list.style.display = isOpen ? 'none' : 'block';
     });
-    watchNowSelect.addEventListener('change', (e) => {
-      selectedLinkIndex = e.target.selectedIndex;
+
+    list.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const item = e.target.closest('.dropdown-item');
+      if (!item) return;
+      selectedLinkIndex = parseInt(item.dataset.index, 10);
+      list.querySelectorAll('.dropdown-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      list.style.display = 'none';
+    });
+
+    document.addEventListener('click', function handleOutside(ev) {
+      if (!providerDropdown.contains(ev.target)) {
+        list.style.display = 'none';
+        document.removeEventListener('click', handleOutside);
+      }
     });
   }
 
@@ -129,7 +162,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
 
   watchNowBtn.addEventListener('click', () => {
     if (streamingLinks && streamingLinks.length > 0) {
-      const url = watchNowSelect.options[selectedLinkIndex]?.value || streamingLinks[0].url;
+      const url = streamingLinks[selectedLinkIndex]?.url || streamingLinks[0].url;
       window.open(url, '_blank');
     } else if (imdbUrl) {
       window.open(imdbUrl, '_blank');
@@ -137,7 +170,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   });
 
   if (streamingLinks && streamingLinks.length > 0) {
-    actions.appendChild(watchNowSelect);
+    actions.appendChild(providerDropdown);
   }
   actions.appendChild(watchNowBtn);
 
