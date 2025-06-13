@@ -76,6 +76,15 @@
             display: flex;
             flex-direction: column;
         }
+        /* Hide scrollbars globally */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
 
         /* Hide scrollbars for Webkit browsers (Chrome, Safari) */
         .hide-scrollbar::-webkit-scrollbar {
