@@ -295,6 +295,57 @@ window.onload = async () => {
         }
     };
 
+    const handleHeroWatchNowClick = async () => {
+        const heroSection = document.querySelector('.hero-section');
+        if (!heroSection) return;
+        const id = parseInt(heroSection.dataset.itemId);
+        const type = heroSection.dataset.itemType;
+        if (!id || !type) return;
+        try {
+            showLoadingIndicator('Fetching item details...');
+            const details = await fetchItemDetails(id, type);
+            const imageSrc = details.backdrop_path
+                ? `${TMDB_BACKDROP_BASE_URL}${details.backdrop_path}`
+                : (details.poster_path ? `${TMDB_IMG_BASE_URL}${details.poster_path}` : '');
+            const tags = [];
+            const year = (details.release_date || details.first_air_date || '').slice(0, 4);
+            if (year) tags.push(year);
+            const certification = getCertification(details);
+            if (certification && certification !== 'N/A') tags.push(certification);
+            tags.push(type === 'movie' ? 'Movie' : 'TV');
+            if (details.genres && details.genres.length > 0) {
+                tags.push(...details.genres.slice(0, 2).map(g => g.name));
+            }
+            const imdbId = details.external_ids && details.external_ids.imdb_id;
+            const imdbUrl = imdbId ? `https://www.imdb.com/title/${imdbId}/` : '';
+            const streamingLinks = [];
+            if (VIDSRC_PROVIDERS && VIDSRC_PROVIDERS.length > 0) {
+                VIDSRC_PROVIDERS.forEach(provider => {
+                    let url = '';
+                    if (type === 'movie') url = `${provider.movieUrl}${details.id}`;
+                    else if (type === 'tv') url = `${provider.tvUrl}${details.id}`;
+                    if (url) {
+                        const name = provider.name + (type === 'tv' ? ' (TV Series)' : '');
+                        streamingLinks.push({ name, url });
+                    }
+                });
+            }
+            openNetflixModal({
+                imageSrc,
+                title: details.title || details.name || '',
+                tags,
+                description: details.overview || '',
+                imdbUrl,
+                streamingLinks
+            });
+        } catch (error) {
+            console.error('Error fetching hero item details:', error);
+            showCustomAlert('Error', `Could not load item details. Error: ${error.message}`);
+        } finally {
+            hideLoadingIndicator();
+        }
+    };
+
     // Setup delegated click listener for seen toggle icons (moved here from SeenItemsManager)
     // This listener also handles general content card clicks.
     document.body.addEventListener('click', async (event) => {
@@ -318,12 +369,18 @@ window.onload = async () => {
                 showCustomAlert('Error', `Could not update seen status: ${error.message}`);
             }
         } else {
-            // If it's a card click but not on the seen icon, handle as a normal card click
-            const card = event.target.closest('.content-card');
-            if (card) {
-                const id = parseInt(card.dataset.id);
-                const type = card.dataset.type;
-                if (!isNaN(id) && type) onCardClick(id, type);
+            const heroBtn = event.target.closest('#hero-watch-now');
+            if (heroBtn) {
+                event.preventDefault();
+                await handleHeroWatchNowClick();
+            } else {
+                // If it's a card click but not on the seen icon, handle as a normal card click
+                const card = event.target.closest('.content-card');
+                if (card) {
+                    const id = parseInt(card.dataset.id);
+                    const type = card.dataset.type;
+                    if (!isNaN(id) && type) onCardClick(id, type);
+                }
             }
         }
     });
