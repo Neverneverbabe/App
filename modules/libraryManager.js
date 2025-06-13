@@ -1,7 +1,7 @@
 // modules/libraryManager.js
 
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
-import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast, updateBookmarkIconStates, updateBookmarkIconForItem } from '../ui.js';
+import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
 import { createContentCardHtml } from '../ui.js'; // Import directly from ui.js
 
 // Local cache for user's watchlists
@@ -60,7 +60,6 @@ export function initializeLibraryListener(onUpdateCallback, renderSelectedFolder
             }));
             console.log("Real-time Watchlists update:", firestoreWatchlistsCache);
             onUpdateCallback(isItemSeenFn, isLightMode, onCardClickCallback); // Trigger folder cards re-render
-            updateBookmarkIconStates();
             if (currentSelectedLibraryFolder) {
                 renderSelectedFolderCallback(currentSelectedLibraryFolder, isItemSeenFn, isLightMode, onCardClickCallback);
             }
@@ -69,7 +68,6 @@ export function initializeLibraryListener(onUpdateCallback, renderSelectedFolder
         firestoreWatchlistsCache = [];
         onUpdateCallback(isItemSeenFn, isLightMode, onCardClickCallback); // Update UI to reflect no watchlists
         renderSelectedFolderCallback(null, isItemSeenFn, isLightMode, onCardClickCallback);
-        updateBookmarkIconStates();
     }
 }
 
@@ -171,8 +169,6 @@ export async function addRemoveItemToFolder(folderId, itemDetails, itemType) {
 
         // Update the local cache immediately so UI reflects the change
         targetWatchlist.items = itemsArray;
-
-        updateBookmarkIconForItem(normalizedItem.tmdb_id, normalizedItem.item_type);
 
         // Save the updated items array back to Firestore
         await saveUserData('watchlists', folderId, {
