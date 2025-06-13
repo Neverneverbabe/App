@@ -530,7 +530,7 @@ window.onload = async () => {
                     await LibraryManager.populateLibraryTab(SeenItemsManager.isItemSeen, isLightMode, onCardClick);
                     break;
                 case 'seen-tab':
-                    SeenItemsManager.populateSeenTab(currentAgeRatingFilter, isLightMode, onCardClick);
+                    SeenItemsManager.populateSeenTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick);
                     break;
                 case 'track-tab':
                     TrackManager.populateTrackTab(isLightMode, onCardClick);
