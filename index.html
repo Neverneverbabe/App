@@ -29,7 +29,7 @@
             --bg-secondary: #141414;
             --text-primary: var(--white);
             --text-secondary: #b3b3b3;
-            --icon-color-default-dark: #999999; /* Adjusted: Darker for better blending in dark mode */
+            --icon-color-default-dark: #b3b3b3; /* Unselected icon color */
             --header-icon-color-dark: var(--white); /* White for clear visibility */
             --card-bg: #141414;
             --gradient-start: #6b21a8; /* purple-800 */
@@ -49,7 +49,7 @@
             --bg-secondary: #f0f0f0;
             --text-primary: var(--black);
             --text-secondary: #4a4a4a;
-            --icon-color-default-light: #505050; /* Slightly darker for default visibility */
+            --icon-color-default-light: #b3b3b3; /* Unselected icon color */
             --header-icon-color-light: var(--black); /* Black for clear visibility */
             --card-bg: #e0e0e0;
             --gradient-start: #bfdbfe; /* blue-200 */
@@ -212,7 +212,7 @@
             padding: 0.75rem; /* Consistent padding for a better touch target */
             border-radius: 9999px; /* rounded-full */
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-            color: var(--text-primary); /* Icon color for visibility against card-bg */
+            color: var(--icon-color-default-dark); /* Unselected icon color */
         }
 
         /* Hamburger button specific style */
@@ -222,7 +222,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for dark mode */
             margin-right: 0.5rem; /* Space between hamburger and logo/tab name */
             padding: 0.75rem; /* Adjusted padding here */
-            color: var(--white); /* Set icon color to white for dark mode */
+            color: var(--icon-color-default-dark); /* Unselected icon color */
         }
         #sidebar-toggle-button i {
             font-size: 1.5rem; /* Adjusted font size here */
@@ -231,7 +231,7 @@
         body.light-mode #sidebar-toggle-button {
              background-color: var(--card-bg); /* Use light mode card background */
              border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border for light mode */
-             color: var(--black); /* Set icon color to black for light mode */
+             color: var(--icon-color-default-light); /* Unselected icon color */
         }
 
         body.light-mode header .icon-buttons button {
@@ -518,15 +518,16 @@
             background: none;
             border: none;
             font-size: 1.5rem;
-            color: var(--text-primary);
+            color: var(--icon-color-default-dark);
             cursor: pointer;
             padding: 0.5rem;
             border-radius: 50%;
-            transition: background-color 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
 
         .item-detail-modal-content .close-button:hover {
             background-color: rgba(255, 255, 255, 0.1);
+            color: var(--white);
         }
         body.light-mode .item-detail-modal-content .close-button:hover {
             background-color: rgba(0, 0, 0, 0.1);
@@ -815,6 +816,35 @@
         }
         .watch-now-btn i {
             margin-right: 0.25rem;
+        }
+
+        /* Generic accent style for primary buttons */
+        .accent-button {
+            background-color: var(--accent-color);
+            color: var(--white);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            padding: 0.5rem 1rem;
+        }
+        .accent-button:hover {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+        .accent-button:active {
+            transform: scale(0.96);
+        }
+        .accent-button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(var(--white-rgb), 0.8);
+        }
+        .accent-button:disabled {
+            background-color: #333333;
+            color: #777777;
+            border-color: #333333;
+            cursor: not-allowed;
         }
         .watch-now-select {
             margin: 0;
@@ -1663,10 +1693,14 @@
             background: none;
             border: none;
             font-size: 1.5rem;
-            color: var(--text-primary);
+            color: var(--icon-color-default-dark);
             cursor: pointer;
             margin-bottom: 1rem;
             float: right;
+            transition: color 0.2s ease-in-out;
+        }
+        .close-secondary-sidebar:hover {
+            color: var(--white);
         }
 
         .secondary-sidebar-content {
@@ -1703,7 +1737,7 @@
             color: var(--text-primary); /* Light mode text */
         }
         body.light-mode .close-secondary-sidebar {
-            color: var(--text-primary); /* Light mode text */
+            color: var(--icon-color-default-light); /* Light mode text */
         }
 
         /* Ensure the new secondary-sidebar-button is part of .icon-buttons for styling consistency if needed,
@@ -1961,8 +1995,8 @@
             <select id="episode-season-select" style="margin-bottom:1rem; width:100%; padding:0.5rem; background:var(--input-bg-color); color:var(--text-primary); border:1px solid var(--input-border-color); border-radius:4px;"></select>
             <div id="episode-list" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none; max-height: 300px; overflow-y: auto;"></div>
             <div id="episode-modal-actions" style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
-                <button id="seen-all-btn" style="padding:0.5rem 1rem;">Seen All</button>
-                <button id="save-episodes-btn" style="padding:0.5rem 1rem;">Save</button>
+                <button id="seen-all-btn" class="accent-button">Seen All</button>
+                <button id="save-episodes-btn" class="accent-button">Save</button>
             </div>
         </div>
     </div>

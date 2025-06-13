@@ -263,7 +263,7 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
         deleteBtn.style.top = '5px';
         deleteBtn.style.right = '5px';
         deleteBtn.style.background = 'rgba(var(--black-rgb), 0.4)';
-        deleteBtn.style.color = 'var(--white)';
+        deleteBtn.style.color = 'var(--text-secondary)';
         deleteBtn.style.border = 'none';
         deleteBtn.style.borderRadius = '50%';
         deleteBtn.style.width = '24px';

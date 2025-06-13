@@ -134,11 +134,11 @@ export async function openSeenEpisodesModal(showDetails) {
         seenAllBtn = document.createElement('button');
         seenAllBtn.id = 'seen-all-btn';
         seenAllBtn.textContent = 'Seen All';
-        seenAllBtn.style.padding = '0.5rem 1rem';
+        seenAllBtn.className = 'accent-button';
         saveBtn = document.createElement('button');
         saveBtn.id = 'save-episodes-btn';
         saveBtn.textContent = 'Save';
-        saveBtn.style.padding = '0.5rem 1rem';
+        saveBtn.className = 'accent-button';
         actionsDiv.appendChild(seenAllBtn);
         actionsDiv.appendChild(saveBtn);
         overlay.querySelector('.item-detail-modal-content').appendChild(actionsDiv);
