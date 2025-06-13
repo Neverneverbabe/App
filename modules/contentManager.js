@@ -110,7 +110,7 @@ export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRati
                 : '';
             const heroTitle = heroItem.title || heroItem.name || 'Featured Content';
             const heroOverview = heroItem.overview || 'No description available.';
-            updateHeroSection(heroImageUrl, heroTitle, heroOverview);
+            updateHeroSection(heroImageUrl, heroTitle, heroOverview, heroItem);
         } else {
             updateHeroSection('', 'Content Not Available', 'Please check back later or try different filters.');
         }

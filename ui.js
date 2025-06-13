@@ -554,9 +554,10 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
  * @param {string} title - The title to display.
  * @param {string} description - The description to display.
  */
-export function updateHeroSection(imageUrl, title, description) {
+export function updateHeroSection(imageUrl, title, description, item = null) {
     const heroImage = document.getElementById('hero-image-element');
     const heroContent = document.querySelector('.hero-section .content');
+    const heroSection = document.querySelector('.hero-section');
     if (heroImage) {
         heroImage.style.backgroundImage = imageUrl ? `url('${imageUrl}')` : '';
     }
@@ -564,7 +565,12 @@ export function updateHeroSection(imageUrl, title, description) {
         heroContent.innerHTML = `
             <h2>${title || ''}</h2>
             <p>${description || ''}</p>
+            <button id="hero-watch-now">Watch Now</button>
         `;
+    }
+    if (heroSection) {
+        heroSection.dataset.itemId = item ? item.id : '';
+        heroSection.dataset.itemType = item ? (item.media_type || (item.title ? 'movie' : 'tv')) : '';
     }
 }
 
