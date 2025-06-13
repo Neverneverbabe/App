@@ -289,18 +289,25 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const fallbackPoster = `https://placehold.co/300x450/${isLightMode ? 'BBB' : '555'}/${isLightMode ? '333' : 'FFF'}?text=No+Poster`;
 
     const seenButtonHtml = `
-        <button id="toggle-seen-btn" class="seen-action-button" data-id="${detailsObject.id}" data-type="${itemType}" style="padding: 0.5em 1em; font-size: 0.9em; border-radius: 8px; cursor: pointer; height: fit-content; background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--text-secondary);">
-            Mark as Seen
+        <button id="toggle-seen-btn" class="seen-action-button" data-id="${detailsObject.id}" data-type="${itemType}" title="Mark as Seen" style="padding: 0.5em; font-size: 1em; border-radius: 8px; cursor: pointer; height: fit-content; background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--text-secondary);">
+            <i class="fas fa-check"></i>
         </button>`;
 
     const folderDropdownHtml = `
-        <div class="apple-dropdown" id="add-to-folder-dropdown-modal" style="width: 180px;">
-            <div class="dropdown-selected" id="dropdown-selected-text-modal">Add to Watchlist</div>
+        <div class="apple-dropdown" id="add-to-folder-dropdown-modal" style="width: 44px;">
+            <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-bookmark"></i>
+            </div>
             <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; max-height: 200px; overflow-y: auto; border-radius: 10px; margin-top: 4px;"></div>
             <div class="dropdown-footer" id="dropdown-footer-modal" style="display:none; padding: 0.5em 1em; text-align: center; border-top: 1px solid var(--border-color); background: var(--dropdown-bg); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
                 <button id="add-new-folder-btn-modal" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
             </div>
         </div>`;
+
+    const watchButtonHtml = `
+        <button id="watch-links-toggle-btn" title="Watch" style="background-color: var(--card-bg); border: 1px solid var(--text-secondary); color: var(--text-primary); padding: 0.5rem; border-radius: 9999px; cursor: pointer;">
+                <i class="fas fa-play"></i>
+        </button>`;
 
     const trackButtonHtml = itemType === 'tv'
         ? `<button id="track-progress-btn" title="Track Progress" style="background-color: var(--card-bg); border: 1px solid var(--text-secondary); color: var(--text-primary); padding: 0.75rem; border-radius: 9999px; cursor: pointer;">
@@ -310,8 +317,9 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
 
     const actionsRowHtml = `
         <div class="item-actions-row" style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-            ${seenButtonHtml}
             ${folderDropdownHtml}
+            ${seenButtonHtml}
+            ${watchButtonHtml}
             ${trackButtonHtml}
         </div>`;
 
@@ -324,7 +332,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     }
     const imdbLinkHtml = `<p><strong>IMDb:</strong> ${imdbLinkHtmlSegment}</p>`;
 
-    let streamingLinksHtml = '<p style="margin-bottom: 0.5rem;"><strong>Watch On:</strong></p><div class="streaming-links">';
+    let streamingLinksHtml = '<div id="watch-links-container" style="display:none;"><p style="margin-bottom: 0.5rem;"><strong>Watch On:</strong></p><div class="streaming-links">';
     if (VIDSRC_PROVIDERS && VIDSRC_PROVIDERS.length > 0) {
         VIDSRC_PROVIDERS.forEach(provider => {
             let url = '';
@@ -337,7 +345,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     } else {
         streamingLinksHtml += '<p style="color: var(--text-secondary); margin-left: 0;">No streaming providers configured.</p>';
     }
-    streamingLinksHtml += '</div>';
+    streamingLinksHtml += '</div></div>';
 
     const backdropPath = detailsObject.backdrop_path
         ? `${TMDB_BACKDROP_BASE_URL}${detailsObject.backdrop_path}`
@@ -374,6 +382,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     `;
     itemDetailModal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    setupWatchLinksToggle();
 }
 
 /**
@@ -394,14 +403,23 @@ export function updateSeenButtonStateInModal(itemId, itemType, isItemSeenFn) {
         };
 
         if (isItemSeenFn(itemId, itemType)) {
-            seenButton.textContent = 'Seen';
             seenButton.classList.add('is-seen');
             seenButton.title = 'Mark as Unseen';
         } else {
-            seenButton.textContent = 'Mark as Seen';
             seenButton.classList.remove('is-seen');
             seenButton.title = 'Mark as Seen';
         }
+    }
+}
+
+export function setupWatchLinksToggle() {
+    const toggleBtn = document.getElementById('watch-links-toggle-btn');
+    const linksContainer = document.getElementById('watch-links-container');
+    if (toggleBtn && linksContainer) {
+        toggleBtn.onclick = (e) => {
+            e.stopPropagation();
+            linksContainer.style.display = linksContainer.style.display === 'none' ? 'block' : 'none';
+        };
     }
 }
 
@@ -453,14 +471,16 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
                 </div>`).join('')
             : `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No watchlists yet. Click '+' below.</div>`;
 
+        let titleText = '';
         if (currentlySelectedWatchlistIds.length === 0) {
-            dropdownSelectedTextModal.textContent = 'Add to Watchlist';
+            titleText = 'Add to Watchlist';
         } else if (currentlySelectedWatchlistIds.length === 1) {
             const selectedName = allWatchlists.find(wl => wl.id === currentlySelectedWatchlistIds[0])?.name || 'Selected';
-            dropdownSelectedTextModal.textContent = selectedName;
+            titleText = selectedName;
         } else {
-            dropdownSelectedTextModal.textContent = `${currentlySelectedWatchlistIds.length} watchlists selected`;
+            titleText = `${currentlySelectedWatchlistIds.length} watchlists selected`;
         }
+        dropdownSelectedTextModal.title = titleText;
     }
 
     updateDropdownDisplay(); // Initial display update when modal opens
