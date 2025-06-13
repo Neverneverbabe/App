@@ -167,8 +167,8 @@ export function renderTrackSectionInModal(showDetails) {
     container.innerHTML = `
         <div style="display:flex;gap:0.5rem;align-items:center;">
             <span style="flex:1;">${progressText}</span>
-            <button id="track-select-episode-btn" style="padding:0.3em 0.8em;">Choose Episode</button>
-            ${tracked ? '<button id="track-remove-btn" style="padding:0.3em 0.8em;">Remove</button>' : ''}
+            <button id="track-select-episode-btn" class="accent-button">Choose Episode</button>
+            ${tracked ? '<button id="track-remove-btn" class="accent-button">Remove</button>' : ''}
         </div>
     `;
     document.getElementById('track-select-episode-btn').onclick = () => {
