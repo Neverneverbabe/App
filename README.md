@@ -23,7 +23,10 @@ openNetflixModal({
 ```
 
 Inside the modal you can mark the item as seen using the checkmark button, save
-it to your watchlist with the bookmark icon, or launch the first available
-streaming link by clicking **Watch Now**.
+it to your watchlist with the bookmark icon, track your progress with the bars
+icon, or launch the first available streaming link by clicking **Watch Now**.
+For TV shows, the checkmark button lets you select individual episodes or mark
+an entire season as seen, while the progress icon simply bookmarks the episode
+you last watched.
 
 The rest of the project uses plain JavaScript modules, so no React setup is required.

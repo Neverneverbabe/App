@@ -82,6 +82,15 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   seenBtn.setAttribute('aria-label', 'Mark as Seen');
   actions.appendChild(seenBtn);
 
+  if (itemDetails) {
+    import('./seenItems.js').then(({ isItemSeen }) => {
+      const type = itemDetails.media_type || (itemDetails.title ? 'movie' : 'tv');
+      const seen = isItemSeen(itemDetails.id, type);
+      seenBtn.classList.toggle('active', seen);
+      seenBtn.title = seen ? 'Mark as Unseen' : 'Mark as Seen';
+    }).catch(() => {});
+  }
+
   const watchlistDropdown = document.createElement('div');
   watchlistDropdown.className = 'apple-dropdown';
   watchlistDropdown.id = 'add-to-folder-dropdown-modal';
@@ -149,12 +158,22 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   }
 
   // --- Button functionality ---
-  let isSeen = false;
-
-  seenBtn.addEventListener('click', () => {
-    isSeen = !isSeen;
-    seenBtn.classList.toggle('active', isSeen);
-    seenBtn.title = isSeen ? 'Marked as Seen' : 'Mark as Seen';
+  seenBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!itemDetails) return;
+    const type = itemDetails.media_type || (itemDetails.title ? 'movie' : 'tv');
+    import('./seenItems.js')
+      .then(async ({ openSeenEpisodesModal, toggleSeenStatus, isItemSeen }) => {
+        if (type === 'tv') {
+          await openSeenEpisodesModal(itemDetails);
+        } else {
+          await toggleSeenStatus(itemDetails, type);
+        }
+        const nowSeen = isItemSeen(itemDetails.id, type);
+        seenBtn.classList.toggle('active', nowSeen);
+        seenBtn.title = nowSeen ? 'Mark as Unseen' : 'Mark as Seen';
+      })
+      .catch(() => {});
   });
 
 
