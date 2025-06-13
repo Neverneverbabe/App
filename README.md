@@ -22,4 +22,8 @@ openNetflixModal({
 });
 ```
 
+Inside the modal you can mark the item as seen using the checkmark button, save
+it to your watchlist with the bookmark icon, or launch the first available
+streaming link by clicking **Watch Now**.
+
 The rest of the project uses plain JavaScript modules, so no React setup is required.

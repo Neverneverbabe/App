@@ -93,6 +93,30 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
   watchNowBtn.className = 'watch-now-btn';
   watchNowBtn.innerHTML = '<i class="fas fa-play"></i> Watch Now';
 
+  // --- Button functionality ---
+  let isSeen = false;
+  let isBookmarked = false;
+
+  seenBtn.addEventListener('click', () => {
+    isSeen = !isSeen;
+    seenBtn.classList.toggle('active', isSeen);
+    seenBtn.title = isSeen ? 'Marked as Seen' : 'Mark as Seen';
+  });
+
+  watchlistBtn.addEventListener('click', () => {
+    isBookmarked = !isBookmarked;
+    watchlistBtn.classList.toggle('active', isBookmarked);
+    watchlistBtn.title = isBookmarked ? 'Remove Bookmark' : 'Add to Watchlist';
+  });
+
+  watchNowBtn.addEventListener('click', () => {
+    if (streamingLinks && streamingLinks.length > 0) {
+      window.open(streamingLinks[0].url, '_blank');
+    } else if (imdbUrl) {
+      window.open(imdbUrl, '_blank');
+    }
+  });
+
   watchNowWrapper.appendChild(watchNowBtn);
   body.appendChild(watchNowWrapper);
 
