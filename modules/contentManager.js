@@ -205,8 +205,26 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
         } else {
             const movieCount = Math.ceil(desiredCount / 2);
             const tvCount = desiredCount - movieCount;
-            const { items: movieItems, pagesFetched: mPages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, movieCount, exploreMoviePage);
-            const { items: tvItems, pagesFetched: tPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, tvCount, exploreTvPage);
+
+            let { items: movieItems, pagesFetched: mPages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, movieCount, exploreMoviePage);
+            let { items: tvItems, pagesFetched: tPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, tvCount, exploreTvPage);
+
+            const fetchedTotal = movieItems.length + tvItems.length;
+
+            // If one media type returned fewer results, try to fetch more from the other type
+            if (fetchedTotal < desiredCount) {
+                const remaining = desiredCount - fetchedTotal;
+                if (movieItems.length < movieCount) {
+                    const { items: extraTvItems, pagesFetched: extraTvPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, remaining, exploreTvPage + tPages);
+                    tvItems = tvItems.concat(extraTvItems);
+                    tPages += extraTvPages;
+                } else if (tvItems.length < tvCount) {
+                    const { items: extraMovieItems, pagesFetched: extraMoviePages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, remaining, exploreMoviePage + mPages);
+                    movieItems = movieItems.concat(extraMovieItems);
+                    mPages += extraMoviePages;
+                }
+            }
+
             newItems = movieItems.concat(tvItems).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
             moviePages = mPages;
             tvPages = tPages;
