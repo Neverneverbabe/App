@@ -33,6 +33,7 @@ import {
 // Global state variables
 let currentAgeRatingFilter = [];
 let currentMediaTypeFilter = '';
+let currentCategoryFilter = [];
 
 // Supported age rating options for filtering (movies and TV)
 const AGE_RATING_OPTIONS = [
@@ -54,6 +55,16 @@ const MEDIA_TYPE_OPTIONS = [
     { value: "movie", label: "Movies" },
     { value: "tv", label: "TV Shows" }
 ];
+const CATEGORY_OPTIONS = [
+    { value: "", label: "All Categories" },
+    { value: "28", label: "Action" },
+    { value: "35", label: "Comedy" },
+    { value: "18", label: "Drama" },
+    { value: "10749", label: "Romance" },
+    { value: "27", label: "Horror" },
+    { value: "16", label: "Animation" },
+    { value: "53", label: "Thriller" }
+];
 let isLightMode = false; // Initial theme state
 
 // DOM Element References (will be initialized in window.onload)
@@ -66,7 +77,7 @@ let themeToggleBtn, filterButton, body, sidebarToggleButton, sidebarToggleIcon, 
     authModalCloseButton, authModalTitle, authForm, nameInputGroup, nameInput, authEmailInput,
     authPasswordInput, confirmPasswordGroup, confirmPasswordInput, authSubmitButton, authSwitchLink,
     filterModal, filterModalCloseButton, filterOptionsItemsContainerModal, filterMediaTypeContainerModal, filterApplyBtnModal,
-    filterClearBtnModal, filterMediaTypeSection, filterAgeRatingSection;
+    filterClearBtnModal, filterMediaTypeSection, filterAgeRatingSection, filterCategorySection, filterCategoryContainerModal;
 
 
 // Shift the main initialization logic to window.onload
@@ -127,10 +138,12 @@ window.onload = async () => {
     filterModalCloseButton = filterModal.querySelector('.close-button');
     filterOptionsItemsContainerModal = document.getElementById('filter-options-items-container-modal');
     filterMediaTypeContainerModal = document.getElementById('filter-media-type-container');
+    filterCategoryContainerModal = document.getElementById('filter-category-container');
     filterApplyBtnModal = document.getElementById('filter-apply-btn-modal');
     filterClearBtnModal = document.getElementById('filter-clear-btn-modal');
     filterMediaTypeSection = document.getElementById('filter-media-type-section');
     filterAgeRatingSection = document.getElementById('filter-age-rating-section');
+    filterCategorySection = document.getElementById('filter-category-section');
 
     // Toggle visibility of filter sections when their titles are clicked
     filterMediaTypeSection.querySelector('.filter-section-title').addEventListener('click', (e) => {
@@ -140,6 +153,10 @@ window.onload = async () => {
     filterAgeRatingSection.querySelector('.filter-section-title').addEventListener('click', (e) => {
         e.stopPropagation();
         filterAgeRatingSection.classList.toggle('collapsed');
+    });
+    filterCategorySection.querySelector('.filter-section-title').addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterCategorySection.classList.toggle('collapsed');
     });
 
 
@@ -509,22 +526,22 @@ window.onload = async () => {
         try {
             switch (activeTabId) {
                 case 'watch-now-tab':
-                    await ContentManager.populateWatchNowTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    await ContentManager.populateWatchNowTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'explore-tab':
-                    await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'library-tab':
                     await LibraryManager.populateLibraryTab(SeenItemsManager.isItemSeen, isLightMode, onCardClick);
                     break;
                 case 'seen-tab':
-                    SeenItemsManager.populateSeenTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick);
+                    SeenItemsManager.populateSeenTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick);
                     break;
                 case 'track-tab':
                     TrackManager.populateTrackTab(isLightMode, onCardClick);
                     break;
                 case 'search-tab':
-                    SearchManager.populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    SearchManager.populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 default:
                     console.log('Unknown tab:', activeTabId);
@@ -700,6 +717,7 @@ window.onload = async () => {
     // --- Filter Modal Logic & State ---
     let tempSelectedFilters = [];
     let tempSelectedMediaType = '';
+    let tempSelectedCategories = [];
 
     /**
      * Renders filter options in the dropdown/modal, marking currently selected ones.
@@ -736,6 +754,21 @@ window.onload = async () => {
         });
     }
 
+    function renderCategoryOptions(container, selectedCats) {
+        container.innerHTML = CATEGORY_OPTIONS.map(opt =>
+            `<div class="dropdown-item category-option" data-genre="${opt.value}">${opt.label} <span class="checkmark">✔</span></div>`
+        ).join('');
+
+        container.querySelectorAll('.category-option').forEach(item => {
+            const value = item.dataset.genre;
+            if (selectedCats.includes(value) || (selectedCats.length === 0 && value === "")) {
+                item.classList.add('item-selected');
+            } else {
+                item.classList.remove('item-selected');
+            }
+        });
+    }
+
     /**
      * Opens the filter modal and populates it with current filter selections.
      */
@@ -744,10 +777,13 @@ window.onload = async () => {
         document.body.style.overflow = 'hidden';
         filterMediaTypeSection.classList.add('collapsed');
         filterAgeRatingSection.classList.add('collapsed');
+        filterCategorySection.classList.add('collapsed');
         tempSelectedFilters = currentAgeRatingFilter.length === 0 ? [""] : [...currentAgeRatingFilter];
         tempSelectedMediaType = currentMediaTypeFilter;
+        tempSelectedCategories = currentCategoryFilter.length === 0 ? [""] : [...currentCategoryFilter];
         renderFilterDropdownOptions(filterOptionsItemsContainerModal, tempSelectedFilters);
         renderMediaTypeOptions(filterMediaTypeContainerModal, tempSelectedMediaType);
+        renderCategoryOptions(filterCategoryContainerModal, tempSelectedCategories);
     }
 
     /**
@@ -801,6 +837,33 @@ window.onload = async () => {
         renderMediaTypeOptions(filterMediaTypeContainerModal, tempSelectedMediaType);
     });
 
+    filterCategoryContainerModal.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const target = event.target.closest('.category-option');
+        if (!target || target.dataset.genre === undefined) return;
+
+        const genreValue = target.dataset.genre;
+
+        if (genreValue === "") {
+            tempSelectedCategories = [""];
+        } else {
+            const allIndex = tempSelectedCategories.indexOf("");
+            if (allIndex > -1) {
+                tempSelectedCategories.splice(allIndex, 1);
+            }
+            const idx = tempSelectedCategories.indexOf(genreValue);
+            if (idx > -1) {
+                tempSelectedCategories.splice(idx, 1);
+            } else {
+                tempSelectedCategories.push(genreValue);
+            }
+            if (tempSelectedCategories.length === 0) {
+                tempSelectedCategories = [""];
+            }
+        }
+        renderCategoryOptions(filterCategoryContainerModal, tempSelectedCategories);
+    });
+
     // Apply filters button click handler for the modal
     filterApplyBtnModal.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -810,8 +873,13 @@ window.onload = async () => {
             currentAgeRatingFilter = [...tempSelectedFilters];
         }
         currentMediaTypeFilter = tempSelectedMediaType;
+        if (tempSelectedCategories.includes("") || tempSelectedCategories.length === 0) {
+            currentCategoryFilter = [];
+        } else {
+            currentCategoryFilter = [...tempSelectedCategories];
+        }
         closeFilterModal();
-        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0 || currentMediaTypeFilter !== '');
+        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0 || currentMediaTypeFilter !== '' || currentCategoryFilter.length > 0);
         // Reset explore tab state to reload content with new filters
         ContentManager.resetExploreState();
         populateCurrentTabContent();
@@ -822,8 +890,10 @@ window.onload = async () => {
         event.stopPropagation();
         tempSelectedFilters = [""];
         tempSelectedMediaType = '';
+        tempSelectedCategories = [""];
         renderFilterDropdownOptions(filterOptionsItemsContainerModal, tempSelectedFilters);
         renderMediaTypeOptions(filterMediaTypeContainerModal, tempSelectedMediaType);
+        renderCategoryOptions(filterCategoryContainerModal, tempSelectedCategories);
     });
 
     // Close filter modal when clicking its close button
@@ -838,7 +908,7 @@ window.onload = async () => {
 
     // Initial check to set filter button active state if any filter is already applied
     if (filterButton) {
-        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0 || currentMediaTypeFilter !== '');
+        filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0 || currentMediaTypeFilter !== '' || currentCategoryFilter.length > 0);
     }
 
     // --- Explore Tab Infinite Scroll ---
@@ -847,7 +917,7 @@ window.onload = async () => {
         if (!exploreTab || !exploreTab.classList.contains('active-tab')) return;
 
         if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 300) {
-            ContentManager.loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+            ContentManager.loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
         }
     });
 
@@ -994,5 +1064,5 @@ window.onload = async () => {
     });
 
     // --- Search Functionality Setup ---
-    SearchManager.setupSearchListeners(searchInput, currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+    SearchManager.setupSearchListeners(searchInput, currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
 };

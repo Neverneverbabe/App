@@ -44,7 +44,7 @@ export async function initializeContentCaches() {
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
     const trendingNowRow = document.getElementById('trending-now-row');
     const recommendedRow = document.getElementById('recommended-row');
     const newReleasesRow = document.getElementById('new-releases-row');
@@ -56,8 +56,12 @@ export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRati
 
     // Filter content based on age rating
     const filterItems = (items) => {
-        if (currentAgeRatingFilter.length === 0) return items;
-        return items.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+        return items.filter(item => {
+            const ratingOk = currentAgeRatingFilter.length === 0 || checkRatingCompatibility(getCertification(item), currentAgeRatingFilter);
+            const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+            const categoryOk = currentCategoryFilter.length === 0 || genreIds.some(id => currentCategoryFilter.includes(String(id)));
+            return ratingOk && categoryOk;
+        });
     };
 
     // When filters are applied, fetch new content that respects the rating
@@ -80,14 +84,14 @@ export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRati
         newReleaseType = 'tv';
     }
 
-    if (currentAgeRatingFilter.length > 0 || currentMediaTypeFilter !== '') {
+    if (currentAgeRatingFilter.length > 0 || currentMediaTypeFilter !== '' || currentCategoryFilter.length > 0) {
         try {
             const desiredCount = cachedTrendingMovies.length || 20;
-            const trendingData = await fetchEnoughDiscoveredItems(trendingType, currentAgeRatingFilter, desiredCount);
+            const trendingData = await fetchEnoughDiscoveredItems(trendingType, currentAgeRatingFilter, desiredCount, 1, currentCategoryFilter);
             trendingSource = trendingData.items;
-            const recommendedData = await fetchEnoughDiscoveredItems(recommendedType, currentAgeRatingFilter, desiredCount);
+            const recommendedData = await fetchEnoughDiscoveredItems(recommendedType, currentAgeRatingFilter, desiredCount, 1, currentCategoryFilter);
             recommendedSource = recommendedData.items;
-            const newReleaseData = await fetchEnoughDiscoveredItems(newReleaseType, currentAgeRatingFilter, desiredCount);
+            const newReleaseData = await fetchEnoughDiscoveredItems(newReleaseType, currentAgeRatingFilter, desiredCount, 1, currentCategoryFilter);
             newReleaseSource = newReleaseData.items;
         } catch (err) {
             console.error('Error fetching filtered watch now content:', err);
@@ -98,7 +102,7 @@ export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRati
         // Trending Movies
         const filteredTrending = filterItems(trendingSource);
         displayContentRow('trending-now-row', filteredTrending, isLightMode, onCardClick, isItemSeenFn);
-        if (filteredTrending.length === 0 && currentAgeRatingFilter.length > 0) {
+        if (filteredTrending.length === 0 && (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0)) {
             trendingNowRow.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
         }
 
@@ -119,14 +123,14 @@ export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRati
         // Recommended TV Shows
         const filteredRecommended = filterItems(recommendedSource);
         displayContentRow('recommended-row', filteredRecommended, isLightMode, onCardClick, isItemSeenFn);
-        if (filteredRecommended.length === 0 && currentAgeRatingFilter.length > 0) {
+        if (filteredRecommended.length === 0 && (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0)) {
             recommendedRow.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
         }
 
         // New Releases (Daily Trending Movies)
         const filteredNewReleases = filterItems(newReleaseSource);
         displayContentRow('new-releases-row', filteredNewReleases, isLightMode, onCardClick, isItemSeenFn);
-        if (filteredNewReleases.length === 0 && currentAgeRatingFilter.length > 0) {
+        if (filteredNewReleases.length === 0 && (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0)) {
             newReleasesRow.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
         }
     } catch (error) {
@@ -142,24 +146,29 @@ export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRati
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
     const exploreGrid = document.getElementById('explore-grid-container');
     if (exploreMoviePage === 1 && exploreTvPage === 1 && exploreGrid.innerHTML.trim() === "") {
         exploreGrid.innerHTML = '<p class="loading-message">Loading movies and shows for you...</p>';
         exploreHasMore = true;
         exploreIsLoading = false;
-        await loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn);
+        await loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn);
     } else {
         let filteredExploreItems = cachedExploreItems;
         if (currentMediaTypeFilter) {
             filteredExploreItems = filteredExploreItems.filter(item => (item.media_type || (item.title ? 'movie' : 'tv')) === currentMediaTypeFilter);
         }
-        if (currentAgeRatingFilter.length > 0) {
-            filteredExploreItems = filteredExploreItems.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+        if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+            filteredExploreItems = filteredExploreItems.filter(item => {
+                const ratingOk = currentAgeRatingFilter.length === 0 || checkRatingCompatibility(getCertification(item), currentAgeRatingFilter);
+                const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+                const categoryOk = currentCategoryFilter.length === 0 || genreIds.some(id => currentCategoryFilter.includes(String(id)));
+                return ratingOk && categoryOk;
+            });
         }
         exploreGrid.innerHTML = ''; // Clear before re-appending filtered items
         appendItemsToGrid(exploreGrid, filteredExploreItems, isLightMode, onCardClick, isItemSeenFn);
-        if (filteredExploreItems.length === 0 && currentAgeRatingFilter.length > 0) {
+        if (filteredExploreItems.length === 0 && (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0)) {
             exploreGrid.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items matched your filter.</p>`;
         }
     }
@@ -172,7 +181,7 @@ export async function populateExploreTab(currentMediaTypeFilter, currentAgeRatin
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
     if (exploreIsLoading) return;
 
     // Restart from the beginning if we've previously reached the end
@@ -195,19 +204,19 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
         let tvPages = 0;
 
         if (currentMediaTypeFilter === 'movie') {
-            const { items, pagesFetched } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount, exploreMoviePage);
+            const { items, pagesFetched } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount, exploreMoviePage, currentCategoryFilter);
             newItems = items;
             moviePages = pagesFetched;
         } else if (currentMediaTypeFilter === 'tv') {
-            const { items, pagesFetched } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, desiredCount, exploreTvPage);
+            const { items, pagesFetched } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, desiredCount, exploreTvPage, currentCategoryFilter);
             newItems = items;
             tvPages = pagesFetched;
         } else {
             const movieCount = Math.ceil(desiredCount / 2);
             const tvCount = desiredCount - movieCount;
 
-            let { items: movieItems, pagesFetched: mPages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, movieCount, exploreMoviePage);
-            let { items: tvItems, pagesFetched: tPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, tvCount, exploreTvPage);
+            let { items: movieItems, pagesFetched: mPages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, movieCount, exploreMoviePage, currentCategoryFilter);
+            let { items: tvItems, pagesFetched: tPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, tvCount, exploreTvPage, currentCategoryFilter);
 
             const fetchedTotal = movieItems.length + tvItems.length;
 
@@ -215,11 +224,11 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
             if (fetchedTotal < desiredCount) {
                 const remaining = desiredCount - fetchedTotal;
                 if (movieItems.length < movieCount) {
-                    const { items: extraTvItems, pagesFetched: extraTvPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, remaining, exploreTvPage + tPages);
+                    const { items: extraTvItems, pagesFetched: extraTvPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, remaining, exploreTvPage + tPages, currentCategoryFilter);
                     tvItems = tvItems.concat(extraTvItems);
                     tPages += extraTvPages;
                 } else if (tvItems.length < tvCount) {
-                    const { items: extraMovieItems, pagesFetched: extraMoviePages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, remaining, exploreMoviePage + mPages);
+                    const { items: extraMovieItems, pagesFetched: extraMoviePages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, remaining, exploreMoviePage + mPages, currentCategoryFilter);
                     movieItems = movieItems.concat(extraMovieItems);
                     mPages += extraMoviePages;
                 }
@@ -234,8 +243,13 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
 
         if (newItems.length > 0) {
             let itemsToDisplay = newItems;
-            if (currentAgeRatingFilter.length > 0) {
-                itemsToDisplay = itemsToDisplay.filter(item => checkRatingCompatibility(getCertification(item), currentAgeRatingFilter));
+            if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+                itemsToDisplay = itemsToDisplay.filter(item => {
+                    const ratingOk = currentAgeRatingFilter.length === 0 || checkRatingCompatibility(getCertification(item), currentAgeRatingFilter);
+                    const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+                    const categoryOk = currentCategoryFilter.length === 0 || genreIds.some(id => currentCategoryFilter.includes(String(id)));
+                    return ratingOk && categoryOk;
+                });
             }
 
             appendItemsToGrid(exploreGridContainer, itemsToDisplay, isLightMode, onCardClick, isItemSeenFn);
