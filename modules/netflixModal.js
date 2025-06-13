@@ -94,9 +94,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     </div>`;
   actions.appendChild(watchlistDropdown);
 
-  body.appendChild(actions);
-
-  // "Watch Now" button centered within the modal
+  // "Watch Now" button displayed with other action icons
   const watchNowWrapper = document.createElement('div');
   watchNowWrapper.className = 'watch-now-wrapper';
 
@@ -144,7 +142,9 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   if (streamingLinks && streamingLinks.length > 0) {
     watchNowWrapper.appendChild(watchNowSelect);
   }
-  body.appendChild(watchNowWrapper);
+  actions.appendChild(watchNowWrapper);
+
+  body.appendChild(actions);
 
   const infoDiv = document.createElement('div');
   infoDiv.className = 'netflix-modal-info';

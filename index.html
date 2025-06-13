@@ -673,19 +673,18 @@
         }
         .watch-now-wrapper {
             display: flex;
-            justify-content: center;
-            width: 100%;
-            margin-top: 1rem;
+            align-items: center;
+            gap: 0.5rem;
         }
         .watch-now-btn {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background-color: var(--black);
+            background-color: var(--science-blue);
             color: var(--white);
             border: none;
             padding: 0.75rem 1.5rem;
-            border-radius: 0.25rem;
+            border-radius: 9999px; /* rounded-full */
             font-weight: 600;
             cursor: pointer;
             width: auto;
@@ -693,7 +692,7 @@
             transition: background-color 0.3s ease-in-out;
         }
         .watch-now-btn:hover {
-            background-color: #222;
+            opacity: 0.9;
         }
         .watch-now-btn i {
             margin-right: 0.25rem;
