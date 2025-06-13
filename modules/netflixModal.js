@@ -1,6 +1,6 @@
 import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
-import { renderTrackSectionInModal } from './track.js';
+import { renderTrackSectionInModal, openEpisodeModal } from './track.js';
 
 export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
@@ -143,6 +143,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
       container.style.display = shouldShow ? 'block' : 'none';
       if (shouldShow && itemDetails) {
         renderTrackSectionInModal(itemDetails);
+        openEpisodeModal(itemDetails);
       }
     });
   }
