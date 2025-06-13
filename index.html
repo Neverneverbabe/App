@@ -808,32 +808,26 @@
         /* Apple-style dropdown for folders with theme support */
         .apple-dropdown {
             position: relative;
-            width: 220px;
+            width: 44px;
             font-family: inherit;
             user-select: none;
         }
         .dropdown-selected {
             background: var(--dropdown-bg, #232326);
-            border-radius: 14px;
-            padding: 0.7em 1em;
+            border-radius: 50%;
+            padding: 0.5em;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border: 1px solid var(--border-color, #333);
             color: var(--text-primary, #fff);
-            font-weight: 500;
             cursor: pointer;
             transition: border 0.2s;
             box-shadow: 0 1px 3px rgba(60,60,67,0.03);
         }
-        .dropdown-selected:after {
-            content: '';
-            margin-top: 0.4em;
-            border: solid #888;
-            border-width: 0 2px 2px 0;
-            display: inline-block;
-            padding: 3px;
-            transform: rotate(45deg);
-            float: none;
-            /* Optionally, add margin-left: auto; if using flexbox on parent */
-        }
+        .dropdown-selected:after { display: none; }
         .dropdown-list {
             position: absolute;
             top: 110%;
@@ -1077,6 +1071,13 @@
             background-color: var(--card-bg);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
+            padding: 0.5em;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .seen-action-button.is-seen {
             background-color: var(--science-blue);
