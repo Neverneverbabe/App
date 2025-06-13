@@ -80,19 +80,12 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   seenBtn.title = 'Mark as Seen';
   actions.appendChild(seenBtn);
 
-  const watchlistDropdown = document.createElement('div');
-  watchlistDropdown.className = 'apple-dropdown';
-  watchlistDropdown.id = 'add-to-folder-dropdown-modal';
-  watchlistDropdown.style.width = '44px';
-  watchlistDropdown.innerHTML = `
-    <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;">
-      <i class="fa-regular fa-bookmark"></i>
-    </div>
-    <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; max-height: 200px; overflow-y: auto; border-radius: 10px; margin-top: 4px;"></div>
-    <div class="dropdown-footer" id="dropdown-footer-modal" style="display:none; padding: 0.5em 1em; text-align: center; border-top: 1px solid var(--border-color); background: var(--dropdown-bg); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
-      <button id="add-new-folder-btn-modal" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
-    </div>`;
-  actions.appendChild(watchlistDropdown);
+  const watchlistBtn = document.createElement('button');
+  watchlistBtn.className = 'netflix-modal-action-btn';
+  watchlistBtn.innerHTML = '<i class="fa-regular fa-bookmark"></i>';
+  watchlistBtn.title = 'Add to Watchlist';
+  watchlistBtn.addEventListener('click', () => openWatchlistOverlay(itemDetails));
+  actions.appendChild(watchlistBtn);
 
   // "Watch Now" button displayed with provider dropdown
   const watchNowBtn = document.createElement('button');
@@ -220,4 +213,68 @@ export function closeNetflixModal() {
     overlay.remove();
     document.body.style.overflow = '';
   }
+}
+
+export function openWatchlistOverlay(itemDetails) {
+  const modal = document.getElementById('watchlist-modal');
+  if (!modal) return;
+
+  const listContainer = document.getElementById('watchlist-options-container');
+  const addBtn = document.getElementById('watchlist-add-folder-btn');
+  const closeBtn = modal.querySelector('.close-button');
+
+  const itemType = itemDetails.media_type || (itemDetails.title ? 'movie' : 'tv');
+
+  function getSelectedIds() {
+    return getWatchlistsCache()
+      .filter(wl => wl.items.some(i => String(i.tmdb_id) === String(itemDetails.id) && i.item_type === itemType))
+      .map(wl => wl.id);
+  }
+
+  function renderList() {
+    const watchlists = getWatchlistsCache();
+    const selectedIds = getSelectedIds();
+    listContainer.innerHTML = watchlists.length
+      ? watchlists.map(wl => `
+          <div class="dropdown-item ${selectedIds.includes(wl.id) ? 'item-selected' : ''}" data-folder-id="${wl.id}">
+            ${wl.name}<span class="checkmark">✔</span>
+          </div>`).join('')
+      : `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No watchlists yet. Click '+' below.</div>`;
+  }
+
+  async function listHandler(e) {
+    const itemElement = e.target.closest('.dropdown-item');
+    if (!itemElement || !itemElement.dataset.folderId) return;
+    await addRemoveItemToFolder(itemElement.dataset.folderId, itemDetails, itemType);
+    renderList();
+  }
+
+  async function addHandler() {
+    const newFolderName = prompt('Enter new watchlist name:');
+    if (newFolderName && newFolderName.trim() !== '') {
+      await createLibraryFolder(newFolderName.trim());
+    }
+    renderList();
+  }
+
+  function closeOverlay() {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    listContainer.removeEventListener('click', listHandler);
+    addBtn.removeEventListener('click', addHandler);
+    modal.removeEventListener('click', outsideHandler);
+    closeBtn.removeEventListener('click', closeOverlay);
+  }
+
+  function outsideHandler(e) { if (e.target === modal) closeOverlay(); }
+
+  renderList();
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  listContainer.addEventListener('click', listHandler);
+  addBtn.addEventListener('click', addHandler);
+  modal.addEventListener('click', outsideHandler);
+  closeBtn.addEventListener('click', closeOverlay);
 }
