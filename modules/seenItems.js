@@ -121,10 +121,11 @@ export async function openSeenEpisodesModal(showDetails) {
     let episodeList = overlay.querySelector('#episode-list');
     let saveBtn = overlay.querySelector('#save-episodes-btn');
     let seenAllBtn = overlay.querySelector('#seen-all-btn');
+    let clearAllBtn = overlay.querySelector('#clear-all-btn');
     const titleEl = overlay.querySelector('#episode-modal-title');
     const closeBtn = overlay.querySelector('.close-button');
 
-    if (!saveBtn || !seenAllBtn) {
+    if (!saveBtn || !seenAllBtn || !clearAllBtn) {
         const actionsDiv = document.createElement('div');
         actionsDiv.id = 'episode-modal-actions';
         actionsDiv.style.display = 'flex';
@@ -135,11 +136,16 @@ export async function openSeenEpisodesModal(showDetails) {
         seenAllBtn.id = 'seen-all-btn';
         seenAllBtn.textContent = 'Seen All';
         seenAllBtn.className = 'accent-button';
+        clearAllBtn = document.createElement('button');
+        clearAllBtn.id = 'clear-all-btn';
+        clearAllBtn.textContent = 'Clear All';
+        clearAllBtn.className = 'accent-button';
         saveBtn = document.createElement('button');
         saveBtn.id = 'save-episodes-btn';
         saveBtn.textContent = 'Save';
         saveBtn.className = 'accent-button';
         actionsDiv.appendChild(seenAllBtn);
+        actionsDiv.appendChild(clearAllBtn);
         actionsDiv.appendChild(saveBtn);
         overlay.querySelector('.item-detail-modal-content').appendChild(actionsDiv);
     }
@@ -159,6 +165,10 @@ export async function openSeenEpisodesModal(showDetails) {
     const newSeenAll = seenAllBtn.cloneNode(true);
     seenAllBtn.parentNode.replaceChild(newSeenAll, seenAllBtn);
     seenAllBtn = newSeenAll;
+
+    const newClearAll = clearAllBtn.cloneNode(true);
+    clearAllBtn.parentNode.replaceChild(newClearAll, clearAllBtn);
+    clearAllBtn = newClearAll;
 
     const newClose = closeBtn.cloneNode(true);
     closeBtn.parentNode.replaceChild(newClose, closeBtn);
@@ -232,6 +242,11 @@ export async function openSeenEpisodesModal(showDetails) {
 
     seenAllBtn.addEventListener('click', async () => {
         await saveSeenEpisodes(showDetails, {}, true);
+        close();
+    });
+
+    clearAllBtn.addEventListener('click', async () => {
+        await saveSeenEpisodes(showDetails, {}, false);
         close();
     });
 
