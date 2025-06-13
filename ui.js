@@ -362,8 +362,8 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
             <span>${yearTag}</span>
             <span>${certificationTag}</span>
             <span>${typeTag}</span>
-            ${genresTags}
             ${imdbLogoHtml}
+            ${genresTags}
         </div>
         <p class="movie-modal-description">${overview}</p>
         <div class="movie-modal-actions">${actionsRowHtml}</div>

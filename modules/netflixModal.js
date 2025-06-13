@@ -33,17 +33,25 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   const tagsDiv = document.createElement('div');
   tagsDiv.className = 'netflix-modal-tags';
-  tags.forEach(tag => {
-    const span = document.createElement('span');
-    span.textContent = tag;
-    tagsDiv.appendChild(span);
-  });
+  let imdbInserted = false;
+  let imdbLink;
   if (imdbUrl) {
-    const imdbLink = document.createElement('a');
+    imdbLink = document.createElement('a');
     imdbLink.href = imdbUrl;
     imdbLink.target = '_blank';
     imdbLink.className = 'imdb-link';
     imdbLink.innerHTML = `<img src="IMDb.png" alt="IMDb">`;
+  }
+  tags.forEach(tag => {
+    const span = document.createElement('span');
+    span.textContent = tag;
+    tagsDiv.appendChild(span);
+    if (!imdbInserted && imdbLink && (tag === 'Movie' || tag === 'TV')) {
+      tagsDiv.appendChild(imdbLink);
+      imdbInserted = true;
+    }
+  });
+  if (imdbLink && !imdbInserted) {
     tagsDiv.appendChild(imdbLink);
   }
   infoOverlay.appendChild(tagsDiv);
