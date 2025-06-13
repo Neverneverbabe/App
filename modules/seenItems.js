@@ -2,6 +2,7 @@
 
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
 import { showCustomAlert, updateSeenButtonStateInModal, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
+import { fetchSeasonDetails } from '../api.js';
 
 // Local cache for user's seen items
 let localUserSeenItemsCache = [];
@@ -49,6 +50,10 @@ export function getSeenItems() {
     return localUserSeenItemsCache;
 }
 
+export function getSeenItem(itemId) {
+    return localUserSeenItemsCache.find(it => String(it.id) === String(itemId)) || null;
+}
+
 /**
  * Checks if a specific item is marked as seen by the current user.
  * @param {number} itemId - The ID of the item.
@@ -58,6 +63,196 @@ export function getSeenItems() {
 export function isItemSeen(itemId, itemType) {
     const seenItems = getSeenItems();
     return seenItems.some(item => String(item.id) === String(itemId) && item.type === itemType);
+}
+
+export async function saveSeenEpisodes(showDetails, episodesMap = {}, markAll = false) {
+    const user = getCurrentUser();
+    if (!user) {
+        showCustomAlert('Info', 'Please sign in to mark episodes as seen.');
+        return;
+    }
+    try {
+        showLoadingIndicator('Saving seen episodes...');
+        if (markAll) {
+            const data = {
+                type: 'tv',
+                id: showDetails.id,
+                title: showDetails.name,
+                poster_path: showDetails.poster_path,
+                backdrop_path: showDetails.backdrop_path,
+                overview: showDetails.overview,
+                release_date: showDetails.first_air_date,
+                vote_average: showDetails.vote_average,
+                addedAt: new Date().toISOString(),
+                episodes: 'ALL'
+            };
+            await saveUserData('seenItems', String(showDetails.id), data);
+        } else if (Object.keys(episodesMap).length > 0) {
+            const data = {
+                type: 'tv',
+                id: showDetails.id,
+                title: showDetails.name,
+                poster_path: showDetails.poster_path,
+                backdrop_path: showDetails.backdrop_path,
+                overview: showDetails.overview,
+                release_date: showDetails.first_air_date,
+                vote_average: showDetails.vote_average,
+                addedAt: new Date().toISOString(),
+                episodes: episodesMap
+            };
+            await saveUserData('seenItems', String(showDetails.id), data);
+        } else {
+            await deleteUserData('seenItems', String(showDetails.id));
+        }
+        showToast('Seen episodes saved.');
+    } catch (err) {
+        console.error('Error saving seen episodes', err);
+        showCustomAlert('Error', `Could not save episodes: ${err.message}`);
+    } finally {
+        hideLoadingIndicator();
+    }
+}
+
+export async function openSeenEpisodesModal(showDetails) {
+    const overlay = document.getElementById('episode-modal');
+    if (!overlay) return;
+
+    let seasonSelect = overlay.querySelector('#episode-season-select');
+    let episodeList = overlay.querySelector('#episode-list');
+    let saveBtn = overlay.querySelector('#save-episodes-btn');
+    let seenAllBtn = overlay.querySelector('#seen-all-btn');
+    const titleEl = overlay.querySelector('#episode-modal-title');
+    const closeBtn = overlay.querySelector('.close-button');
+
+    if (!saveBtn || !seenAllBtn) {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.id = 'episode-modal-actions';
+        actionsDiv.style.display = 'flex';
+        actionsDiv.style.justifyContent = 'flex-end';
+        actionsDiv.style.gap = '0.5rem';
+        actionsDiv.style.marginTop = '1rem';
+        seenAllBtn = document.createElement('button');
+        seenAllBtn.id = 'seen-all-btn';
+        seenAllBtn.textContent = 'Seen All';
+        seenAllBtn.style.padding = '0.5rem 1rem';
+        saveBtn = document.createElement('button');
+        saveBtn.id = 'save-episodes-btn';
+        saveBtn.textContent = 'Save';
+        saveBtn.style.padding = '0.5rem 1rem';
+        actionsDiv.appendChild(seenAllBtn);
+        actionsDiv.appendChild(saveBtn);
+        overlay.querySelector('.item-detail-modal-content').appendChild(actionsDiv);
+    }
+
+    const newSelect = seasonSelect.cloneNode(false);
+    seasonSelect.parentNode.replaceChild(newSelect, seasonSelect);
+    seasonSelect = newSelect;
+
+    const newList = episodeList.cloneNode(false);
+    episodeList.parentNode.replaceChild(newList, episodeList);
+    episodeList = newList;
+
+    const newSave = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSave, saveBtn);
+    saveBtn = newSave;
+
+    const newSeenAll = seenAllBtn.cloneNode(true);
+    seenAllBtn.parentNode.replaceChild(newSeenAll, seenAllBtn);
+    seenAllBtn = newSeenAll;
+
+    const newClose = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newClose, closeBtn);
+
+    const existing = getSeenItem(showDetails.id);
+    let selected = {};
+    let allSelected = false;
+    if (existing) {
+        if (existing.episodes === 'ALL') {
+            allSelected = true;
+        } else if (existing.episodes && typeof existing.episodes === 'object') {
+            Object.keys(existing.episodes).forEach(season => {
+                selected[season] = new Set(existing.episodes[season]);
+            });
+        }
+    }
+
+    function close() {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    newClose.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    titleEl.textContent = showDetails.name || showDetails.title || 'Select Episodes';
+
+    const seasons = (showDetails.seasons || []).filter(s => s.season_number > 0);
+    seasonSelect.innerHTML = seasons.map(s => `<option value="${s.season_number}">Season ${s.season_number}</option>`).join('');
+
+    async function loadSeason(num) {
+        episodeList.innerHTML = '<p style="text-align:center;padding:1rem;">Loading...</p>';
+        try {
+            const seasonData = await fetchSeasonDetails(showDetails.id, num);
+            episodeList.innerHTML = seasonData.episodes.map(ep => {
+                const overview = ep.overview ? ep.overview.slice(0, 100) + (ep.overview.length > 100 ? '...' : '') : '';
+                const checked = allSelected || (selected[num] && selected[num].has(ep.episode_number));
+                return `<label class="episode-item" data-season="${num}" data-episode="${ep.episode_number}" style="display:flex;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--border-color);cursor:pointer;">
+                            <input type="checkbox" class="episode-checkbox" ${checked ? 'checked' : ''} style="margin-right:0.5rem;">
+                            <div>
+                                <strong>E${ep.episode_number} - ${ep.name}</strong>
+                                <p style="margin:0.2rem 0 0;font-size:0.9rem;color:var(--text-secondary);">${overview}</p>
+                            </div>
+                        </label>`;
+            }).join('');
+        } catch (err) {
+            console.error('Error loading episodes', err);
+            episodeList.innerHTML = '<p style="color:red;text-align:center;">Failed to load episodes.</p>';
+        }
+    }
+
+    seasonSelect.addEventListener('change', () => {
+        const val = parseInt(seasonSelect.value, 10);
+        if (!isNaN(val)) loadSeason(val);
+    });
+
+    episodeList.addEventListener('change', (e) => {
+        const checkbox = e.target.closest('.episode-checkbox');
+        if (!checkbox) return;
+        const item = checkbox.closest('.episode-item');
+        const seasonNumber = parseInt(item.dataset.season, 10);
+        const episodeNumber = parseInt(item.dataset.episode, 10);
+        if (!selected[seasonNumber]) selected[seasonNumber] = new Set();
+        if (checkbox.checked) {
+            selected[seasonNumber].add(episodeNumber);
+        } else {
+            selected[seasonNumber].delete(episodeNumber);
+            if (selected[seasonNumber].size === 0) delete selected[seasonNumber];
+        }
+        allSelected = false;
+    });
+
+    seenAllBtn.addEventListener('click', async () => {
+        await saveSeenEpisodes(showDetails, {}, true);
+        close();
+    });
+
+    saveBtn.addEventListener('click', async () => {
+        const data = {};
+        Object.keys(selected).forEach(season => {
+            data[season] = Array.from(selected[season]);
+        });
+        await saveSeenEpisodes(showDetails, data, false);
+        close();
+    });
+
+    if (seasons.length > 0) {
+        seasonSelect.value = seasons[0].season_number;
+        loadSeason(seasons[0].season_number);
+    } else {
+        episodeList.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">No seasons available.</p>';
+    }
+
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 }
 
 /**
@@ -122,13 +317,13 @@ export function setupDelegatedSeenToggleListener(onCardClickCallback) {
             if (isNaN(itemId) || !itemType) return;
 
             try {
-                // Fetch details as toggleSeenStatus expects the full itemDetails object
-                // This is a small redundancy but ensures the toggle function has full context.
-                const { fetchItemDetails } = await import('../api.js'); // Dynamically import to avoid circular dependency with main.js/ui.js
+                const { fetchItemDetails } = await import('../api.js');
                 const details = await fetchItemDetails(itemId, itemType);
-                await toggleSeenStatus(details, itemType);
-
-                // UI update will be handled by the real-time listener, no need to manually toggle class here.
+                if (itemType === 'tv') {
+                    await openSeenEpisodesModal(details);
+                } else {
+                    await toggleSeenStatus(details, itemType);
+                }
             } catch (error) {
                 console.error("Error handling seen toggle on card (delegated):", error);
                 showCustomAlert('Error', `Could not update seen status: ${error.message}`);

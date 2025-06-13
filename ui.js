@@ -396,11 +396,15 @@ export function updateSeenButtonStateInModal(itemId, itemType, isItemSeenFn) {
     const seenButton = document.getElementById('toggle-seen-btn');
     if (seenButton) {
         seenButton.onclick = async () => {
-            // Dynamically import toggleSeenStatus to avoid circular dependency
-            const { toggleSeenStatus } = await import('./modules/seenItems.js');
-            toggleSeenStatus({ id: itemId, media_type: itemType }, itemType);
-            // The actual UI update will be handled by the Firestore listener in seenItems.js
-            // which will trigger a re-render including this modal's button state.
+            if (itemType === 'tv') {
+                const { fetchItemDetails } = await import('./api.js');
+                const details = await fetchItemDetails(itemId, 'tv');
+                const { openSeenEpisodesModal } = await import('./modules/seenItems.js');
+                await openSeenEpisodesModal(details);
+            } else {
+                const { toggleSeenStatus } = await import('./modules/seenItems.js');
+                toggleSeenStatus({ id: itemId, media_type: itemType }, itemType);
+            }
         };
 
         if (isItemSeenFn(itemId, itemType)) {
