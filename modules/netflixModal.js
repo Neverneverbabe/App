@@ -16,7 +16,7 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'netflix-modal-close';
-  closeBtn.innerHTML = '&times;';
+  closeBtn.innerHTML = '<i class="fas fa-times"></i>';
   closeBtn.addEventListener('click', closeNetflixModal);
   modal.appendChild(closeBtn);
 
