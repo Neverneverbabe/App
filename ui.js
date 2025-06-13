@@ -296,7 +296,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const folderDropdownHtml = `
         <div class="apple-dropdown" id="add-to-folder-dropdown-modal" style="width: 44px;">
             <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;">
-                <i class="fas fa-bookmark"></i>
+                <i class="fa-regular fa-bookmark"></i>
             </div>
             <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; max-height: 200px; overflow-y: auto; border-radius: 10px; margin-top: 4px;"></div>
             <div class="dropdown-footer" id="dropdown-footer-modal" style="display:none; padding: 0.5em 1em; text-align: center; border-top: 1px solid var(--border-color); background: var(--dropdown-bg); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
@@ -471,11 +471,26 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
         let titleText = '';
         if (currentlySelectedWatchlistIds.length === 0) {
             titleText = 'Add to Watchlist';
+            const icon = dropdownSelectedTextModal.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+            }
         } else if (currentlySelectedWatchlistIds.length === 1) {
             const selectedName = allWatchlists.find(wl => wl.id === currentlySelectedWatchlistIds[0])?.name || 'Selected';
             titleText = selectedName;
+            const icon = dropdownSelectedTextModal.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+            }
         } else {
             titleText = `${currentlySelectedWatchlistIds.length} watchlists selected`;
+            const icon = dropdownSelectedTextModal.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+            }
         }
         dropdownSelectedTextModal.title = titleText;
     }
