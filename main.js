@@ -34,6 +34,7 @@ import {
 let currentAgeRatingFilter = [];
 let currentMediaTypeFilter = '';
 let currentCategoryFilter = [];
+let currentExploreCategory = 'all';
 
 // Supported age rating options for filtering (movies and TV)
 const AGE_RATING_OPTIONS = [
@@ -65,6 +66,14 @@ const CATEGORY_OPTIONS = [
     { value: "16", label: "Animation" },
     { value: "53", label: "Thriller" }
 ];
+const EXPLORE_CATEGORY_OPTIONS = [
+    { value: 'all', label: 'All' },
+    { value: 'trending', label: 'Trending' },
+    { value: 'popular', label: 'Popular' },
+    { value: 'recommended', label: 'Recommended' },
+    { value: 'classics', label: 'Classics' },
+    { value: 'favorites', label: 'All Time Favorites' }
+];
 let isLightMode = false; // Initial theme state
 
 // DOM Element References (will be initialized in window.onload)
@@ -77,7 +86,9 @@ let themeToggleBtn, filterButton, body, sidebarToggleButton, sidebarToggleIcon, 
     authModalCloseButton, authModalTitle, authForm, nameInputGroup, nameInput, authEmailInput,
     authPasswordInput, confirmPasswordGroup, confirmPasswordInput, authSubmitButton, authSwitchLink,
     filterModal, filterModalCloseButton, filterOptionsItemsContainerModal, filterMediaTypeContainerModal, filterApplyBtnModal,
-    filterClearBtnModal, filterMediaTypeSection, filterAgeRatingSection, filterCategorySection, filterCategoryContainerModal;
+    filterClearBtnModal, filterMediaTypeSection, filterAgeRatingSection, filterCategorySection, filterCategoryContainerModal,
+    exploreCategoryButton, exploreCategoryModal, exploreCategoryModalCloseButton, exploreCategoryOptionsContainer,
+    exploreCategoryButtonMobile;
 
 
 // Shift the main initialization logic to window.onload
@@ -144,6 +155,11 @@ window.onload = async () => {
     filterMediaTypeSection = document.getElementById('filter-media-type-section');
     filterAgeRatingSection = document.getElementById('filter-age-rating-section');
     filterCategorySection = document.getElementById('filter-category-section');
+    exploreCategoryButton = document.getElementById('explore-category-button');
+    exploreCategoryModal = document.getElementById('explore-category-modal');
+    exploreCategoryModalCloseButton = exploreCategoryModal ? exploreCategoryModal.querySelector('.close-button') : null;
+    exploreCategoryOptionsContainer = document.getElementById('explore-category-options');
+    exploreCategoryButtonMobile = document.getElementById('explore-category-button-mobile');
 
     // Toggle visibility of filter sections when their titles are clicked
     filterMediaTypeSection.querySelector('.filter-section-title').addEventListener('click', (e) => {
@@ -529,7 +545,7 @@ window.onload = async () => {
                     await ContentManager.populateWatchNowTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'explore-tab':
-                    await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, currentExploreCategory, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'library-tab':
                     await LibraryManager.populateLibraryTab(SeenItemsManager.isItemSeen, isLightMode, onCardClick);
@@ -794,10 +810,42 @@ window.onload = async () => {
         document.body.style.overflow = '';
     }
 
+    function renderExploreCategoryOptions(container, selected) {
+        container.innerHTML = EXPLORE_CATEGORY_OPTIONS.map(opt =>
+            `<div class="dropdown-item explore-category-option" data-cat="${opt.value}">${opt.label} <span class="checkmark">✔</span></div>`
+        ).join('');
+        container.querySelectorAll('.explore-category-option').forEach(item => {
+            item.classList.toggle('item-selected', item.dataset.cat === selected);
+        });
+    }
+
+    function openExploreCategoryModal() {
+        if (!exploreCategoryModal) return;
+        exploreCategoryModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        renderExploreCategoryOptions(exploreCategoryOptionsContainer, currentExploreCategory);
+    }
+
+    function closeExploreCategoryModal() {
+        if (!exploreCategoryModal) return;
+        exploreCategoryModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
     // Filter button click handler (desktop)
     filterButton?.addEventListener('click', (event) => {
         event.stopPropagation();
         openFilterModal();
+    });
+
+    exploreCategoryButton?.addEventListener('click', (event) => {
+        event.stopPropagation();
+        openExploreCategoryModal();
+    });
+
+    exploreCategoryButtonMobile?.addEventListener('click', () => {
+        closeRightSidebar();
+        openExploreCategoryModal();
     });
 
     // Click handler for individual filter options within the modal
@@ -906,6 +954,23 @@ window.onload = async () => {
         }
     });
 
+    exploreCategoryOptionsContainer.addEventListener('click', (event) => {
+        const target = event.target.closest('.explore-category-option');
+        if (!target || !target.dataset.cat) return;
+        currentExploreCategory = target.dataset.cat;
+        closeExploreCategoryModal();
+        ContentManager.resetExploreState();
+        populateCurrentTabContent();
+    });
+
+    exploreCategoryModalCloseButton?.addEventListener('click', closeExploreCategoryModal);
+
+    exploreCategoryModal?.addEventListener('click', (event) => {
+        if (event.target === exploreCategoryModal) {
+            closeExploreCategoryModal();
+        }
+    });
+
     // Initial check to set filter button active state if any filter is already applied
     if (filterButton) {
         filterButton.classList.toggle('filter-active', currentAgeRatingFilter.length > 0 || currentMediaTypeFilter !== '' || currentCategoryFilter.length > 0);
@@ -917,7 +982,7 @@ window.onload = async () => {
         if (!exploreTab || !exploreTab.classList.contains('active-tab')) return;
 
         if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 300) {
-            ContentManager.loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+            ContentManager.loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, currentExploreCategory, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
         }
     });
 

@@ -1787,6 +1787,9 @@
                     <i class="fas fa-filter"></i>
                 </button>
             </div>
+            <button id="explore-category-button" title="Explore Categories" aria-label="Explore Categories">
+                <i class="fas fa-th-large"></i>
+            </button>
             <button data-tab="search-tab" title="Search" aria-label="Search">
                 <i class="fas fa-search"></i>
             </button>
@@ -1965,6 +1968,15 @@
         </div>
     </div>
 
+    <!-- Explore Category Modal -->
+    <div id="explore-category-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 300px; padding: 1.5rem;">
+            <button class="close-button" aria-label="Close"><i class="fas fa-times"></i></button>
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Explore Categories</h2>
+            <div id="explore-category-options" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none;"></div>
+        </div>
+    </div>
+
     <!-- Watchlist Modal -->
     <div id="watchlist-modal" class="item-detail-modal">
         <div class="item-detail-modal-content" style="max-width: 300px; padding: 1.5rem;">
@@ -2007,6 +2019,7 @@
         <div class="secondary-sidebar-content">
             <button id="theme-toggle-mobile"><i class="fas fa-sun"></i> Theme</button>
             <button id="filter-button-mobile"><i class="fas fa-filter"></i> Filter</button>
+            <button id="explore-category-button-mobile"><i class="fas fa-th-large"></i> Explore</button>
             <button id="search-button-mobile"><i class="fas fa-search"></i> Search</button>
             <button id="profile-button-mobile"><i class="fas fa-user-circle"></i> Profile</button>
         </div>

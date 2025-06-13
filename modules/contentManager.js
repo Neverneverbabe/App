@@ -1,7 +1,8 @@
 // modules/contentManager.js
 
 // Imports necessary functions from the API and utilities
-import { fetchTrendingItems, fetchDiscoveredItems, fetchEnoughDiscoveredItems } from '../api.js';
+import { fetchTrendingItems, fetchDiscoveredItems, fetchEnoughDiscoveredItems, fetchTopRatedItems, fetchClassicItems, fetchRecommendations } from '../api.js';
+import { getSeenItems } from './seenItems.js';
 import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, displayContentRow, appendItemsToGrid, updateHeroSection } from '../ui.js';
 import { TMDB_BACKDROP_BASE_URL } from '../config.js';
@@ -146,13 +147,13 @@ export async function populateWatchNowTab(currentMediaTypeFilter, currentAgeRati
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, exploreCategory, isLightMode, onCardClick, isItemSeenFn) {
     const exploreGrid = document.getElementById('explore-grid-container');
     if (exploreMoviePage === 1 && exploreTvPage === 1 && exploreGrid.innerHTML.trim() === "") {
         exploreGrid.innerHTML = '<p class="loading-message">Loading movies and shows for you...</p>';
         exploreHasMore = true;
         exploreIsLoading = false;
-        await loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn);
+        await loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, exploreCategory, isLightMode, onCardClick, isItemSeenFn);
     } else {
         let filteredExploreItems = cachedExploreItems;
         if (currentMediaTypeFilter) {
@@ -181,7 +182,7 @@ export async function populateExploreTab(currentMediaTypeFilter, currentAgeRatin
  * @param {function} onCardClick - Callback function for when a content card is clicked.
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
-export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
+export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, exploreCategory, isLightMode, onCardClick, isItemSeenFn) {
     if (exploreIsLoading) return;
 
     // Restart from the beginning if we've previously reached the end
@@ -203,40 +204,98 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
         let moviePages = 0;
         let tvPages = 0;
 
-        if (currentMediaTypeFilter === 'movie') {
-            const { items, pagesFetched } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount, exploreMoviePage, currentCategoryFilter);
-            newItems = items;
-            moviePages = pagesFetched;
-        } else if (currentMediaTypeFilter === 'tv') {
-            const { items, pagesFetched } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, desiredCount, exploreTvPage, currentCategoryFilter);
-            newItems = items;
-            tvPages = pagesFetched;
-        } else {
-            const movieCount = Math.ceil(desiredCount / 2);
-            const tvCount = desiredCount - movieCount;
-
-            let { items: movieItems, pagesFetched: mPages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, movieCount, exploreMoviePage, currentCategoryFilter);
-            let { items: tvItems, pagesFetched: tPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, tvCount, exploreTvPage, currentCategoryFilter);
-
-            const fetchedTotal = movieItems.length + tvItems.length;
-
-            // If one media type returned fewer results, try to fetch more from the other type
-            if (fetchedTotal < desiredCount) {
-                const remaining = desiredCount - fetchedTotal;
-                if (movieItems.length < movieCount) {
-                    const { items: extraTvItems, pagesFetched: extraTvPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, remaining, exploreTvPage + tPages, currentCategoryFilter);
-                    tvItems = tvItems.concat(extraTvItems);
-                    tPages += extraTvPages;
-                } else if (tvItems.length < tvCount) {
-                    const { items: extraMovieItems, pagesFetched: extraMoviePages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, remaining, exploreMoviePage + mPages, currentCategoryFilter);
-                    movieItems = movieItems.concat(extraMovieItems);
-                    mPages += extraMoviePages;
-                }
+        if (exploreCategory === 'trending') {
+            if (currentMediaTypeFilter === 'movie') {
+                newItems = await fetchTrendingItems('movie', 'week');
+                moviePages = 1;
+            } else if (currentMediaTypeFilter === 'tv') {
+                newItems = await fetchTrendingItems('tv', 'week');
+                tvPages = 1;
+            } else {
+                const movies = await fetchTrendingItems('movie', 'week');
+                const shows = await fetchTrendingItems('tv', 'week');
+                newItems = movies.concat(shows).sort((a,b) => (b.popularity||0)-(a.popularity||0));
+                moviePages = 1;
+                tvPages = 1;
             }
+            exploreReachedEnd = true;
+        } else if (exploreCategory === 'favorites') {
+            if (currentMediaTypeFilter === 'movie') {
+                newItems = await fetchTopRatedItems('movie', exploreMoviePage);
+                moviePages = 1;
+            } else if (currentMediaTypeFilter === 'tv') {
+                newItems = await fetchTopRatedItems('tv', exploreTvPage);
+                tvPages = 1;
+            } else {
+                const movies = await fetchTopRatedItems('movie', exploreMoviePage);
+                const shows = await fetchTopRatedItems('tv', exploreTvPage);
+                newItems = movies.concat(shows).sort((a,b) => (b.vote_average||0)-(a.vote_average||0));
+                moviePages = 1;
+                tvPages = 1;
+            }
+        } else if (exploreCategory === 'classics') {
+            if (currentMediaTypeFilter === 'movie') {
+                newItems = await fetchClassicItems('movie', exploreMoviePage);
+                moviePages = 1;
+            } else if (currentMediaTypeFilter === 'tv') {
+                newItems = await fetchClassicItems('tv', exploreTvPage);
+                tvPages = 1;
+            } else {
+                const movies = await fetchClassicItems('movie', exploreMoviePage);
+                const shows = await fetchClassicItems('tv', exploreTvPage);
+                newItems = movies.concat(shows).sort((a,b)=>(b.vote_average||0)-(a.vote_average||0));
+                moviePages = 1;
+                tvPages = 1;
+            }
+        } else if (exploreCategory === 'recommended') {
+            newItems = [];
+            const seen = getSeenItems();
+            if (seen && seen.length > 0) {
+                const base = seen[Math.floor(Math.random() * seen.length)];
+                newItems = await fetchRecommendations(base.id, base.type);
+            } else {
+                const movies = await fetchTrendingItems('movie', 'week');
+                const shows = await fetchTrendingItems('tv', 'week');
+                newItems = movies.concat(shows).sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+            }
+            exploreReachedEnd = true;
+            moviePages = 1;
+            tvPages = 1;
+        } else {
+            if (currentMediaTypeFilter === 'movie') {
+                const { items, pagesFetched } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, desiredCount, exploreMoviePage, currentCategoryFilter);
+                newItems = items;
+                moviePages = pagesFetched;
+            } else if (currentMediaTypeFilter === 'tv') {
+                const { items, pagesFetched } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, desiredCount, exploreTvPage, currentCategoryFilter);
+                newItems = items;
+                tvPages = pagesFetched;
+            } else {
+                const movieCount = Math.ceil(desiredCount / 2);
+                const tvCount = desiredCount - movieCount;
 
-            newItems = movieItems.concat(tvItems).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-            moviePages = mPages;
-            tvPages = tPages;
+                let { items: movieItems, pagesFetched: mPages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, movieCount, exploreMoviePage, currentCategoryFilter);
+                let { items: tvItems, pagesFetched: tPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, tvCount, exploreTvPage, currentCategoryFilter);
+
+                const fetchedTotal = movieItems.length + tvItems.length;
+
+                if (fetchedTotal < desiredCount) {
+                    const remaining = desiredCount - fetchedTotal;
+                    if (movieItems.length < movieCount) {
+                        const { items: extraTvItems, pagesFetched: extraTvPages } = await fetchEnoughDiscoveredItems('tv', currentAgeRatingFilter, remaining, exploreTvPage + tPages, currentCategoryFilter);
+                        tvItems = tvItems.concat(extraTvItems);
+                        tPages += extraTvPages;
+                    } else if (tvItems.length < tvCount) {
+                        const { items: extraMovieItems, pagesFetched: extraMoviePages } = await fetchEnoughDiscoveredItems('movie', currentAgeRatingFilter, remaining, exploreMoviePage + mPages, currentCategoryFilter);
+                        movieItems = movieItems.concat(extraMovieItems);
+                        mPages += extraMoviePages;
+                    }
+                }
+
+                newItems = movieItems.concat(tvItems).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+                moviePages = mPages;
+                tvPages = tPages;
+            }
         }
 
         cachedExploreItems = cachedExploreItems.concat(newItems);
