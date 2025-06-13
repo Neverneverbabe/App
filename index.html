@@ -605,8 +605,8 @@
             padding: 1rem;
         }
         .netflix-modal {
-            background-color: #111;
-            color: #fff;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
             width: 100%;
             max-width: 45rem;
             border-radius: 0.5rem;
@@ -623,11 +623,11 @@
             border: none;
             font-size: 1.75rem;
             font-weight: bold;
-            color: #fff;
+            color: var(--text-primary);
             cursor: pointer;
         }
         .netflix-modal-close:hover {
-            color: #f33;
+            color: var(--accent-hover);
         }
         .netflix-modal-image {
             position: relative;
@@ -655,7 +655,7 @@
             gap: 0.25rem;
         }
         .netflix-modal-tags span {
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(var(--text-primary-rgb, 255,255,255),0.2);
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
             font-size: 0.75rem;
@@ -664,7 +664,7 @@
         .netflix-modal-tags a.imdb-link {
             display: inline-flex;
             align-items: center;
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(var(--text-primary-rgb, 255,255,255),0.2);
             padding: 0;
             border-radius: 0.25rem;
         }
@@ -675,14 +675,14 @@
         .netflix-modal-tags a.imdb-link span {
             margin-left: 0.25rem;
             font-size: 0.75rem;
-            color: #fff;
+            color: var(--text-primary);
             padding-right: 0.25rem;
         }
         .netflix-modal-body {
             padding: 1rem 1.5rem 1.5rem 1.5rem;
         }
         .netflix-modal-description {
-            color: #ccc;
+            color: var(--text-secondary);
             margin-bottom: 1rem;
             line-height: 1.5;
             font-size: 0.875rem;
@@ -739,17 +739,17 @@
         }
         .watch-now-select {
             margin-left: 0.5rem;
-            background-color: var(--black);
-            color: var(--white);
-            border: none;
+            background-color: var(--dropdown-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
             padding: 0.5rem 1rem;
             border-radius: 0.25rem;
             cursor: pointer;
         }
         .light-mode .watch-now-select {
-            background-color: #f5f5f7;
-            color: #1d1d1f;
-            border: 1px solid #d1d1d6;
+            background-color: var(--dropdown-bg);
+            color: var(--text-primary);
+            border-color: var(--border-color);
         }
         @keyframes netflixFadeIn {
             from { opacity: 0; transform: translateY(20px); }
