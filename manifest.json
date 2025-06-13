@@ -4,8 +4,8 @@
     "description": "A PWA mimicking the Watch TV interface.",
     "start_url": "./",
     "display": "standalone",
-    "background_color": "#1D1D1F",
-    "theme_color": "#0066CC",
+    "background_color": "#141414",
+    "theme_color": "#e50914",
     "icons": [
         {
             "src": "icons/icon-48x48.png",
