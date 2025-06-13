@@ -11,22 +11,22 @@ const NetflixModal = ({
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
       <div className="relative w-full max-w-3xl bg-zinc-900 text-white rounded-lg overflow-hidden shadow-xl animate-fadeIn">
 
-        {/* Close Button */}
+        {/* ❌ Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 text-white text-xl font-bold hover:text-red-500"
+          className="absolute top-3 right-3 z-10 text-white text-2xl font-bold hover:text-red-500"
         >
           ×
         </button>
 
-        {/* Image with Overlay */}
+        {/* ✅ Image with Overlay */}
         <div className="relative h-60 md:h-72">
           <img
             src={imageSrc}
             alt={title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent p-4 flex flex-col justify-end animate-slideUp">
+          <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-b from-black/90 via-black/60 to-transparent animate-slideUp">
             <h1 className="text-2xl md:text-3xl font-bold mb-2">{title}</h1>
             <div className="flex flex-wrap gap-2 text-xs">
               {tags.map((tag) => (
@@ -41,7 +41,7 @@ const NetflixModal = ({
           </div>
         </div>
 
-        {/* Description + Buttons */}
+        {/* 📝 Content */}
         <div className="p-6">
           <p className="text-sm text-zinc-300 mb-6 leading-relaxed">
             {description}
