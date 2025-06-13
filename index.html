@@ -407,9 +407,16 @@
             margin-top: 1rem;
         }
 
+        .watch-now-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
         .action-row .icon-btn,
-        .action-row .watch-now-btn,
-        .action-row .action-dropdown {
+        .watch-now-row .watch-now-btn,
+        .watch-now-row .action-dropdown {
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             border: none;
@@ -441,12 +448,12 @@
             background-color: rgba(var(--black-rgb), 0.2);
         }
 
-        .action-row .action-dropdown {
+        .watch-now-row .action-dropdown {
             background-color: var(--card-bg);
             color: var(--text-primary);
         }
 
-        .light-mode .action-row .action-dropdown {
+        .light-mode .watch-now-row .action-dropdown {
             background-color: var(--white);
             color: var(--black);
         }
@@ -1766,6 +1773,8 @@
                     <div class="action-row">
                         <button class="icon-btn" title="Mark as Seen" aria-label="Mark as Seen"><i class="fas fa-check"></i></button>
                         <button class="icon-btn" title="Add to Watchlist" aria-label="Add to Watchlist"><i class="fa-regular fa-bookmark"></i></button>
+                    </div>
+                    <div class="watch-now-row">
                         <button class="watch-now-btn">Watch Now</button>
                         <select class="action-dropdown">
                             <option>Option 1</option>
