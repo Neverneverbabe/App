@@ -1,4 +1,4 @@
-export function openNetflixModal({ imageSrc = '', title = '', tags = [], description = '' } = {}) {
+export function openNetflixModal({ imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', streamingLinks = [] } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
   const overlay = document.createElement('div');
@@ -65,6 +65,38 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
   actions.appendChild(watchlistBtn);
 
   body.appendChild(actions);
+
+  const infoDiv = document.createElement('div');
+  infoDiv.className = 'netflix-modal-info';
+
+  if (imdbUrl) {
+    const imdbP = document.createElement('p');
+    imdbP.innerHTML = `<strong>IMDb:</strong> <a href="${imdbUrl}" target="_blank">View on IMDb</a>`;
+    infoDiv.appendChild(imdbP);
+  }
+
+  if (streamingLinks && streamingLinks.length > 0) {
+    const watchOnP = document.createElement('p');
+    watchOnP.style.marginBottom = '0.5rem';
+    watchOnP.innerHTML = '<strong>Watch On:</strong>';
+    infoDiv.appendChild(watchOnP);
+
+    const linksContainer = document.createElement('div');
+    linksContainer.className = 'streaming-links';
+    streamingLinks.forEach(link => {
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.target = '_blank';
+      a.textContent = link.name;
+      linksContainer.appendChild(a);
+    });
+    infoDiv.appendChild(linksContainer);
+  }
+
+  if (infoDiv.children.length > 0) {
+    body.appendChild(infoDiv);
+  }
+
   modal.appendChild(body);
   overlay.appendChild(modal);
 
