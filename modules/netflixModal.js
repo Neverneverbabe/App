@@ -107,10 +107,16 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   providerBtn.innerHTML = '<i class="fas fa-link"></i>';
   providerBtn.title = 'Watch Links';
   providerBtn.setAttribute('aria-label', 'Watch Links');
+  providerBtn.dataset.selectedIndex = '0';
 
   providerBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    openProviderModal(streamingLinks, imdbUrl, (idx) => { selectedLinkIndex = idx; });
+    const currentIdx = parseInt(providerBtn.dataset.selectedIndex, 10) || 0;
+    openProviderModal(streamingLinks, imdbUrl, currentIdx, (idx) => {
+      selectedLinkIndex = idx;
+      providerBtn.dataset.selectedIndex = String(idx);
+      if (streamingLinks[idx]) providerBtn.title = streamingLinks[idx].name;
+    });
   });
 
   // --- Button functionality ---
@@ -125,7 +131,8 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
 
   watchNowBtn.addEventListener('click', () => {
     if (streamingLinks && streamingLinks.length > 0) {
-      const url = streamingLinks[selectedLinkIndex]?.url || streamingLinks[0].url;
+      const idx = parseInt(providerBtn.dataset.selectedIndex, 10) || selectedLinkIndex;
+      const url = streamingLinks[idx]?.url || streamingLinks[0].url;
       window.open(url, '_blank');
     } else if (imdbUrl) {
       window.open(imdbUrl, '_blank');
@@ -306,7 +313,7 @@ export function openWatchlistModal(itemDetails) {
   document.body.style.overflow = 'hidden';
 }
 
-export function openProviderModal(streamingLinks = [], imdbUrl = '', onSelect = null) {
+export function openProviderModal(streamingLinks = [], imdbUrl = '', currentIdx = 0, onSelect = null) {
   const overlay = document.getElementById('links-modal');
   if (!overlay) return;
   let listEl = document.getElementById('provider-options-list');
@@ -318,7 +325,7 @@ export function openProviderModal(streamingLinks = [], imdbUrl = '', onSelect = 
 
   if (streamingLinks.length > 0) {
     listEl.innerHTML = streamingLinks
-      .map((link, idx) => `<div class="dropdown-item${idx === 0 ? ' selected' : ''}" data-index="${idx}">${link.name}<span class="checkmark">✔</span></div>`)
+      .map((link, idx) => `<div class="dropdown-item${idx === currentIdx ? ' selected' : ''}" data-index="${idx}">${link.name}<span class="checkmark">✔</span></div>`)
       .join('');
     listEl.addEventListener('click', (e) => {
       const item = e.target.closest('.dropdown-item');
