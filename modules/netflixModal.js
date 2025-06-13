@@ -61,7 +61,8 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   const watchlistBtn = document.createElement('button');
   watchlistBtn.className = 'netflix-modal-action-btn primary';
-  watchlistBtn.textContent = 'Add to Watchlist';
+  watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
+  watchlistBtn.title = 'Add to Watchlist';
   actions.appendChild(watchlistBtn);
 
   body.appendChild(actions);
