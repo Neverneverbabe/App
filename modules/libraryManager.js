@@ -212,7 +212,7 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
         justify-content: center;
         cursor: pointer;
         transition: all 0.2s ease-in-out;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(var(--black-rgb), 0.1);
         margin-right: 1rem;
         margin-bottom: 1rem;
     `;
@@ -248,7 +248,7 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
         card.dataset.folderName = folder.name;
 
         card.innerHTML = `
-            <img src="${firstItemPoster}" alt="Folder: ${folder.name}" style="width:100%; height:14rem; object-fit: cover; border-radius:0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <img src="${firstItemPoster}" alt="Folder: ${folder.name}" style="width:100%; height:14rem; object-fit: cover; border-radius:0.5rem; box-shadow: 0 4px 6px -1px rgba(var(--black-rgb), 0.1);">
             <p style="text-align:center; margin-top:0.5rem; font-size:0.9em; font-weight:500; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${folder.name} (${folder.items.length})</p>
         `;
 
@@ -258,8 +258,8 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
         deleteBtn.style.position = 'absolute';
         deleteBtn.style.top = '5px';
         deleteBtn.style.right = '5px';
-        deleteBtn.style.background = 'rgba(0,0,0,0.4)';
-        deleteBtn.style.color = 'white';
+        deleteBtn.style.background = 'rgba(var(--black-rgb), 0.4)';
+        deleteBtn.style.color = 'var(--white)';
         deleteBtn.style.border = 'none';
         deleteBtn.style.borderRadius = '50%';
         deleteBtn.style.width = '24px';
@@ -278,10 +278,10 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
             renderMoviesInSelectedFolder(folder.id, isItemSeenFn, isLightMode, onCardClickCallback); // Render movies in this folder
             libraryFoldersRow.querySelectorAll('.folder-card').forEach(fc => {
                 fc.style.border = '2px solid transparent';
-                fc.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                fc.style.boxShadow = '0 4px 6px -1px rgba(var(--black-rgb), 0.1)';
             });
             card.style.border = `2px solid var(--science-blue)`;
-            card.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(0, 0, 0, 0.1)`;
+            card.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(var(--black-rgb), 0.1)`;
         });
 
         libraryFoldersRow.appendChild(card);
@@ -292,7 +292,7 @@ export function renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickC
         const selectedCard = libraryFoldersRow.querySelector(`.folder-card[data-folder-id="${currentSelectedLibraryFolder}"]`);
         if (selectedCard) {
             selectedCard.style.border = `2px solid var(--science-blue)`;
-            selectedCard.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(0, 0, 0, 0.1)`;
+            selectedCard.style.boxShadow = `0 0 0 2px var(--science-blue), 0 4px 6px -1px rgba(var(--black-rgb), 0.1)`;
         }
     }
 }
@@ -357,8 +357,8 @@ export async function renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLig
                 removeBtn.style.position = 'absolute';
                 removeBtn.style.bottom = '5px';
                 removeBtn.style.right = '5px';
-                removeBtn.style.background = 'rgba(255, 0, 0, 0.6)';
-                removeBtn.style.color = 'white';
+                removeBtn.style.background = 'rgba(var(--science-blue-rgb), 0.6)';
+                removeBtn.style.color = 'var(--white)';
                 removeBtn.style.border = 'none';
                 removeBtn.style.borderRadius = '50%';
                 removeBtn.style.width = '24px';
