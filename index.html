@@ -908,6 +908,28 @@
             color: var(--white);
         }
 
+        /* Bookmark Icon on Card */
+        .bookmark-toggle-icon {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 28px;
+            height: 28px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .bookmark-toggle-icon i {
+            color: var(--accent-color);
+            font-size: 14px;
+        }
+
         .content-card p {
             margin-top: 0.75rem; /* mt-3 */
             font-size: 0.875rem; /* text-sm */
