@@ -120,15 +120,17 @@ export function openNetflixModal({ itemDetails = null, itemType = '', imageSrc =
   });
 
   // --- Button functionality ---
-  let isSeen = false;
-
   seenBtn.addEventListener('click', async () => {
-    if (itemType === 'tv' && itemDetails) {
+    if (!itemDetails) return;
+    if (itemType === 'tv') {
       openEpisodesModal(itemDetails);
     } else {
-      isSeen = !isSeen;
-      seenBtn.classList.toggle('active', isSeen);
-      seenBtn.title = isSeen ? 'Marked as Seen' : 'Mark as Seen';
+      const { toggleSeenStatus, isItemSeen } = await import('./seenItems.js');
+      const current = isItemSeen(itemDetails.id, itemType || 'movie');
+      await toggleSeenStatus(itemDetails, itemType || 'movie');
+      const newState = !current;
+      seenBtn.classList.toggle('active', newState);
+      seenBtn.title = newState ? 'Marked as Seen' : 'Mark as Seen';
     }
   });
 
