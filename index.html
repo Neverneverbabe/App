@@ -472,6 +472,10 @@
         #watchlist-modal {
             z-index: 1100;
         }
+        /* Ensure links overlay sits above the movie modal */
+        #links-modal {
+            z-index: 1100;
+        }
 
         .item-detail-modal-content {
             background-color: var(--bg-primary);
@@ -1856,6 +1860,15 @@
                 <button id="watchlist-add-btn" class="filter-action-button" aria-label="Add New Watchlist">+</button>
                 <button id="watchlist-modal-done" class="filter-action-button apply">Done</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Streaming Links Modal -->
+    <div id="links-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 300px; padding: 1.5rem;">
+            <button class="close-button" aria-label="Close"><i class="fas fa-times"></i></button>
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Choose Provider</h2>
+            <div id="provider-options-list" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none; max-height: 300px; overflow-y: auto;"></div>
         </div>
     </div>
 

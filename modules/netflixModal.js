@@ -95,60 +95,23 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     </div>`;
   actions.appendChild(watchlistDropdown);
 
-  // "Watch Now" button displayed with provider dropdown
+  // "Watch Now" button displayed with provider overlay
   const watchNowBtn = document.createElement('button');
   watchNowBtn.className = 'watch-now-btn';
   watchNowBtn.innerHTML = '<i class="fas fa-play"></i> Watch Now';
 
   let selectedLinkIndex = 0;
 
-  // Provider dropdown using icon trigger
-  const providerDropdown = document.createElement('div');
-  providerDropdown.className = 'apple-dropdown';
-  providerDropdown.id = 'provider-dropdown';
-  providerDropdown.style.width = '44px';
-  providerDropdown.innerHTML = `
-    <div class="dropdown-selected" id="provider-dropdown-selected" title="Streaming Providers" aria-label="Streaming Providers" role="button" tabindex="0" style="display:flex;align-items:center;justify-content:center;">
-      <i class="fas fa-link"></i>
-    </div>
-    <div class="dropdown-list hide-scrollbar" id="provider-dropdown-list" style="display:none; border-radius: 10px; margin-top: 4px;"></div>
-  `;
+  const providerBtn = document.createElement('button');
+  providerBtn.className = 'netflix-modal-action-btn';
+  providerBtn.innerHTML = '<i class="fas fa-link"></i>';
+  providerBtn.title = 'Watch Links';
+  providerBtn.setAttribute('aria-label', 'Watch Links');
 
-  if (streamingLinks && streamingLinks.length > 0) {
-    const list = providerDropdown.querySelector('#provider-dropdown-list');
-    list.innerHTML = streamingLinks
-      .map((link, idx) => `
-        <div class="dropdown-item${idx === 0 ? ' selected' : ''}" data-index="${idx}">
-          ${link.name}
-          <span class="checkmark">✔</span>
-        </div>
-      `).join('');
-
-    const selected = providerDropdown.querySelector('#provider-dropdown-selected');
-
-    selected.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = list.style.display === 'block';
-      list.style.display = isOpen ? 'none' : 'block';
-    });
-
-    list.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const item = e.target.closest('.dropdown-item');
-      if (!item) return;
-      selectedLinkIndex = parseInt(item.dataset.index, 10);
-      list.querySelectorAll('.dropdown-item').forEach(el => el.classList.remove('selected'));
-      item.classList.add('selected');
-      list.style.display = 'none';
-    });
-
-    document.addEventListener('click', function handleOutside(ev) {
-      if (!providerDropdown.contains(ev.target)) {
-        list.style.display = 'none';
-        document.removeEventListener('click', handleOutside);
-      }
-    });
-  }
+  providerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openProviderModal(streamingLinks, imdbUrl, (idx) => { selectedLinkIndex = idx; });
+  });
 
   // --- Button functionality ---
   let isSeen = false;
@@ -170,7 +133,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   });
 
   if (streamingLinks && streamingLinks.length > 0) {
-    actions.appendChild(providerDropdown);
+    actions.appendChild(providerBtn);
   }
   actions.appendChild(watchNowBtn);
 
@@ -335,6 +298,50 @@ export function openWatchlistModal(itemDetails) {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
   updateList();
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+export function openProviderModal(streamingLinks = [], imdbUrl = '', onSelect = null) {
+  const overlay = document.getElementById('links-modal');
+  if (!overlay) return;
+  let listEl = document.getElementById('provider-options-list');
+  const closeBtn = overlay.querySelector('.close-button');
+
+  const newListEl = listEl.cloneNode(false);
+  listEl.parentNode.replaceChild(newListEl, listEl);
+  listEl = newListEl;
+
+  if (streamingLinks.length > 0) {
+    listEl.innerHTML = streamingLinks
+      .map((link, idx) => `<div class="dropdown-item${idx === 0 ? ' selected' : ''}" data-index="${idx}">${link.name}<span class="checkmark">✔</span></div>`)
+      .join('');
+    listEl.addEventListener('click', (e) => {
+      const item = e.target.closest('.dropdown-item');
+      if (!item || item.dataset.index === undefined) return;
+      const idx = parseInt(item.dataset.index, 10);
+      listEl.querySelectorAll('.dropdown-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      if (onSelect) onSelect(idx);
+      close();
+    });
+  } else if (imdbUrl) {
+    listEl.innerHTML = `<a class="dropdown-item" href="${imdbUrl}" target="_blank">IMDb</a>`;
+  } else {
+    listEl.innerHTML = `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No streaming links available.</div>`;
+  }
+
+  function close() {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  const newCloseBtn = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+  newCloseBtn.addEventListener('click', close);
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
   overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
