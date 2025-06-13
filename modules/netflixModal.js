@@ -135,9 +135,13 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   if (streamingLinks && streamingLinks.length > 0) {
     actions.appendChild(providerBtn);
   }
-  actions.appendChild(watchNowBtn);
 
   body.appendChild(actions);
+
+  const watchNowRow = document.createElement('div');
+  watchNowRow.className = 'netflix-modal-watch-row';
+  watchNowRow.appendChild(watchNowBtn);
+  body.appendChild(watchNowRow);
 
   if (recommendations && recommendations.length > 0) {
     const recSection = document.createElement('div');
