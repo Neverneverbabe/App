@@ -132,33 +132,22 @@ export function createAuthFormUI(parentElement, onSuccessCallback) {
 
 export function updateAuthDropdownUI(user) {
     if (!authDropdownMenu) return;
-    authDropdownMenu.innerHTML = '';
+
+    const statusEl = authDropdownMenu.querySelector('#profile-status');
+    const signInBtn = authDropdownMenu.querySelector('#profile-signin-btn');
+    const signUpBtn = authDropdownMenu.querySelector('#profile-signup-btn');
+    const signOutBtn = authDropdownMenu.querySelector('#profile-signout-btn');
 
     if (user) {
-        const userInfo = document.createElement('div');
-        userInfo.className = 'auth-dropdown-status';
-        userInfo.textContent = `Logged in as: ${user.email || 'Anonymous User'}`; // Display email or anonymous status
-        authDropdownMenu.appendChild(userInfo);
-        const signOutDropdownButton = document.createElement('button');
-        signOutDropdownButton.id = 'signOutDropdownButton';
-        signOutDropdownButton.className = 'auth-dropdown-button bg-red-600 hover:bg-red-700 w-full mt-2';
-        signOutDropdownButton.textContent = 'Sign Out';
-        signOutDropdownButton.addEventListener('click', async () => {
-            try {
-                const oldUserId = currentUserId; // Preserve oldUserId before sign out for local storage
-                await signOutUser(); // Call signOutUser from firebase_api.js (gets its own auth instance)
-                localStorage.removeItem(`mediaFinderLastSelectedWatchlist_${oldUserId}`);
-                _showCustomAlert("Signed out successfully.", "info"); // Use _showCustomAlert
-                if (authDropdownMenu) authDropdownMenu.classList.add('hidden');
-            } catch (error) {
-                _showCustomAlert(`Sign out error: ${error.message}`, "error"); // Use _showCustomAlert
-            }
-        });
-        authDropdownMenu.appendChild(signOutDropdownButton);
+        if (statusEl) statusEl.textContent = `Signed in as: ${user.email || 'Anonymous User'}`;
+        if (signInBtn) signInBtn.style.display = 'none';
+        if (signUpBtn) signUpBtn.style.display = 'none';
+        if (signOutBtn) signOutBtn.style.display = 'block';
     } else {
-        createAuthFormUI(authDropdownMenu, () => {
-            if (authDropdownMenu) authDropdownMenu.classList.add('hidden');
-        });
+        if (statusEl) statusEl.textContent = 'Not Signed In';
+        if (signInBtn) signInBtn.style.display = 'block';
+        if (signUpBtn) signUpBtn.style.display = 'block';
+        if (signOutBtn) signOutBtn.style.display = 'none';
     }
 }
 
