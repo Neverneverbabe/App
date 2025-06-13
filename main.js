@@ -230,8 +230,23 @@ window.onload = async () => {
                 // Initialize seen items and library listeners for the newly signed-in user
                 SeenItemsManager.initializeSeenItemsListener(populateCurrentTabContent);
                 LibraryManager.initializeLibraryListener(
-                    (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickCallback),
-                    (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLightMode, onCardClickCallback),
+                    (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(
+                        isItemSeenFn,
+                        isLightMode,
+                        onCardClickCallback,
+                        currentMediaTypeFilter,
+                        currentAgeRatingFilter,
+                        currentCategoryFilter
+                    ),
+                    (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(
+                        folderId,
+                        isItemSeenFn,
+                        isLightMode,
+                        onCardClickCallback,
+                        currentMediaTypeFilter,
+                        currentAgeRatingFilter,
+                        currentCategoryFilter
+                    ),
                     SeenItemsManager.isItemSeen,
                     isLightMode,
                     onCardClick // Pass onCardClick
@@ -242,8 +257,23 @@ window.onload = async () => {
                 // Clear any local caches that depend on user being signed in
                 SeenItemsManager.initializeSeenItemsListener(populateCurrentTabContent); // Re-initialize to clear cache
                 LibraryManager.initializeLibraryListener(
-                    (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickCallback),
-                    (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLightMode, onCardClickCallback),
+                    (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(
+                        isItemSeenFn,
+                        isLightMode,
+                        onCardClickCallback,
+                        currentMediaTypeFilter,
+                        currentAgeRatingFilter,
+                        currentCategoryFilter
+                    ),
+                    (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(
+                        folderId,
+                        isItemSeenFn,
+                        isLightMode,
+                        onCardClickCallback,
+                        currentMediaTypeFilter,
+                        currentAgeRatingFilter,
+                        currentCategoryFilter
+                    ),
                     SeenItemsManager.isItemSeen,
                     isLightMode,
                     onCardClick // Pass onCardClick
@@ -257,8 +287,23 @@ window.onload = async () => {
         // This ensures data is loaded even if the initial auth state is already signed in.
         SeenItemsManager.initializeSeenItemsListener(populateCurrentTabContent);
         LibraryManager.initializeLibraryListener(
-            (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickCallback),
-            (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLightMode, onCardClickCallback),
+            (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(
+                isItemSeenFn,
+                isLightMode,
+                onCardClickCallback,
+                currentMediaTypeFilter,
+                currentAgeRatingFilter,
+                currentCategoryFilter
+            ),
+            (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(
+                folderId,
+                isItemSeenFn,
+                isLightMode,
+                onCardClickCallback,
+                currentMediaTypeFilter,
+                currentAgeRatingFilter,
+                currentCategoryFilter
+            ),
             SeenItemsManager.isItemSeen,
             isLightMode,
             onCardClick
@@ -548,13 +593,26 @@ window.onload = async () => {
                     await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, currentExploreCategory, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'library-tab':
-                    await LibraryManager.populateLibraryTab(SeenItemsManager.isItemSeen, isLightMode, onCardClick);
+                    await LibraryManager.populateLibraryTab(
+                        currentMediaTypeFilter,
+                        currentAgeRatingFilter,
+                        currentCategoryFilter,
+                        SeenItemsManager.isItemSeen,
+                        isLightMode,
+                        onCardClick
+                    );
                     break;
                 case 'seen-tab':
                     SeenItemsManager.populateSeenTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick);
                     break;
                 case 'track-tab':
-                    TrackManager.populateTrackTab(isLightMode, onCardClick);
+                    await TrackManager.populateTrackTab(
+                        currentMediaTypeFilter,
+                        currentAgeRatingFilter,
+                        currentCategoryFilter,
+                        isLightMode,
+                        onCardClick
+                    );
                     break;
                 case 'search-tab':
                     SearchManager.populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
