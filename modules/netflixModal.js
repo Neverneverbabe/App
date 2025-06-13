@@ -56,7 +56,8 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   const seenBtn = document.createElement('button');
   seenBtn.className = 'netflix-modal-action-btn';
-  seenBtn.textContent = 'Mark as Seen';
+  seenBtn.innerHTML = '<i class="fas fa-check"></i>';
+  seenBtn.title = 'Mark as Seen';
   actions.appendChild(seenBtn);
 
   const watchlistBtn = document.createElement('button');
