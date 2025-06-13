@@ -605,6 +605,7 @@
             align-items: center;
             justify-content: center;
             padding: 1rem;
+            overflow-y: auto; /* Allow scrolling when modal is taller than viewport */
         }
         .netflix-modal {
             background-color: var(--card-bg);
@@ -612,7 +613,9 @@
             width: 100%;
             max-width: 45rem;
             border-radius: 0.5rem;
-            overflow: hidden;
+            overflow-x: hidden;
+            max-height: calc(100vh - 2rem); /* Prevent modal from exceeding viewport */
+            overflow-y: auto; /* Scroll modal content if needed */
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             position: relative;
             animation: netflixFadeIn 0.4s ease-out forwards;
