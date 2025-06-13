@@ -324,13 +324,10 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
         </div>`;
 
     const imdbId = detailsObject.external_ids && detailsObject.external_ids.imdb_id;
-    let imdbLinkHtmlSegment;
+    let imdbLogoHtml = '';
     if (imdbId) {
-        imdbLinkHtmlSegment = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank"><img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;"></a>`;
-    } else {
-        imdbLinkHtmlSegment = `Not Available`;
+        imdbLogoHtml = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank"><img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;"></a>`;
     }
-    const imdbLinkHtml = `<p><strong>IMDb:</strong> ${imdbLinkHtmlSegment}</p>`;
 
     let streamingLinksHtml = '<div id="watch-links-container" style="display:none;"><p style="margin-bottom: 0.5rem;"><strong>Watch On:</strong></p><div class="streaming-links">';
     if (VIDSRC_PROVIDERS && VIDSRC_PROVIDERS.length > 0) {
@@ -366,6 +363,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
             <span>${certificationTag}</span>
             <span>${typeTag}</span>
             ${genresTags}
+            ${imdbLogoHtml}
         </div>
         <p class="movie-modal-description">${overview}</p>
         <div class="movie-modal-actions">${actionsRowHtml}</div>
@@ -374,7 +372,6 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
             <p><strong>Rating:</strong> ${voteAverage} / 10</p>
             ${ageRatingHtml}
             <p><strong>Genres:</strong> ${genres}</p>
-            ${imdbLinkHtml}
             ${streamingLinksHtml}
             ${itemType === 'tv' ? '<div id="track-progress-container" style="margin-top:1rem;display:none;"></div>' : ''}
         </div>
