@@ -1151,6 +1151,13 @@
             background: #e0e8f0;
             color: var(--accent-color);
         }
+        /* Highlight selected episode in progress modal */
+        .episode-item.selected {
+            background: var(--dropdown-hover, #2a2a2e);
+        }
+        .light-mode .episode-item.selected {
+            background: #e0e8f0;
+        }
         /* Style for filter button when a filter is active */
         .icon-buttons #filter-button.filter-active i {
             color: var(--accent-color); /* Highlight icon when filter is active */
