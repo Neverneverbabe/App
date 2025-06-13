@@ -89,3 +89,30 @@ export async function fetchEnoughDiscoveredItems(mediaType, certificationFilters
 
     return { items: results.slice(0, desiredCount), pagesFetched: pagesFetched || 1 };
 }
+
+/**
+ * Fetch recommended items for a movie or TV show.
+ * @param {number} id - The TMDB ID of the item.
+ * @param {'movie'|'tv'} type - The media type.
+ * @returns {Promise<Array>} An array of recommended items.
+ */
+export async function fetchRecommendations(id, type) {
+    const url = `${TMDB_BASE_URL}/${type}/${id}/recommendations?api_key=${API_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch recommendations');
+    const data = await response.json();
+    return (data.results || []).map(item => ({ ...item, media_type: type }));
+}
+
+/**
+ * Fetch all movies belonging to a collection.
+ * @param {number} collectionId - The TMDB collection ID.
+ * @returns {Promise<Array>} Array of collection parts (movies).
+ */
+export async function fetchCollectionItems(collectionId) {
+    const url = `${TMDB_BASE_URL}/collection/${collectionId}?api_key=${API_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch collection');
+    const data = await response.json();
+    return data.parts || [];
+}
