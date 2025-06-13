@@ -146,32 +146,9 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
 
   body.appendChild(actions);
 
-  const infoDiv = document.createElement('div');
-  infoDiv.className = 'netflix-modal-info';
-
-  // IMDb link now displayed alongside tags
-
-  if (streamingLinks && streamingLinks.length > 0) {
-    const watchOnP = document.createElement('p');
-    watchOnP.style.marginBottom = '0.5rem';
-    watchOnP.innerHTML = '<strong>Watch On:</strong>';
-    infoDiv.appendChild(watchOnP);
-
-    const linksContainer = document.createElement('div');
-    linksContainer.className = 'streaming-links';
-    streamingLinks.forEach(link => {
-      const a = document.createElement('a');
-      a.href = link.url;
-      a.target = '_blank';
-      a.textContent = link.name;
-      linksContainer.appendChild(a);
-    });
-    infoDiv.appendChild(linksContainer);
-  }
-
-  if (infoDiv.children.length > 0) {
-    body.appendChild(infoDiv);
-  }
+  // Optional list of streaming links was previously displayed under the
+  // "Watch Now" button. The dropdown next to the button already provides
+  // provider choices, so this section has been removed.
 
   modal.appendChild(body);
   overlay.appendChild(modal);
