@@ -364,6 +364,23 @@ window.onload = async () => {
 
         try {
             switch (activeTabId) {
+                case 'watch-now-tab':
+                    await ContentManager.populateWatchNowTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    break;
+                case 'explore-tab':
+                    await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    break;
+                case 'library-tab':
+                    await LibraryManager.populateLibraryTab(SeenItemsManager.isItemSeen, isLightMode, onCardClick);
+                    break;
+                case 'seen-tab':
+                    SeenItemsManager.populateSeenTab(currentAgeRatingFilter, isLightMode, onCardClick);
+                    break;
+                case 'track-tab':
+                    TrackManager.populateTrackTab(isLightMode, onCardClick);
+                    break;
+                case 'search-tab':
+                    SearchManager.populateSearchTab(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 default:
                     console.log('Unknown tab:', activeTabId);
