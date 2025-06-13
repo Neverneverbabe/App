@@ -693,6 +693,8 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
+            width: 100%;
+            justify-content: space-evenly;
         }
         .netflix-modal-action-btn {
             background-color: var(--dropdown-bg, #141414);
@@ -723,11 +725,6 @@
         .modal-row {
             padding-bottom: 0;
         }
-        .watch-now-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
         .watch-now-btn {
             display: flex;
             align-items: center;
@@ -750,7 +747,7 @@
             margin-right: 0.25rem;
         }
         .watch-now-select {
-            margin-left: 0.5rem;
+            margin: 0;
             background-color: var(--dropdown-bg);
             color: var(--text-primary);
             border: 1px solid var(--border-color);

@@ -94,10 +94,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     </div>`;
   actions.appendChild(watchlistDropdown);
 
-  // "Watch Now" button displayed with other action icons
-  const watchNowWrapper = document.createElement('div');
-  watchNowWrapper.className = 'watch-now-wrapper';
-
+  // "Watch Now" button displayed with provider dropdown
   const watchNowBtn = document.createElement('button');
   watchNowBtn.className = 'watch-now-btn';
   watchNowBtn.innerHTML = '<i class="fas fa-play"></i> Watch Now';
@@ -138,11 +135,10 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     }
   });
 
-  watchNowWrapper.appendChild(watchNowBtn);
   if (streamingLinks && streamingLinks.length > 0) {
-    watchNowWrapper.appendChild(watchNowSelect);
+    actions.appendChild(watchNowSelect);
   }
-  actions.appendChild(watchNowWrapper);
+  actions.appendChild(watchNowBtn);
 
   body.appendChild(actions);
 
