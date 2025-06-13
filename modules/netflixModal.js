@@ -38,6 +38,13 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
     span.textContent = tag;
     tagsDiv.appendChild(span);
   });
+  if (imdbUrl) {
+    const imdbLink = document.createElement('a');
+    imdbLink.href = imdbUrl;
+    imdbLink.target = '_blank';
+    imdbLink.innerHTML = `<img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;">`;
+    tagsDiv.appendChild(imdbLink);
+  }
   infoOverlay.appendChild(tagsDiv);
 
   imageSection.appendChild(infoOverlay);
@@ -71,11 +78,7 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
   const infoDiv = document.createElement('div');
   infoDiv.className = 'netflix-modal-info';
 
-  if (imdbUrl) {
-    const imdbP = document.createElement('p');
-    imdbP.innerHTML = `<strong>IMDb:</strong> <a href="${imdbUrl}" target="_blank"><img src="IMDb.png" alt="IMDb" style="height: 1.2em; vertical-align: middle;"></a>`;
-    infoDiv.appendChild(imdbP);
-  }
+  // IMDb link now displayed alongside tags
 
   if (streamingLinks && streamingLinks.length > 0) {
     const watchOnP = document.createElement('p');
