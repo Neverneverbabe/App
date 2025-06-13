@@ -302,10 +302,17 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
             </div>
         </div>`;
 
+    const trackButtonHtml = itemType === 'tv'
+        ? `<button id="track-progress-btn" title="Track Progress" style="background-color: var(--card-bg); border: 1px solid var(--text-secondary); color: var(--text-primary); padding: 0.75rem; border-radius: 9999px; cursor: pointer;">
+                <i class="fas fa-pencil-alt"></i>
+           </button>`
+        : '';
+
     const actionsRowHtml = `
         <div class="item-actions-row" style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
             ${seenButtonHtml}
             ${folderDropdownHtml}
+            ${trackButtonHtml}
         </div>`;
 
     const imdbId = detailsObject.external_ids && detailsObject.external_ids.imdb_id;
@@ -348,7 +355,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
             <p style="margin-bottom: 0.5rem; font-size: 1rem; line-height: 1.5;"><strong>Genres:</strong> ${genres}</p>
             ${imdbLinkHtml}
             ${streamingLinksHtml}
-            ${itemType === 'tv' ? '<div id="track-progress-container" style="margin-top:1rem;"></div>' : ''}
+            ${itemType === 'tv' ? '<div id="track-progress-container" style="margin-top:1rem;display:none;"></div>' : ''}
         </div>
     </div>
     `;

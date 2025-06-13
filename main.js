@@ -258,6 +258,19 @@ window.onload = async () => {
             );
             if (type === 'tv') {
                 TrackManager.renderTrackSectionInModal(details);
+                const trackBtn = document.getElementById('track-progress-btn');
+                const trackContainer = document.getElementById('track-progress-container');
+                if (trackBtn && trackContainer) {
+                    trackBtn.addEventListener('click', () => {
+                        const isHidden = trackContainer.style.display === 'none' || trackContainer.style.display === '';
+                        if (isHidden) {
+                            TrackManager.renderTrackSectionInModal(details);
+                            trackContainer.style.display = 'block';
+                        } else {
+                            trackContainer.style.display = 'none';
+                        }
+                    });
+                }
             }
         } catch (error) {
             console.error("Error fetching item details for modal:", error);
