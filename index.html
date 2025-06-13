@@ -1192,10 +1192,23 @@
         .filter-section {
             margin-bottom: 1rem;
         }
+        .filter-section.collapsed .dropdown-list {
+            display: none;
+        }
         .filter-section-title {
             margin-bottom: 0.5rem;
             font-size: 1rem;
             color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-section-title .arrow {
+            transition: transform 0.3s ease;
+        }
+        .filter-section.collapsed .filter-section-title .arrow {
+            transform: rotate(-90deg);
         }
         /* Apple-like Search Input Styles */
         #search-input {
@@ -1896,14 +1909,14 @@
         <div class="item-detail-modal-content" style="max-width: 350px; padding: 1.5rem;">
             <button class="close-button" aria-label="Close"><i class="fas fa-times"></i></button>
             <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">Filter Content</h2>
-            <div class="filter-section">
-                <h3 class="filter-section-title">Media Type</h3>
+            <div class="filter-section collapsed" id="filter-media-type-section">
+                <h3 class="filter-section-title">Media Type <i class="fas fa-chevron-down arrow"></i></h3>
                 <div id="filter-media-type-container" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none;">
                     <!-- Media type options rendered by JavaScript -->
                 </div>
             </div>
-            <div class="filter-section">
-                <h3 class="filter-section-title">Age Rating</h3>
+            <div class="filter-section collapsed" id="filter-age-rating-section">
+                <h3 class="filter-section-title">Age Rating <i class="fas fa-chevron-down arrow"></i></h3>
                 <div id="filter-options-items-container-modal" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none;">
                     <!-- Age rating options rendered here -->
                 </div>
