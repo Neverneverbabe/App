@@ -146,9 +146,6 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                 <div class="bookmark-toggle-icon" title="Add to Watchlist">
                     <i class="fa-regular fa-bookmark"></i>
                 </div>
-                <div class="track-toggle-icon" title="Track Progress">
-                    <i class="fas fa-bars-progress"></i>
-                </div>
                 <img src="${posterPath || fallbackImageUrl}" alt="${title}"
                     onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}"
                     data-fallback="${fallbackImageUrl}">
