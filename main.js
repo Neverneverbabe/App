@@ -442,8 +442,7 @@ window.onload = async () => {
                         displayItemDetails(details, type, isLightMode);
                         updateSeenButtonStateInModal(id, type, SeenItemsManager.isItemSeen);
                         TrackManager.renderTrackSectionInModal(details);
-                        const c = document.getElementById('track-progress-container');
-                        if (c) c.style.display = 'block';
+                        TrackManager.openEpisodeModal(details);
                     } catch (error) {
                         console.error('Error opening track modal:', error);
                         showCustomAlert('Error', `Could not load item details. Error: ${error.message}`);

@@ -429,17 +429,13 @@ export function setupWatchLinksToggle() {
 
 export function setupTrackProgressToggle(showDetails) {
     const trackBtn = document.getElementById('track-progress-btn');
-    const trackContainer = document.getElementById('track-progress-container');
-    if (trackBtn && trackContainer) {
+    if (trackBtn) {
         trackBtn.onclick = (e) => {
             e.stopPropagation();
-            const shouldShow = trackContainer.style.display === 'none' || trackContainer.style.display === '';
-            trackContainer.style.display = shouldShow ? 'block' : 'none';
-            if (shouldShow) {
-                import('./modules/track.js').then(({ renderTrackSectionInModal }) => {
-                    renderTrackSectionInModal(showDetails);
-                });
-            }
+            import('./modules/track.js').then(({ openEpisodeModal, renderTrackSectionInModal }) => {
+                renderTrackSectionInModal(showDetails);
+                openEpisodeModal(showDetails);
+            });
         };
     }
 }

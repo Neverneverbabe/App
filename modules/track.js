@@ -1,6 +1,7 @@
 // modules/track.js
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
+import { fetchSeasonDetails } from '../api.js';
 
 let trackedShowsCache = [];
 let unsubscribeTrack = null;
@@ -66,28 +67,101 @@ export async function removeTrackedShow(showId) {
     }
 }
 
+export async function openEpisodeModal(showDetails) {
+    const overlay = document.getElementById('episode-modal');
+    if (!overlay) return;
+
+    let seasonSelect = overlay.querySelector('#episode-season-select');
+    let episodeList = overlay.querySelector('#episode-list');
+    const titleEl = overlay.querySelector('#episode-modal-title');
+    const closeBtn = overlay.querySelector('.close-button');
+
+    const newSelect = seasonSelect.cloneNode(false);
+    seasonSelect.parentNode.replaceChild(newSelect, seasonSelect);
+    seasonSelect = newSelect;
+
+    const newList = episodeList.cloneNode(false);
+    episodeList.parentNode.replaceChild(newList, episodeList);
+    episodeList = newList;
+
+    const newClose = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newClose, closeBtn);
+
+    function close() {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    newClose.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    titleEl.textContent = showDetails.name || showDetails.title || 'Select Episode';
+
+    const seasons = (showDetails.seasons || []).filter(s => s.season_number > 0);
+    seasonSelect.innerHTML = seasons.map(s => `<option value="${s.season_number}">Season ${s.season_number}</option>`).join('');
+
+    async function loadSeason(num) {
+        episodeList.innerHTML = '<p style="text-align:center;padding:1rem;">Loading...</p>';
+        try {
+            const seasonData = await fetchSeasonDetails(showDetails.id, num);
+            episodeList.innerHTML = seasonData.episodes.map(ep => {
+                const overview = ep.overview ? ep.overview.slice(0, 100) + (ep.overview.length > 100 ? '...' : '') : '';
+                return `<div class="episode-item" data-season="${num}" data-episode="${ep.episode_number}" style="padding:0.5rem 0;border-bottom:1px solid var(--border-color);cursor:pointer;">
+                            <strong>E${ep.episode_number} - ${ep.name}</strong>
+                            <p style="margin:0.2rem 0 0;font-size:0.9rem;color:var(--text-secondary);">${overview}</p>
+                        </div>`;
+            }).join('');
+        } catch (err) {
+            console.error('Error loading episodes', err);
+            episodeList.innerHTML = '<p style="color:red;text-align:center;">Failed to load episodes.</p>';
+        }
+    }
+
+    seasonSelect.addEventListener('change', () => {
+        const val = parseInt(seasonSelect.value, 10);
+        if (!isNaN(val)) loadSeason(val);
+    });
+
+    episodeList.addEventListener('click', async (e) => {
+        const item = e.target.closest('.episode-item');
+        if (!item) return;
+        const seasonNumber = parseInt(item.dataset.season, 10);
+        const episodeNumber = parseInt(item.dataset.episode, 10);
+        await addOrUpdateTrackedShow(showDetails, seasonNumber, episodeNumber);
+        close();
+        const container = document.getElementById('track-progress-container');
+        if (container) renderTrackSectionInModal(showDetails);
+    });
+
+    if (seasons.length > 0) {
+        seasonSelect.value = seasons[0].season_number;
+        loadSeason(seasons[0].season_number);
+    } else {
+        episodeList.innerHTML = '<p style="text-align:center;color:var(--text-secondary);">No seasons available.</p>';
+    }
+
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
 export function renderTrackSectionInModal(showDetails) {
     const container = document.getElementById('track-progress-container');
     if (!container) return;
     const tracked = getTrackedShow(showDetails.id);
-    const seasonVal = tracked ? tracked.season : '';
-    const episodeVal = tracked ? tracked.episode : '';
+    const progressText = tracked ? `Season ${tracked.season}, Episode ${tracked.episode}` : 'No progress saved';
     container.innerHTML = `
         <div style="display:flex;gap:0.5rem;align-items:center;">
-            <input type="number" id="track-season-input" placeholder="Season" min="1" style="width:60px" value="${seasonVal}">
-            <input type="number" id="track-episode-input" placeholder="Episode" min="1" style="width:70px" value="${episodeVal}">
-            <button id="track-save-btn" style="padding:0.3em 0.8em;">Save</button>
+            <span style="flex:1;">${progressText}</span>
+            <button id="track-select-episode-btn" style="padding:0.3em 0.8em;">Choose Episode</button>
             ${tracked ? '<button id="track-remove-btn" style="padding:0.3em 0.8em;">Remove</button>' : ''}
         </div>
     `;
-    document.getElementById('track-save-btn').onclick = async () => {
-        const s = parseInt(document.getElementById('track-season-input').value) || 1;
-        const e = parseInt(document.getElementById('track-episode-input').value) || 1;
-        await addOrUpdateTrackedShow(showDetails, s, e);
+    document.getElementById('track-select-episode-btn').onclick = () => {
+        openEpisodeModal(showDetails);
     };
     if (tracked) {
         document.getElementById('track-remove-btn').onclick = async () => {
             await removeTrackedShow(showDetails.id);
+            renderTrackSectionInModal(showDetails);
         };
     }
 }
