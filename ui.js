@@ -147,7 +147,7 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                     <i class="fa-regular fa-bookmark"></i>
                 </div>
                 <div class="track-toggle-icon" title="Track Progress">
-                    <i class="fas fa-pencil-alt"></i>
+                    <i class="fas fa-bars-progress"></i>
                 </div>
                 <img src="${posterPath || fallbackImageUrl}" alt="${title}"
                     onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}"
@@ -317,7 +317,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
 
     const trackButtonHtml = itemType === 'tv'
         ? `<button id="track-progress-btn" title="Track Progress" style="background-color: var(--card-bg); border: 1px solid var(--text-secondary); color: var(--text-primary); padding: 0.75rem; border-radius: 9999px; cursor: pointer;">
-                <i class="fas fa-pencil-alt"></i>
+                <i class="fas fa-bars-progress"></i>
            </button>`
         : '';
 
