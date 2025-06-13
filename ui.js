@@ -540,7 +540,9 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
 export function updateHeroSection(imageUrl, title, description) {
     const heroImage = document.getElementById('hero-image-element');
     const heroContent = document.querySelector('.hero-section .content');
-    heroImage.src = (typeof imageUrl === 'string') ? imageUrl : '';
+    if (heroImage) {
+        heroImage.style.backgroundImage = imageUrl ? `url('${imageUrl}')` : '';
+    }
     if (heroContent) {
         heroContent.innerHTML = `
             <h2>${title || ''}</h2>
