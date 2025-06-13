@@ -18,6 +18,7 @@ let exploreMoviePage = 1;
 let exploreTvPage = 1;
 let exploreIsLoading = false;
 let exploreHasMore = true;
+let exploreReachedEnd = false; // Tracks if we've reached the end of available results
 
 /**
  * Initializes the content caches by fetching initial data.
@@ -172,7 +173,14 @@ export async function populateExploreTab(currentMediaTypeFilter, currentAgeRatin
  * @param {function} isItemSeenFn - Function to check if an item is seen.
  */
 export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRatingFilter, isLightMode, onCardClick, isItemSeenFn) {
-    if (exploreIsLoading || !exploreHasMore) return;
+    if (exploreIsLoading) return;
+
+    // Restart from the beginning if we've previously reached the end
+    if (exploreReachedEnd) {
+        exploreMoviePage = 1;
+        exploreTvPage = 1;
+        exploreReachedEnd = false;
+    }
 
     exploreIsLoading = true;
     const loadingIndicator = document.getElementById('explore-loading-indicator');
@@ -216,10 +224,10 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
             exploreMoviePage += moviePages;
             exploreTvPage += tvPages;
             if (itemsToDisplay.length < desiredCount) {
-                exploreHasMore = false;
+                exploreReachedEnd = true;
             }
         } else {
-            exploreHasMore = false;
+            exploreReachedEnd = true;
         }
     } catch (error) {
         console.error("Error loading more explore items:", error);
@@ -238,6 +246,7 @@ export function resetExploreState() {
     exploreTvPage = 1;
     exploreIsLoading = false;
     exploreHasMore = true;
+    exploreReachedEnd = false;
     cachedExploreItems = [];
     const exploreGrid = document.getElementById('explore-grid-container');
     if (exploreGrid) {
