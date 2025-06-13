@@ -623,6 +623,11 @@
             justify-content: center;
             padding: 1rem;
             overflow-y: auto; /* Allow scrolling when modal is taller than viewport */
+            -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+        }
+        .netflix-modal-overlay::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome, Safari */
         }
         .netflix-modal {
             background-color: var(--card-bg);
@@ -633,9 +638,14 @@
             overflow-x: hidden;
             max-height: calc(100vh - 2rem); /* Prevent modal from exceeding viewport */
             overflow-y: auto; /* Scroll modal content if needed */
+            -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             position: relative;
             animation: netflixFadeIn 0.4s ease-out forwards;
+        }
+        .netflix-modal::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome, Safari */
         }
         .netflix-modal-close {
             position: absolute;
