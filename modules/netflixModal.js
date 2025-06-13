@@ -76,6 +76,17 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   body.appendChild(actions);
 
+  // "Watch Now" button centered within the modal
+  const watchNowWrapper = document.createElement('div');
+  watchNowWrapper.className = 'watch-now-wrapper';
+
+  const watchNowBtn = document.createElement('button');
+  watchNowBtn.className = 'watch-now-btn';
+  watchNowBtn.innerHTML = '<i class="fas fa-play"></i> Watch Now';
+
+  watchNowWrapper.appendChild(watchNowBtn);
+  body.appendChild(watchNowWrapper);
+
   const infoDiv = document.createElement('div');
   infoDiv.className = 'netflix-modal-info';
 
