@@ -6,6 +6,7 @@ import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
 
 let trackedShowsCache = [];
 let unsubscribeTrack = null;
+let trackUpdateCallback = () => {};
 
 // Cache for fetched item details
 const trackDetailsCache = {};
@@ -18,6 +19,7 @@ async function getTrackDetailsCached(id) {
 }
 
 export function initializeTrackListener(onUpdateCallback) {
+    trackUpdateCallback = onUpdateCallback;
     if (unsubscribeTrack) {
         unsubscribeTrack();
         unsubscribeTrack = null;
@@ -26,11 +28,11 @@ export function initializeTrackListener(onUpdateCallback) {
     if (user) {
         unsubscribeTrack = listenToUserCollection('trackedShows', (items) => {
             trackedShowsCache = items;
-            onUpdateCallback();
+            trackUpdateCallback();
         });
     } else {
         trackedShowsCache = [];
-        onUpdateCallback();
+        trackUpdateCallback();
     }
 }
 
@@ -59,6 +61,13 @@ export async function addOrUpdateTrackedShow(showDetails, season, episode) {
             updatedAt: new Date().toISOString()
         };
         await saveUserData('trackedShows', String(showDetails.id), data);
+        const idx = trackedShowsCache.findIndex(it => String(it.id) === String(showDetails.id));
+        if (idx !== -1) {
+            trackedShowsCache[idx] = data;
+        } else {
+            trackedShowsCache.push(data);
+        }
+        trackUpdateCallback();
         showToast('Progress saved.');
     } catch (error) {
         console.error('Error saving tracked show:', error);
@@ -71,6 +80,8 @@ export async function addOrUpdateTrackedShow(showDetails, season, episode) {
 export async function removeTrackedShow(showId) {
     try {
         await deleteUserData('trackedShows', String(showId));
+        trackedShowsCache = trackedShowsCache.filter(item => String(item.id) !== String(showId));
+        trackUpdateCallback();
         showToast('Progress removed.');
     } catch (error) {
         console.error('Error removing tracked show:', error);
