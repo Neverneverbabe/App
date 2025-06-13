@@ -1,4 +1,4 @@
-export function openNetflixModal({ imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', streamingLinks = [] } = {}) {
+export function openNetflixModal({ imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [] } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
   const overlay = document.createElement('div');
@@ -40,7 +40,8 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
     imdbLink.href = imdbUrl;
     imdbLink.target = '_blank';
     imdbLink.className = 'imdb-link';
-    imdbLink.innerHTML = `<img src="IMDb.png" alt="IMDb">`;
+    const ratingHtml = rating !== null ? `<span class="imdb-rating">${rating}</span>` : '';
+    imdbLink.innerHTML = `<img src="IMDb.png" alt="IMDb">${ratingHtml}`;
   }
   tags.forEach(tag => {
     const span = document.createElement('span');
