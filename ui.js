@@ -289,7 +289,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const fallbackPoster = `https://placehold.co/300x450/${isLightMode ? 'BBB' : '555'}/${isLightMode ? '333' : 'FFF'}?text=No+Poster`;
 
     const seenButtonHtml = `
-        <button id="toggle-seen-btn" class="seen-action-button" data-id="${detailsObject.id}" data-type="${itemType}" title="Mark as Seen" style="padding: 0.5em; font-size: 1em; border-radius: 8px; cursor: pointer; height: fit-content; background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--text-secondary);">
+        <button id="toggle-seen-btn" class="seen-action-button" data-id="${detailsObject.id}" data-type="${itemType}" title="Mark as Seen">
             <i class="fas fa-check"></i>
         </button>`;
 
@@ -305,7 +305,7 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
         </div>`;
 
     const watchButtonHtml = `
-        <button id="watch-links-toggle-btn" title="Watch" style="background-color: var(--card-bg); border: 1px solid var(--text-secondary); color: var(--text-primary); padding: 0.5rem; border-radius: 9999px; cursor: pointer;">
+        <button id="watch-links-toggle-btn" title="Watch">
                 <i class="fas fa-play"></i>
         </button>`;
 
