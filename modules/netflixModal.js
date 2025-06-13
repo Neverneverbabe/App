@@ -1,13 +1,6 @@
 import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
 
-function openUrlInNewTab(url) {
-  const newWindow = window.open(url, '_blank');
-  if (!newWindow) {
-    window.location.href = url;
-  }
-}
-
 export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
@@ -137,9 +130,9 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   watchNowBtn.addEventListener('click', () => {
     if (streamingLinks && streamingLinks.length > 0) {
       const url = watchNowSelect.options[selectedLinkIndex]?.value || streamingLinks[0].url;
-      openUrlInNewTab(url);
+      window.open(url, '_blank');
     } else if (imdbUrl) {
-      openUrlInNewTab(imdbUrl);
+      window.open(imdbUrl, '_blank');
     }
   });
 
