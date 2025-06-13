@@ -339,20 +339,33 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     }
     streamingLinksHtml += '</div>';
 
+    const backdropPath = detailsObject.backdrop_path
+        ? `${TMDB_BACKDROP_BASE_URL}${detailsObject.backdrop_path}`
+        : (posterPath || fallbackPoster);
+    const yearTag = releaseDate !== 'N/A' ? new Date(releaseDate).getFullYear() : 'N/A';
+    const certificationTag = certification !== 'N/A' ? certification : 'NR';
+    const typeTag = itemType === 'movie' ? 'Movie' : 'TV';
+    const genresTags = detailsObject.genres && detailsObject.genres.length > 0
+        ? detailsObject.genres.map(g => `<span>${g.name}</span>`).join('')
+        : '';
+
     modalContentArea.innerHTML = `
-    <div class="details-grid">
-        <div class="poster-container" style="display: flex; justify-content: center; align-items: flex-start;">
-            <img src="${posterPath || fallbackPoster}" alt="${title} Poster" class="poster"
-                onerror="this.onerror=null;this.src='${fallbackPoster}';">
+    <div class="movie-modal-hero" style="background-image:url('${backdropPath}');"></div>
+    <div class="movie-modal-body">
+        <h2>${title}</h2>
+        <div class="movie-modal-tags">
+            <span>${yearTag}</span>
+            <span>${certificationTag}</span>
+            <span>${typeTag}</span>
+            ${genresTags}
         </div>
-        <div class="details-info" style="display: flex; flex-direction: column;">
-            <h2>${title}</h2>
-            ${actionsRowHtml}
-            <p style="margin-bottom: 0.5rem; font-size: 1rem; line-height: 1.5;"><strong>Overview:</strong> ${overview}</p>
-            <p style="margin-bottom: 0.5rem; font-size: 1rem; line-height: 1.5;"><strong>Release Date:</strong> ${releaseDate}</p>
-            <p style="margin-bottom: 0.5rem; font-size: 1rem; line-height: 1.5;"><strong>Rating:</strong> ${voteAverage} / 10</p>
+        <p class="movie-modal-description">${overview}</p>
+        <div class="movie-modal-actions">${actionsRowHtml}</div>
+        <div class="details-info">
+            <p><strong>Release Date:</strong> ${releaseDate}</p>
+            <p><strong>Rating:</strong> ${voteAverage} / 10</p>
             ${ageRatingHtml}
-            <p style="margin-bottom: 0.5rem; font-size: 1rem; line-height: 1.5;"><strong>Genres:</strong> ${genres}</p>
+            <p><strong>Genres:</strong> ${genres}</p>
             ${imdbLinkHtml}
             ${streamingLinksHtml}
             ${itemType === 'tv' ? '<div id="track-progress-container" style="margin-top:1rem;display:none;"></div>' : ''}
