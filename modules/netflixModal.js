@@ -5,6 +5,12 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
   overlay.id = 'netflix-modal-overlay';
   overlay.className = 'netflix-modal-overlay';
 
+  const handleKeyDown = event => {
+    if (event.key === 'Escape') closeNetflixModal();
+  };
+  document.addEventListener('keydown', handleKeyDown);
+  overlay._handleKeyDown = handleKeyDown;
+
   const modal = document.createElement('div');
   modal.className = 'netflix-modal';
 
@@ -75,6 +81,9 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 export function closeNetflixModal() {
   const overlay = document.getElementById('netflix-modal-overlay');
   if (overlay) {
+    if (overlay._handleKeyDown) {
+      document.removeEventListener('keydown', overlay._handleKeyDown);
+    }
     overlay.remove();
     document.body.style.overflow = '';
   }
