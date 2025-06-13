@@ -1,7 +1,7 @@
 import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
 
-export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
+export function openNetflixModal({ itemDetails = null, itemType = '', imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
   const overlay = document.createElement('div');
@@ -122,10 +122,14 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   // --- Button functionality ---
   let isSeen = false;
 
-  seenBtn.addEventListener('click', () => {
-    isSeen = !isSeen;
-    seenBtn.classList.toggle('active', isSeen);
-    seenBtn.title = isSeen ? 'Marked as Seen' : 'Mark as Seen';
+  seenBtn.addEventListener('click', async () => {
+    if (itemType === 'tv' && itemDetails) {
+      openEpisodesModal(itemDetails);
+    } else {
+      isSeen = !isSeen;
+      seenBtn.classList.toggle('active', isSeen);
+      seenBtn.title = isSeen ? 'Marked as Seen' : 'Mark as Seen';
+    }
   });
 
 
@@ -341,6 +345,104 @@ export function openProviderModal(streamingLinks = [], imdbUrl = '', currentIdx 
   } else {
     listEl.innerHTML = `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No streaming links available.</div>`;
   }
+
+  function close() {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  const newCloseBtn = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+  newCloseBtn.addEventListener('click', close);
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+export async function openEpisodesModal(itemDetails) {
+  const overlay = document.getElementById('episodes-modal');
+  if (!overlay || !itemDetails) return;
+  let listEl = document.getElementById('episodes-season-list');
+  let titleEl = document.getElementById('episodes-modal-title');
+  const seenAllBtn = document.getElementById('episodes-seen-all');
+  const saveBtn = document.getElementById('episodes-save');
+  const closeBtn = overlay.querySelector('.close-button');
+
+  const { fetchSeasonEpisodes } = await import('../api.js');
+  const { getSeenEpisodesForShow, markEpisodesSeen } = await import('./episodesSeen.js');
+  const { toggleSeenStatus } = await import('./seenItems.js');
+
+  const tvId = itemDetails.id;
+  let seenEpisodes = JSON.parse(JSON.stringify(getSeenEpisodesForShow(tvId)));
+
+  titleEl.textContent = `Episodes - ${itemDetails.name || itemDetails.title}`;
+  listEl.innerHTML = '';
+  itemDetails.seasons.forEach(season => {
+    const div = document.createElement('div');
+    div.className = 'season-block';
+    div.dataset.seasonNumber = season.season_number;
+    div.innerHTML = `<h3 class="season-header" style="cursor:pointer;margin:0.5rem 0;">${season.name}</h3><div class="episode-list" style="display:none;margin-left:1rem;margin-bottom:0.5rem;"></div>`;
+    listEl.appendChild(div);
+  });
+
+  async function loadSeason(div) {
+    const num = div.dataset.seasonNumber;
+    const epList = div.querySelector('.episode-list');
+    if (epList.dataset.loaded) return;
+    try {
+      const data = await fetchSeasonEpisodes(tvId, num);
+      epList.innerHTML = data.episodes.map(ep => {
+        const checked = (seenEpisodes[num] || []).includes(ep.episode_number) ? 'checked' : '';
+        return `<label style="display:block;margin-bottom:4px;"><input type="checkbox" data-episode="${ep.episode_number}" ${checked}> S${num}E${ep.episode_number} - ${ep.name}<span style="display:block;font-size:0.8em;color:var(--text-secondary);margin-left:1.5em;">${ep.overview || ''}</span></label>`;
+      }).join('');
+      epList.dataset.loaded = 'true';
+    } catch (e) {
+      epList.innerHTML = '<p style="color:var(--text-secondary);">Failed to load episodes.</p>';
+      epList.dataset.loaded = 'true';
+    }
+  }
+
+  listEl.addEventListener('click', async (e) => {
+    const header = e.target.closest('.season-header');
+    if (!header) return;
+    const container = header.parentElement;
+    const list = container.querySelector('.episode-list');
+    if (list.style.display === 'block') {
+      list.style.display = 'none';
+    } else {
+      list.style.display = 'block';
+      await loadSeason(container);
+    }
+  });
+
+  seenAllBtn.onclick = async () => {
+    for (const div of listEl.querySelectorAll('.season-block')) {
+      await loadSeason(div);
+    }
+    listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+  };
+
+  function gatherSelections() {
+    const selections = {};
+    listEl.querySelectorAll('.season-block').forEach(div => {
+      const seasonNum = div.dataset.seasonNumber;
+      const arr = [];
+      div.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (cb.checked) arr.push(parseInt(cb.dataset.episode, 10));
+      });
+      if (arr.length > 0) selections[seasonNum] = arr;
+    });
+    return selections;
+  }
+
+  saveBtn.onclick = async () => {
+    seenEpisodes = gatherSelections();
+    await markEpisodesSeen(tvId, seenEpisodes);
+    await toggleSeenStatus(itemDetails, 'tv');
+    close();
+  };
 
   function close() {
     overlay.style.display = 'none';

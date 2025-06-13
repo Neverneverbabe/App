@@ -116,3 +116,16 @@ export async function fetchCollectionItems(collectionId) {
     const data = await response.json();
     return data.parts || [];
 }
+
+/**
+ * Fetch all episodes for a specific season of a TV show.
+ * @param {number} tvId - The TMDB TV show ID.
+ * @param {number} seasonNumber - The season number.
+ * @returns {Promise<Object>} Season data including episodes array.
+ */
+export async function fetchSeasonEpisodes(tvId, seasonNumber) {
+    const url = `${TMDB_BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch season details');
+    return await response.json();
+}

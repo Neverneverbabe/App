@@ -13,6 +13,7 @@ import * as SearchManager from './modules/search.js';
 import * as SeenItemsManager from './modules/seenItems.js';
 import * as LibraryManager from './modules/libraryManager.js';
 import * as TrackManager from './modules/track.js';
+import * as EpisodesSeenManager from './modules/episodesSeen.js';
 
 // Import Netflix-style modal helpers
 import { openNetflixModal, openWatchlistModal } from './modules/netflixModal.js';
@@ -196,6 +197,7 @@ window.onload = async () => {
                 console.log("Auth state changed: User signed in - UID:", user.uid);
                 // Initialize seen items and library listeners for the newly signed-in user
                 SeenItemsManager.initializeSeenItemsListener(populateCurrentTabContent);
+                EpisodesSeenManager.initializeEpisodesListener(populateCurrentTabContent);
                 LibraryManager.initializeLibraryListener(
                     (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickCallback),
                     (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLightMode, onCardClickCallback),
@@ -208,6 +210,7 @@ window.onload = async () => {
                 console.log("Auth state changed: User signed out");
                 // Clear any local caches that depend on user being signed in
                 SeenItemsManager.initializeSeenItemsListener(populateCurrentTabContent); // Re-initialize to clear cache
+                EpisodesSeenManager.initializeEpisodesListener(populateCurrentTabContent);
                 LibraryManager.initializeLibraryListener(
                     (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickCallback),
                     (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLightMode, onCardClickCallback),
@@ -223,6 +226,7 @@ window.onload = async () => {
         // Initialize seen items and library managers with their listeners immediately if user is already authenticated (e.g., page refresh)
         // This ensures data is loaded even if the initial auth state is already signed in.
         SeenItemsManager.initializeSeenItemsListener(populateCurrentTabContent);
+        EpisodesSeenManager.initializeEpisodesListener(populateCurrentTabContent);
         LibraryManager.initializeLibraryListener(
             (isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderLibraryFolderCards(isItemSeenFn, isLightMode, onCardClickCallback),
             (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(folderId, isItemSeenFn, isLightMode, onCardClickCallback),
@@ -307,6 +311,7 @@ window.onload = async () => {
 
             openNetflixModal({
                 itemDetails: details,
+                itemType: type,
                 imageSrc,
                 title: details.title || details.name || '',
                 tags,
@@ -375,6 +380,7 @@ window.onload = async () => {
             }
             openNetflixModal({
                 itemDetails: details,
+                itemType: type,
                 imageSrc,
                 title: details.title || details.name || '',
                 tags,

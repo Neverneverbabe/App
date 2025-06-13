@@ -483,6 +483,10 @@
         #links-modal {
             z-index: 1100;
         }
+        /* Ensure episodes overlay sits above the movie modal */
+        #episodes-modal {
+            z-index: 1100;
+        }
 
         .item-detail-modal-content {
             background-color: var(--bg-primary);
@@ -1947,6 +1951,19 @@
             <button class="close-button" aria-label="Close"><i class="fas fa-times"></i></button>
             <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Choose Provider</h2>
             <div id="provider-options-list" class="dropdown-list hide-scrollbar" style="position: static; border: none; box-shadow: none; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Episodes Modal -->
+    <div id="episodes-modal" class="item-detail-modal">
+        <div class="item-detail-modal-content" style="max-width: 600px; padding: 1.5rem;">
+            <button class="close-button" aria-label="Close"><i class="fas fa-times"></i></button>
+            <h2 id="episodes-modal-title" style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">Episodes</h2>
+            <div id="episodes-season-list" style="max-height:400px; overflow-y:auto;"></div>
+            <div class="filter-dropdown-footer" style="border-radius:0.75rem; display:flex; justify-content: space-between; margin-top:1rem;">
+                <button id="episodes-seen-all" class="filter-action-button">Seen All</button>
+                <button id="episodes-save" class="filter-action-button apply">Save</button>
+            </div>
         </div>
     </div>
 
