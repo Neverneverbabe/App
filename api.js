@@ -136,3 +136,34 @@ export async function fetchCollectionItems(collectionId) {
     const data = await response.json();
     return data.parts || [];
 }
+
+// --- Additional Helpers for Explore Categories ---
+
+/**
+ * Fetch top rated movies or TV shows.
+ * @param {'movie'|'tv'} mediaType
+ * @param {number} page
+ * @returns {Promise<Array>}
+ */
+export async function fetchTopRatedItems(mediaType = 'movie', page = 1) {
+    const url = `${TMDB_BASE_URL}/${mediaType}/top_rated?api_key=${API_KEY}&page=${page}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch top rated items');
+    const data = await response.json();
+    return (data.results || []).map(item => ({ ...item, media_type: mediaType }));
+}
+
+/**
+ * Fetch classic movies or TV shows released before the year 2000.
+ * @param {'movie'|'tv'} mediaType
+ * @param {number} page
+ * @returns {Promise<Array>}
+ */
+export async function fetchClassicItems(mediaType = 'movie', page = 1) {
+    const url = `${TMDB_BASE_URL}/discover/${mediaType}?api_key=${API_KEY}&sort_by=vote_average.desc&vote_count.gte=500&primary_release_date.lte=2000-12-31&page=${page}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch classic items');
+    const data = await response.json();
+    return (data.results || []).map(item => ({ ...item, media_type: mediaType }));
+}
+
