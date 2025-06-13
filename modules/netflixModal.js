@@ -1,4 +1,7 @@
-export function openNetflixModal({ imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [] } = {}) {
+import { renderWatchlistOptionsInModal } from '../ui.js';
+import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
+
+export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [] } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
   const overlay = document.createElement('div');
@@ -77,11 +80,19 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
   seenBtn.title = 'Mark as Seen';
   actions.appendChild(seenBtn);
 
-  const watchlistBtn = document.createElement('button');
-  watchlistBtn.className = 'netflix-modal-action-btn primary';
-  watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
-  watchlistBtn.title = 'Add to Watchlist';
-  actions.appendChild(watchlistBtn);
+  const watchlistDropdown = document.createElement('div');
+  watchlistDropdown.className = 'apple-dropdown';
+  watchlistDropdown.id = 'add-to-folder-dropdown-modal';
+  watchlistDropdown.style.width = '44px';
+  watchlistDropdown.innerHTML = `
+    <div class="dropdown-selected" id="dropdown-selected-text-modal" title="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;">
+      <i class="fa-regular fa-bookmark"></i>
+    </div>
+    <div class="dropdown-list hide-scrollbar" id="dropdown-list-modal" style="display:none; max-height: 200px; overflow-y: auto; border-radius: 10px; margin-top: 4px;"></div>
+    <div class="dropdown-footer" id="dropdown-footer-modal" style="display:none; padding: 0.5em 1em; text-align: center; border-top: 1px solid var(--border-color); background: var(--dropdown-bg); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+      <button id="add-new-folder-btn-modal" style="background:none; border:none; color:var(--science-blue); font-size:1.5em; cursor:pointer; width:100%; line-height:1;">+</button>
+    </div>`;
+  actions.appendChild(watchlistDropdown);
 
   body.appendChild(actions);
 
@@ -95,7 +106,6 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   // --- Button functionality ---
   let isSeen = false;
-  let isBookmarked = false;
 
   seenBtn.addEventListener('click', () => {
     isSeen = !isSeen;
@@ -103,11 +113,6 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
     seenBtn.title = isSeen ? 'Marked as Seen' : 'Mark as Seen';
   });
 
-  watchlistBtn.addEventListener('click', () => {
-    isBookmarked = !isBookmarked;
-    watchlistBtn.classList.toggle('active', isBookmarked);
-    watchlistBtn.title = isBookmarked ? 'Remove Bookmark' : 'Add to Watchlist';
-  });
 
   watchNowBtn.addEventListener('click', () => {
     if (streamingLinks && streamingLinks.length > 0) {
@@ -158,6 +163,10 @@ export function openNetflixModal({ imageSrc = '', title = '', tags = [], descrip
 
   document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
+
+  if (itemDetails) {
+    renderWatchlistOptionsInModal(itemDetails, getWatchlistsCache(), addRemoveItemToFolder, createLibraryFolder);
+  }
 }
 
 export function closeNetflixModal() {

@@ -280,6 +280,7 @@ window.onload = async () => {
             }
 
             openNetflixModal({
+                itemDetails: details,
                 imageSrc,
                 title: details.title || details.name || '',
                 tags,
@@ -332,6 +333,7 @@ window.onload = async () => {
                 });
             }
             openNetflixModal({
+                itemDetails: details,
                 imageSrc,
                 title: details.title || details.name || '',
                 tags,
