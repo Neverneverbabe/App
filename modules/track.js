@@ -96,6 +96,8 @@ export async function openEpisodeModal(showDetails) {
     let seasonSelect = overlay.querySelector('#episode-season-select');
     let episodeList = overlay.querySelector('#episode-list');
     let saveBtn = overlay.querySelector('#save-episodes-btn');
+    let seenAllBtn = overlay.querySelector('#seen-all-btn');
+    let clearAllBtn = overlay.querySelector('#clear-all-btn');
     const titleEl = overlay.querySelector('#episode-modal-title');
     const closeBtn = overlay.querySelector('.close-button');
 
@@ -110,6 +112,18 @@ export async function openEpisodeModal(showDetails) {
     const newSave = saveBtn.cloneNode(true);
     saveBtn.parentNode.replaceChild(newSave, saveBtn);
     saveBtn = newSave;
+
+    const newSeenAll = seenAllBtn.cloneNode(true);
+    seenAllBtn.parentNode.replaceChild(newSeenAll, seenAllBtn);
+    seenAllBtn = newSeenAll;
+    seenAllBtn.style.display = 'none';
+
+    const newClear = clearAllBtn.cloneNode(true);
+    clearAllBtn.parentNode.replaceChild(newClear, clearAllBtn);
+    clearAllBtn = newClear;
+    clearAllBtn.textContent = 'Remove';
+    const isTracked = !!getTrackedShow(showDetails.id);
+    clearAllBtn.style.display = isTracked ? 'inline-block' : 'none';
 
     const newClose = closeBtn.cloneNode(true);
     closeBtn.parentNode.replaceChild(newClose, closeBtn);
@@ -159,6 +173,13 @@ export async function openEpisodeModal(showDetails) {
         selectedEpisode = parseInt(item.dataset.episode, 10);
         episodeList.querySelectorAll('.episode-item.selected').forEach(el => el.classList.remove('selected'));
         item.classList.add('selected');
+    });
+
+    clearAllBtn.addEventListener('click', async () => {
+        await removeTrackedShow(showDetails.id);
+        close();
+        const container = document.getElementById('track-progress-container');
+        if (container) renderTrackSectionInModal(showDetails);
     });
 
     saveBtn.addEventListener('click', async () => {
