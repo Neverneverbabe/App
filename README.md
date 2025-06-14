@@ -29,4 +29,7 @@ For TV shows, the checkmark button lets you select individual episodes or mark
 an entire season as seen, while the progress icon simply bookmarks the episode
 you last watched.
 
+When you open another item from the recommendations inside a modal, a back
+arrow appears so you can return to the previous modal without losing your place.
+
 The rest of the project uses plain JavaScript modules, so no React setup is required.
