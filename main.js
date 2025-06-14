@@ -75,6 +75,8 @@ const EXPLORE_CATEGORY_OPTIONS = [
     { value: 'favorites', label: 'All Time Favorites' }
 ];
 let isLightMode = false; // Initial theme state
+let modalHistory = [];
+let currentModalItem = null;
 
 // DOM Element References (will be initialized in window.onload)
 let themeToggleBtn, filterButton, body, sidebarToggleButton, sidebarToggleIcon, currentTabNameDisplay,
@@ -340,9 +342,13 @@ window.onload = async () => {
      * @param {number} id - The ID of the movie or TV show.
      * @param {'movie'|'tv'} type - The media type ('movie' or 'tv').
      */
-    const onCardClick = async (id, type) => {
+    const onCardClick = async (id, type, options = {}) => {
         try {
             showLoadingIndicator('Fetching item details...');
+            if (!options.fromBack && currentModalItem) {
+                modalHistory.push(currentModalItem);
+            }
+            currentModalItem = { id, type };
             const details = await fetchItemDetails(id, type);
             const recommendations = await fetchRecommendations(id, type);
             let seriesItems = [];
@@ -397,7 +403,15 @@ window.onload = async () => {
                 streamingLinks,
                 recommendations,
                 series: seriesItems,
-                onItemSelect: onCardClick
+                onItemSelect: onCardClick,
+                onBack: modalHistory.length > 0 ? () => {
+                    const prev = modalHistory.pop();
+                    onCardClick(prev.id, prev.type, { fromBack: true });
+                } : null,
+                onClose: () => {
+                    modalHistory = [];
+                    currentModalItem = null;
+                }
             });
         } catch (error) {
             console.error("Error fetching item details for modal:", error);
@@ -464,7 +478,15 @@ window.onload = async () => {
                 streamingLinks,
                 recommendations,
                 series: seriesItems,
-                onItemSelect: onCardClick
+                onItemSelect: onCardClick,
+                onBack: modalHistory.length > 0 ? () => {
+                    const prev = modalHistory.pop();
+                    onCardClick(prev.id, prev.type, { fromBack: true });
+                } : null,
+                onClose: () => {
+                    modalHistory = [];
+                    currentModalItem = null;
+                }
             });
         } catch (error) {
             console.error('Error fetching hero item details:', error);

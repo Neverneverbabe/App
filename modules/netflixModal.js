@@ -2,15 +2,20 @@ import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
 import { renderTrackSectionInModal, openEpisodeModal } from './track.js';
 
-export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
+export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null, onBack = null, onClose = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
   const overlay = document.createElement('div');
   overlay.id = 'netflix-modal-overlay';
   overlay.className = 'netflix-modal-overlay';
 
+  const handleClose = () => {
+    closeNetflixModal();
+    if (onClose) onClose();
+  };
+
   const handleKeyDown = event => {
-    if (event.key === 'Escape') closeNetflixModal();
+    if (event.key === 'Escape') handleClose();
   };
   document.addEventListener('keydown', handleKeyDown);
   overlay._handleKeyDown = handleKeyDown;
@@ -21,8 +26,19 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   const closeBtn = document.createElement('button');
   closeBtn.className = 'netflix-modal-close';
   closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-  closeBtn.addEventListener('click', closeNetflixModal);
+  closeBtn.addEventListener('click', handleClose);
   modal.appendChild(closeBtn);
+
+  if (onBack) {
+    const backBtn = document.createElement('button');
+    backBtn.className = 'netflix-modal-back';
+    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
+    backBtn.addEventListener('click', () => {
+      closeNetflixModal();
+      onBack();
+    });
+    modal.appendChild(backBtn);
+  }
 
   const imageSection = document.createElement('div');
   imageSection.className = 'netflix-modal-image';
@@ -264,7 +280,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
 
   overlay.addEventListener('click', event => {
     if (event.target === overlay) {
-      closeNetflixModal();
+      handleClose();
     }
   });
 
