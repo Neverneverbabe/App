@@ -476,6 +476,7 @@ window.onload = async () => {
     document.body.addEventListener('click', async (event) => {
         const seenToggleIcon = event.target.closest('.seen-toggle-icon');
         if (seenToggleIcon) {
+            event.preventDefault();
             event.stopPropagation(); // Prevent card click if the icon itself was clicked
             const card = seenToggleIcon.closest('.content-card');
             if (!card) return;
@@ -496,6 +497,7 @@ window.onload = async () => {
         } else {
             const bookmarkIcon = event.target.closest('.bookmark-toggle-icon');
             if (bookmarkIcon) {
+                event.preventDefault();
                 event.stopPropagation();
                 const card = bookmarkIcon.closest('.content-card');
                 if (!card) return;
@@ -505,6 +507,7 @@ window.onload = async () => {
                 const title = card.dataset.title || '';
                 const poster = card.dataset.poster || '';
                 openWatchlistModal({ id, media_type: type, title, poster_path: poster });
+                return;
             } else {
                 const heroBtn = event.target.closest('#hero-watch-now');
                     if (heroBtn) {
