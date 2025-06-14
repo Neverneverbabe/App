@@ -236,7 +236,8 @@ window.onload = async () => {
                         onCardClickCallback,
                         currentMediaTypeFilter,
                         currentAgeRatingFilter,
-                        currentCategoryFilter
+                        currentCategoryFilter,
+                        LibraryManager.getCurrentParentFolderId()
                     ),
                     (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(
                         folderId,
@@ -263,7 +264,8 @@ window.onload = async () => {
                         onCardClickCallback,
                         currentMediaTypeFilter,
                         currentAgeRatingFilter,
-                        currentCategoryFilter
+                        currentCategoryFilter,
+                        LibraryManager.getCurrentParentFolderId()
                     ),
                     (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(
                         folderId,
@@ -293,7 +295,8 @@ window.onload = async () => {
                 onCardClickCallback,
                 currentMediaTypeFilter,
                 currentAgeRatingFilter,
-                currentCategoryFilter
+                currentCategoryFilter,
+                LibraryManager.getCurrentParentFolderId()
             ),
             (folderId, isItemSeenFn, isLightMode, onCardClickCallback) => LibraryManager.renderMoviesInSelectedFolder(
                 folderId,

@@ -1,7 +1,7 @@
 // App/ui.js
 import { TMDB_IMG_BASE_URL, TMDB_BACKDROP_BASE_URL, VIDSRC_PROVIDERS } from './config.js';
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
-import { getWatchlistsCache } from './modules/libraryManager.js';
+import { getWatchlistsCache, getWatchlistFullName } from './modules/libraryManager.js';
 
 // --- Global DOM References ---
 const itemDetailModal = document.getElementById('item-detail-modal');
@@ -516,7 +516,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
         dropdownListModal.innerHTML = allWatchlists.length
             ? allWatchlists.map(watchlist => `
                 <div class="dropdown-item ${currentlySelectedWatchlistIds.includes(watchlist.id) ? 'item-selected' : ''}" data-folder-id="${watchlist.id}">
-                    ${watchlist.name}
+                    ${getWatchlistFullName(watchlist.id)}
                     <span class="checkmark">✔</span>
                 </div>`).join('')
             : `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No watchlists yet. Click '+' below.</div>`;
@@ -531,7 +531,7 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
                 icon.classList.add('fa-regular');
             }
         } else if (currentlySelectedWatchlistIds.length === 1) {
-            const selectedName = allWatchlists.find(wl => wl.id === currentlySelectedWatchlistIds[0])?.name || 'Selected';
+            const selectedName = getWatchlistFullName(currentlySelectedWatchlistIds[0]) || 'Selected';
             titleText = selectedName;
             dropdownSelectedTextModal.classList.add('is-selected');
             const icon = dropdownSelectedTextModal.querySelector('i');
