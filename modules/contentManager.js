@@ -13,6 +13,8 @@ let cachedRecommendedShows = [];
 let cachedNewReleaseMovies = [];
 let cachedNewReleaseTv = [];
 let cachedExploreItems = [];
+// Track IDs of items already loaded in Explore to avoid duplicates
+const loadedExploreItemIds = new Set();
 
 // State variables for infinite scrolling in the explore tab
 let exploreMoviePage = 1;
@@ -298,6 +300,17 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
             }
         }
 
+        const rawFetchedCount = newItems.length;
+        // Remove duplicates based on media type and ID
+        newItems = newItems.filter(item => {
+            const key = `${item.media_type || (item.title ? 'movie' : 'tv')}_${item.id}`;
+            return !loadedExploreItemIds.has(key);
+        });
+        newItems.forEach(item => {
+            const key = `${item.media_type || (item.title ? 'movie' : 'tv')}_${item.id}`;
+            loadedExploreItemIds.add(key);
+        });
+
         cachedExploreItems = cachedExploreItems.concat(newItems);
 
         if (newItems.length > 0) {
@@ -314,11 +327,15 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
             appendItemsToGrid(exploreGridContainer, itemsToDisplay, isLightMode, onCardClick, isItemSeenFn);
             exploreMoviePage += moviePages;
             exploreTvPage += tvPages;
-            if (itemsToDisplay.length < desiredCount) {
+            if (rawFetchedCount < desiredCount && newItems.length === itemsToDisplay.length) {
                 exploreReachedEnd = true;
             }
         } else {
-            exploreReachedEnd = true;
+            exploreMoviePage += moviePages;
+            exploreTvPage += tvPages;
+            if (rawFetchedCount < desiredCount) {
+                exploreReachedEnd = true;
+            }
         }
     } catch (error) {
         console.error("Error loading more explore items:", error);
@@ -339,6 +356,7 @@ export function resetExploreState() {
     exploreHasMore = true;
     exploreReachedEnd = false;
     cachedExploreItems = [];
+    loadedExploreItemIds.clear();
     const exploreGrid = document.getElementById('explore-grid-container');
     if (exploreGrid) {
         exploreGrid.innerHTML = '';
