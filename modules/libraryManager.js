@@ -23,6 +23,8 @@ async function getItemDetailsCached(id, type) {
 
 // State for the currently selected library folder
 let currentSelectedLibraryFolder = null;
+// Stack representing the current folder navigation path
+let libraryFolderStack = [];
 
 /**
  * Gets the current watchlist cache.
@@ -37,7 +39,13 @@ export function getWatchlistsCache() {
  * @param {string|null} folderId - The ID of the folder to select.
  */
 export function setCurrentSelectedLibraryFolder(folderId) {
-    currentSelectedLibraryFolder = folderId;
+    if (folderId) {
+        libraryFolderStack = [folderId];
+        currentSelectedLibraryFolder = folderId;
+    } else {
+        libraryFolderStack = [];
+        currentSelectedLibraryFolder = null;
+    }
 }
 
 /**
@@ -46,6 +54,33 @@ export function setCurrentSelectedLibraryFolder(folderId) {
  */
 export function getCurrentSelectedLibraryFolder() {
     return currentSelectedLibraryFolder;
+}
+
+export function pushFolder(folderId) {
+    if (folderId) {
+        libraryFolderStack.push(folderId);
+        currentSelectedLibraryFolder = folderId;
+    }
+}
+
+export function popFolder() {
+    libraryFolderStack.pop();
+    currentSelectedLibraryFolder = libraryFolderStack[libraryFolderStack.length - 1] || null;
+}
+
+export function getCurrentParentFolderId() {
+    return libraryFolderStack[libraryFolderStack.length - 1] || null;
+}
+
+export function getWatchlistFullName(folderId) {
+    const folderMap = Object.fromEntries(firestoreWatchlistsCache.map(f => [f.id, f]));
+    let parts = [];
+    let current = folderMap[folderId];
+    while (current) {
+        parts.unshift(current.name);
+        current = current.parentId ? folderMap[current.parentId] : null;
+    }
+    return parts.join(' / ');
 }
 
 /**
@@ -72,7 +107,7 @@ export function initializeLibraryListener(onUpdateCallback, renderSelectedFolder
                 items: Array.isArray(wl.items) ? wl.items : []
             }));
             console.log("Real-time Watchlists update:", firestoreWatchlistsCache);
-            onUpdateCallback(isItemSeenFn, isLightMode, onCardClickCallback); // Trigger folder cards re-render
+            onUpdateCallback(isItemSeenFn, isLightMode, onCardClickCallback, getCurrentParentFolderId()); // Trigger folder cards re-render
             updateBookmarkIconStates();
             if (currentSelectedLibraryFolder) {
                 renderSelectedFolderCallback(currentSelectedLibraryFolder, isItemSeenFn, isLightMode, onCardClickCallback);
@@ -80,7 +115,7 @@ export function initializeLibraryListener(onUpdateCallback, renderSelectedFolder
         });
     } else {
         firestoreWatchlistsCache = [];
-        onUpdateCallback(isItemSeenFn, isLightMode, onCardClickCallback); // Update UI to reflect no watchlists
+        onUpdateCallback(isItemSeenFn, isLightMode, onCardClickCallback, null); // Update UI to reflect no watchlists
         renderSelectedFolderCallback(null, isItemSeenFn, isLightMode, onCardClickCallback);
         updateBookmarkIconStates();
     }
@@ -90,7 +125,7 @@ export function initializeLibraryListener(onUpdateCallback, renderSelectedFolder
  * Creates a new watchlist (folder) in Firestore.
  * @param {string} folderName - The name of the new folder.
  */
-export async function createLibraryFolder(folderName) {
+export async function createLibraryFolder(folderName, parentId = null) {
     const user = getCurrentUser();
     if (!user) {
         showCustomAlert("Info", "Please sign in to create watchlists.");
@@ -98,8 +133,8 @@ export async function createLibraryFolder(folderName) {
     }
     try {
         showLoadingIndicator(`Creating "${folderName}"...`);
-        // saveUserData will create a new document with the folderName as its ID
-        await saveUserData('watchlists', folderName, { name: folderName, items: [] });
+        const docId = `${folderName.replace(/\s+/g, '_')}_${Date.now()}`;
+        await saveUserData('watchlists', docId, { name: folderName, items: [], parentId });
         showCustomAlert("Success", `Watchlist "${folderName}" created successfully!`);
     } catch (error) {
         console.error("Error creating new folder:", error);
@@ -214,12 +249,42 @@ export function renderLibraryFolderCards(
     onCardClickCallback,
     currentMediaTypeFilter = '',
     currentAgeRatingFilter = [],
-    currentCategoryFilter = []
+    currentCategoryFilter = [],
+    parentFolderId = null
 ) {
     const libraryFoldersRow = document.getElementById('library-folders-row');
     if (!libraryFoldersRow) return;
 
     libraryFoldersRow.innerHTML = '';
+
+    if (parentFolderId) {
+        const backCard = document.createElement('div');
+        backCard.className = 'content-card folder-card';
+        backCard.style.cssText = `flex-shrink:0;width:10rem;height:14rem;background-color:var(--card-bg);display:flex;align-items:center;justify-content:center;margin-right:1rem;margin-bottom:1rem;cursor:pointer;border-radius:0.5rem;`;
+        backCard.innerHTML = `<i class="fas fa-arrow-left" style="font-size:2rem;color:var(--text-secondary);"></i>`;
+        backCard.addEventListener('click', () => {
+            popFolder();
+            renderLibraryFolderCards(
+                isItemSeenFn,
+                isLightMode,
+                onCardClickCallback,
+                currentMediaTypeFilter,
+                currentAgeRatingFilter,
+                currentCategoryFilter,
+                getCurrentParentFolderId()
+            );
+            renderMoviesInSelectedFolder(
+                getCurrentSelectedLibraryFolder(),
+                isItemSeenFn,
+                isLightMode,
+                onCardClickCallback,
+                currentMediaTypeFilter,
+                currentAgeRatingFilter,
+                currentCategoryFilter
+            );
+        });
+        libraryFoldersRow.appendChild(backCard);
+    }
 
     const createNewCard = document.createElement('div');
     createNewCard.className = 'content-card folder-card create-new-folder-card';
@@ -247,7 +312,7 @@ export function renderLibraryFolderCards(
     createNewCard.addEventListener('click', async () => {
         const newFolderName = prompt("Enter new watchlist name:"); // Using native prompt for simplicity
         if (newFolderName && newFolderName.trim() !== "") {
-            await createLibraryFolder(newFolderName.trim());
+            await createLibraryFolder(newFolderName.trim(), parentFolderId);
         }
     });
     libraryFoldersRow.appendChild(createNewCard);
@@ -256,7 +321,9 @@ export function renderLibraryFolderCards(
         return;
     }
 
-    firestoreWatchlistsCache.forEach(folder => {
+    const foldersToShow = firestoreWatchlistsCache.filter(f => (f.parentId || null) === parentFolderId);
+
+    foldersToShow.forEach(folder => {
         const firstItemPoster = folder.items && folder.items.length > 0 && folder.items[0].poster_path
             ? (folder.items[0].poster_path.startsWith('http') ? folder.items[0].poster_path : `https://image.tmdb.org/t/p/w200${folder.items[0].poster_path}`)
             : "https://placehold.co/150x225/374151/9CA3AF?text=Folder";
@@ -298,7 +365,16 @@ export function renderLibraryFolderCards(
 
         card.addEventListener('click', (e) => {
             if (e.target === deleteBtn) return;
-            currentSelectedLibraryFolder = folder.id; // Update selected folder state
+            pushFolder(folder.id);
+            renderLibraryFolderCards(
+                isItemSeenFn,
+                isLightMode,
+                onCardClickCallback,
+                currentMediaTypeFilter,
+                currentAgeRatingFilter,
+                currentCategoryFilter,
+                folder.id
+            );
             renderMoviesInSelectedFolder(
                 folder.id,
                 isItemSeenFn,
@@ -307,7 +383,7 @@ export function renderLibraryFolderCards(
                 currentMediaTypeFilter,
                 currentAgeRatingFilter,
                 currentCategoryFilter
-            ); // Render movies in this folder
+            );
             libraryFoldersRow.querySelectorAll('.folder-card').forEach(fc => {
                 fc.style.border = '2px solid transparent';
                 fc.style.boxShadow = '0 4px 6px -1px rgba(var(--black-rgb), 0.1)';
@@ -465,7 +541,8 @@ export async function populateLibraryTab(
         onCardClick,
         currentMediaTypeFilter,
         currentAgeRatingFilter,
-        currentCategoryFilter
+        currentCategoryFilter,
+        getCurrentParentFolderId()
     );
     await renderMoviesInSelectedFolder(
         currentSelectedLibraryFolder,
