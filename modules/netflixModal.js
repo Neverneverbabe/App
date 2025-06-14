@@ -2,15 +2,44 @@ import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './libraryManager.js';
 import { renderTrackSectionInModal, openEpisodeModal } from './track.js';
 
+// --- Modal navigation state ---
+let modalHistoryStack = [];
+let currentModalData = null;
+
+export function pushCurrentModalToHistory() {
+  if (currentModalData) {
+    modalHistoryStack.push(currentModalData);
+  }
+}
+
+export function goBackNetflixModal() {
+  if (modalHistoryStack.length > 0) {
+    const previous = modalHistoryStack.pop();
+    closeNetflixModal(false);
+    openNetflixModal(previous);
+  } else {
+    closeNetflixModal();
+  }
+}
+
 export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
+
+  currentModalData = { itemDetails, imageSrc, title, tags, description, imdbUrl, rating, streamingLinks, recommendations, series, onItemSelect };
 
   const overlay = document.createElement('div');
   overlay.id = 'netflix-modal-overlay';
   overlay.className = 'netflix-modal-overlay';
+  overlay._modalData = currentModalData;
 
   const handleKeyDown = event => {
-    if (event.key === 'Escape') closeNetflixModal();
+    if (event.key === 'Escape') {
+      if (modalHistoryStack.length > 0) {
+        goBackNetflixModal();
+      } else {
+        closeNetflixModal();
+      }
+    }
   };
   document.addEventListener('keydown', handleKeyDown);
   overlay._handleKeyDown = handleKeyDown;
@@ -23,6 +52,14 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   closeBtn.innerHTML = '<i class="fas fa-times"></i>';
   closeBtn.addEventListener('click', closeNetflixModal);
   modal.appendChild(closeBtn);
+
+  const backBtn = document.createElement('button');
+  backBtn.className = 'netflix-modal-back';
+  backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
+  backBtn.title = 'Go Back';
+  backBtn.addEventListener('click', goBackNetflixModal);
+  if (modalHistoryStack.length === 0) backBtn.style.display = 'none';
+  modal.appendChild(backBtn);
 
   const imageSection = document.createElement('div');
   imageSection.className = 'netflix-modal-image';
@@ -221,7 +258,8 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
       const card = temp.firstElementChild;
       if (card && onItemSelect) {
         card.addEventListener('click', () => {
-          closeNetflixModal();
+          pushCurrentModalToHistory();
+          closeNetflixModal(false);
           onItemSelect(rec.id, rec.media_type || (rec.title ? 'movie' : 'tv'));
         });
       }
@@ -245,7 +283,8 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
       const card = temp.firstElementChild;
       if (card && onItemSelect) {
         card.addEventListener('click', () => {
-          closeNetflixModal();
+          pushCurrentModalToHistory();
+          closeNetflixModal(false);
           onItemSelect(part.id, part.media_type || (part.title ? 'movie' : 'tv'));
         });
       }
@@ -285,7 +324,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   }
 }
 
-export function closeNetflixModal() {
+export function closeNetflixModal(clearHistory = true) {
   const overlay = document.getElementById('netflix-modal-overlay');
   if (overlay) {
     if (overlay._handleKeyDown) {
@@ -293,6 +332,10 @@ export function closeNetflixModal() {
     }
     overlay.remove();
     document.body.style.overflow = '';
+  }
+  if (clearHistory) {
+    modalHistoryStack = [];
+    currentModalData = null;
   }
 }
 
