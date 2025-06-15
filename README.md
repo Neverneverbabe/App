@@ -35,6 +35,7 @@ The rest of the project uses plain JavaScript modules, so no React setup is requ
 
 Folders in the **Library** tab can be rearranged by dragging a folder tile onto another.
 The new order is saved to your account so your organization persists across sessions.
+Each folder card also includes a small pencil icon you can click to rename that watchlist.
 
 ## React Movie Library Component
 

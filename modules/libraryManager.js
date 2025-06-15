@@ -190,6 +190,34 @@ export async function deleteLibraryFolder(folderId, folderName) {
 }
 
 /**
+ * Renames an existing watchlist folder in Firestore.
+ * @param {string} folderId - The ID of the folder to rename.
+ * @param {string} newName - The new name for the folder.
+ */
+export async function renameLibraryFolder(folderId, newName) {
+    const user = getCurrentUser();
+    if (!user) {
+        showCustomAlert("Info", "Please sign in to rename watchlists.");
+        return;
+    }
+
+    try {
+        showLoadingIndicator(`Renaming to "${newName}"...`);
+        await saveUserData('watchlists', folderId, { name: newName });
+        const idx = firestoreWatchlistsCache.findIndex(wl => wl.id === folderId);
+        if (idx > -1) {
+            firestoreWatchlistsCache[idx].name = newName;
+        }
+        showCustomAlert("Success", `Watchlist renamed to "${newName}"`);
+    } catch (error) {
+        console.error("Error renaming folder:", error);
+        showCustomAlert("Error", `Failed to rename watchlist: ${error.message}`);
+    } finally {
+        hideLoadingIndicator();
+    }
+}
+
+/**
  * Updates the order field for a specific folder.
  * @param {string} folderId - The ID of the folder.
  * @param {number} newOrder - The new order index.
@@ -392,6 +420,29 @@ export function renderLibraryFolderCards(
             await deleteLibraryFolder(folder.id, folder.name);
         };
         card.appendChild(deleteBtn);
+
+        const renameBtn = document.createElement('button');
+        renameBtn.innerHTML = '✏️';
+        renameBtn.title = 'Rename Watchlist';
+        renameBtn.style.position = 'absolute';
+        renameBtn.style.top = '5px';
+        renameBtn.style.left = '5px';
+        renameBtn.style.background = 'rgba(var(--black-rgb), 0.4)';
+        renameBtn.style.color = 'var(--text-secondary)';
+        renameBtn.style.border = 'none';
+        renameBtn.style.borderRadius = '50%';
+        renameBtn.style.width = '24px';
+        renameBtn.style.height = '24px';
+        renameBtn.style.fontSize = '14px';
+        renameBtn.style.cursor = 'pointer';
+        renameBtn.onclick = async (e) => {
+            e.stopPropagation();
+            const newName = prompt('Enter new name for this watchlist:', folder.name);
+            if (newName && newName.trim() !== '' && newName !== folder.name) {
+                await renameLibraryFolder(folder.id, newName.trim());
+            }
+        };
+        card.appendChild(renameBtn);
 
         card.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text/plain', folder.id);
