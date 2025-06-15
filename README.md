@@ -49,3 +49,39 @@ ReactDOM.createRoot(document.getElementById('root')).render(<MovieLibrary />);
 ```
 
 Include React and ReactDOM via your preferred build system or CDN, then mount the component inside a container element with id `root`.
+
+## Bookmark Folder Selector (React)
+
+A popup React component is available in `react/BookmarkFolderSelector.jsx` for selecting multiple watchlist folders when bookmarking a movie. Pass a nested folder structure and any folders already containing the movie. When the user hits **Save**, the component calls your `onSave` callback with the selected folder IDs.
+
+```javascript
+import ReactDOM from 'react-dom/client';
+import BookmarkFolderSelector from './react/BookmarkFolderSelector.jsx';
+
+const folders = [
+  { id: 'comedy', name: 'Comedy', children: [] },
+  {
+    id: 'good',
+    name: 'Good',
+    children: [
+      { id: 'crier', name: 'Crier', children: [] },
+      { id: 'classic', name: 'Classic', children: [] }
+    ],
+  },
+];
+
+function handleSave(ids) {
+  console.log(ids); // persist selections
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <BookmarkFolderSelector
+    folders={folders}
+    initialSelected={['comedy']}
+    onSave={handleSave}
+    onClose={() => console.log('closed')}
+  />
+);
+```
+
+The UI remembers the initial selection and lets you expand folders to reveal subfolders. Multiple folders can be checked at once.
