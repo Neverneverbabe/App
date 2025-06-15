@@ -1,34 +1,5 @@
 // modules/libraryManager.js
 
-/**
- * MOVIE LIBRARY LAYOUT STRUCTURE
- *
- * Layout is divided into 3 logical UI tiers:
- *
- * 1. Top Row – Library Folders
- *    - Represents the main user-created folders (broad categories)
- *    - Example: [ New Library + ] [ "Comedy" ] [ "Good" ] [ "Horror" ]
- *    - Clicking a folder filters the view to only show its subfolders and movies
- *
- * 2. Second Row – Subfolders (Watchlists)
- *    - Contextual row based on selected folder from Row 1
- *    - Example (Comedy selected): [ New Watchlist + ] (no subfolders yet)
- *    - Example (Good selected): [ New Watchlist + ] [ "Crier" ] [ "Classic" ]
- *    - Clicking a subfolder filters the movie list to just that subfolder
- *
- * 3. Main Content – Movie List/Grid
- *    - Displays movies based on the selected folder and subfolder
- *    - Examples:
- *       - Comedy (no subfolder selected): shows "Dumb and Dumber", etc.
- *       - Good > Crier selected: shows "Pay It Forward", "Green Book", etc.
- *
- * Behavior Notes:
- * - If only a folder is selected, all movies under that folder display
- * - If a subfolder is selected, only its movies display
- * - Movies can belong to subfolders for better filtering
- * - New Library + and New Watchlist + are buttons to add folders and subfolders
- */
-
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast, updateBookmarkIconStates, updateBookmarkIconForItem } from '../ui.js';
 import { createContentCardHtml } from '../ui.js'; // Import directly from ui.js
