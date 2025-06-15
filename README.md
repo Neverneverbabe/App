@@ -85,3 +85,17 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 ```
 
 The UI remembers the initial selection and lets you expand folders to reveal subfolders. Multiple folders can be checked at once.
+
+## React Folder Manager
+
+`react/MovieFolderManager.jsx` demonstrates renaming folders and moving them into other folders.
+It renders a nested list where each folder can be edited inline or moved to a new parent.
+
+```javascript
+import ReactDOM from 'react-dom/client';
+import MovieFolderManager from './react/MovieFolderManager.jsx';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <MovieFolderManager />
+);
+```
