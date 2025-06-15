@@ -323,15 +323,89 @@ export function openWatchlistModal(itemDetails) {
   const itemType = itemDetails.media_type || (itemDetails.title ? 'movie' : 'tv');
 
   function getSelectedIds(cache) {
-    return cache.filter(wl => wl.items.some(it => String(it.tmdb_id) === String(itemDetails.id) && it.item_type === itemType)).map(wl => wl.id);
+    return cache
+      .filter(wl =>
+        wl.items.some(
+          it => String(it.tmdb_id) === String(itemDetails.id) && it.item_type === itemType
+        )
+      )
+      .map(wl => wl.id);
+  }
+
+  const expanded = {};
+  let selectedIds = new Set();
+
+  function buildTree(folders, parentId = null) {
+    return folders
+      .filter(f => (f.parentId || null) === parentId)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map(f => ({ ...f, children: buildTree(folders, f.id) }));
+  }
+
+  function refreshSelected() {
+    selectedIds = new Set(getSelectedIds(getWatchlistsCache()));
+  }
+
+  function renderTree(nodes, container, depth = 0) {
+    nodes.forEach(node => {
+      const row = document.createElement('div');
+      row.className = `dropdown-item ${selectedIds.has(node.id) ? 'item-selected' : ''}`;
+      row.dataset.folderId = node.id;
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      if (depth > 0) row.style.paddingLeft = `${1 + depth}rem`;
+
+      if (node.children && node.children.length > 0) {
+        const btn = document.createElement('button');
+        btn.textContent = expanded[node.id] ? '▾' : '▸';
+        btn.style.marginRight = '0.25rem';
+        btn.style.width = '1rem';
+        btn.style.background = 'none';
+        btn.style.border = 'none';
+        btn.style.color = 'inherit';
+        btn.style.cursor = 'pointer';
+        btn.addEventListener('click', ev => {
+          ev.stopPropagation();
+          expanded[node.id] = !expanded[node.id];
+          updateList();
+        });
+        row.appendChild(btn);
+      } else {
+        const spacer = document.createElement('span');
+        spacer.style.display = 'inline-block';
+        spacer.style.width = '1rem';
+        spacer.style.marginRight = '0.25rem';
+        row.appendChild(spacer);
+      }
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = node.name;
+      row.appendChild(nameSpan);
+
+      const check = document.createElement('span');
+      check.className = 'checkmark';
+      check.textContent = '✔';
+      row.appendChild(check);
+
+
+
+      container.appendChild(row);
+
+      if (node.children && node.children.length > 0 && expanded[node.id]) {
+        renderTree(node.children, container, depth + 1);
+      }
+    });
   }
 
   function updateList() {
-    let cache = getWatchlistsCache();
-    const selected = getSelectedIds(cache);
-    listEl.innerHTML = cache.length
-      ? cache.map(wl => `<div class="dropdown-item ${selected.includes(wl.id) ? 'item-selected' : ''}" data-folder-id="${wl.id}">${wl.name}<span class="checkmark">✔</span></div>`).join('')
-      : `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No watchlists yet. Click '+' below.</div>`;
+    const cache = getWatchlistsCache();
+    refreshSelected();
+    listEl.innerHTML = '';
+    if (cache.length) {
+      renderTree(buildTree(cache), listEl);
+    } else {
+      listEl.innerHTML = `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No watchlists yet. Click '+' below.</div>`;
+    }
   }
 
   const newListEl = listEl.cloneNode(false);
