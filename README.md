@@ -35,3 +35,17 @@ The rest of the project uses plain JavaScript modules, so no React setup is requ
 
 Folders in the **Library** tab can be rearranged by dragging a folder tile onto another.
 The new order is saved to your account so your organization persists across sessions.
+
+## React Movie Library Component
+
+A basic React component is provided in `react/MovieLibrary.jsx` that implements a three-tier library layout. The component manages libraries, watchlists and movie lists in state and lets you add new folders dynamically.
+
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import MovieLibrary from './react/MovieLibrary.jsx';
+
+ReactDOM.createRoot(document.getElementById('root')).render(<MovieLibrary />);
+```
+
+Include React and ReactDOM via your preferred build system or CDN, then mount the component inside a container element with id `root`.
