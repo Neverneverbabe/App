@@ -278,27 +278,72 @@ export async function addRemoveItemToFolder(folderId, itemDetails, itemType) {
             poster_path: itemDetails.poster_path
         };
 
-        let itemsArray = Array.isArray(targetWatchlist.items) ? [...targetWatchlist.items] : [];
-        const existingIndex = itemsArray.findIndex(i => String(i.tmdb_id) === String(normalizedItem.tmdb_id) && i.item_type === normalizedItem.item_type);
+        let itemsArray = Array.isArray(targetWatchlist.items)
+            ? [...targetWatchlist.items]
+            : [];
+        const existingIndex = itemsArray.findIndex(
+            i =>
+                String(i.tmdb_id) === String(normalizedItem.tmdb_id) &&
+                i.item_type === normalizedItem.item_type
+        );
 
-        if (existingIndex > -1) {
-            itemsArray.splice(existingIndex, 1);
-            showToast(`Removed "${normalizedItem.title}" from "${targetWatchlist.name}"`);
-        } else {
+        const adding = existingIndex === -1;
+
+        if (adding) {
             itemsArray.push(normalizedItem);
-            showToast(`Added "${normalizedItem.title}" to "${targetWatchlist.name}"`);
+            showToast(
+                `Added "${normalizedItem.title}" to "${targetWatchlist.name}"`
+            );
+        } else {
+            itemsArray.splice(existingIndex, 1);
+            showToast(
+                `Removed "${normalizedItem.title}" from "${targetWatchlist.name}"`
+            );
         }
 
         // Update the local cache immediately so UI reflects the change
         targetWatchlist.items = itemsArray;
 
-        updateBookmarkIconForItem(normalizedItem.tmdb_id, normalizedItem.item_type);
+        updateBookmarkIconForItem(
+            normalizedItem.tmdb_id,
+            normalizedItem.item_type
+        );
 
         // Save the updated items array back to Firestore
         await saveUserData('watchlists', folderId, {
             name: targetWatchlist.name,
             items: itemsArray
         });
+
+        // If adding to a subfolder, also add to all ancestor folders so
+        // selecting the parent folder in the Library tab shows aggregated items
+        if (adding && targetWatchlist.parentId) {
+            let parentId = targetWatchlist.parentId;
+            const folderMap = Object.fromEntries(
+                firestoreWatchlistsCache.map(wl => [wl.id, wl])
+            );
+            while (parentId) {
+                const parent = folderMap[parentId];
+                if (!parent) break;
+                let parentItems = Array.isArray(parent.items)
+                    ? [...parent.items]
+                    : [];
+                const hasItem = parentItems.findIndex(
+                    i =>
+                        String(i.tmdb_id) === String(normalizedItem.tmdb_id) &&
+                        i.item_type === normalizedItem.item_type
+                );
+                if (hasItem === -1) {
+                    parentItems.push(normalizedItem);
+                    parent.items = parentItems;
+                    await saveUserData('watchlists', parent.id, {
+                        name: parent.name,
+                        items: parentItems
+                    });
+                }
+                parentId = parent.parentId;
+            }
+        }
 
         // The real-time listener will also update firestoreWatchlistsCache,
         // but we update the local object first to avoid dropdown flicker.
