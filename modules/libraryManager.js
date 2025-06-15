@@ -83,6 +83,23 @@ export function getWatchlistFullName(folderId) {
     return parts.join(' / ');
 }
 
+// Helper to collect items from a folder and all of its descendants
+function getAllItemsRecursive(folderId) {
+    const folderMap = Object.fromEntries(firestoreWatchlistsCache.map(f => [f.id, f]));
+    const result = [];
+    (function collect(id) {
+        const folder = folderMap[id];
+        if (!folder) return;
+        if (Array.isArray(folder.items)) {
+            result.push(...folder.items);
+        }
+        firestoreWatchlistsCache
+            .filter(f => f.parentId === id)
+            .forEach(f => collect(f.id));
+    })(folderId);
+    return result;
+}
+
 /**
  * Initializes the Firestore listener for user watchlists and loads initial data.
  * This should be called after Firebase auth is ready.
@@ -581,7 +598,13 @@ export async function renderMoviesInSelectedFolder(
     }
 
     selectedFolderTitleElement.textContent = `Items in "${selectedWatchlist.name}"`;
-    const items = selectedWatchlist.items;
+    let items = [];
+    if (libraryFolderStack.length === 1) {
+        // For top-level selections, include items from all descendant folders
+        items = getAllItemsRecursive(folderId);
+    } else {
+        items = selectedWatchlist.items;
+    }
 
     if (items.length === 0) {
         librarySelectedFolderMoviesRow.innerHTML = `<p style="color:var(--text-secondary); padding: 1rem;">This watchlist is empty.</p>`;
