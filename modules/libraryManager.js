@@ -102,10 +102,23 @@ export function initializeLibraryListener(onUpdateCallback, renderSelectedFolder
     const user = getCurrentUser();
     if (user) {
         unsubscribeWatchlists = listenToUserCollection('watchlists', (items) => {
-            firestoreWatchlistsCache = items.map(wl => ({
-                ...wl,
-                items: Array.isArray(wl.items) ? wl.items : []
-            }));
+            let needsOrderUpdate = false;
+            firestoreWatchlistsCache = items.map((wl, idx) => {
+                const normalized = {
+                    ...wl,
+                    items: Array.isArray(wl.items) ? wl.items : []
+                };
+                if (typeof normalized.order !== 'number') {
+                    normalized.order = idx;
+                    needsOrderUpdate = true;
+                }
+                return normalized;
+            });
+            if (needsOrderUpdate) {
+                firestoreWatchlistsCache.forEach(wl => {
+                    saveUserData('watchlists', wl.id, { order: wl.order });
+                });
+            }
             console.log("Real-time Watchlists update:", firestoreWatchlistsCache);
             onUpdateCallback(isItemSeenFn, isLightMode, onCardClickCallback, getCurrentParentFolderId()); // Trigger folder cards re-render
             updateBookmarkIconStates();
@@ -134,7 +147,8 @@ export async function createLibraryFolder(folderName, parentId = null) {
     try {
         showLoadingIndicator(`Creating "${folderName}"...`);
         const docId = `${folderName.replace(/\s+/g, '_')}_${Date.now()}`;
-        await saveUserData('watchlists', docId, { name: folderName, items: [], parentId });
+        const siblingCount = firestoreWatchlistsCache.filter(wl => (wl.parentId || null) === parentId).length;
+        await saveUserData('watchlists', docId, { name: folderName, items: [], parentId, order: siblingCount });
         showCustomAlert("Success", `Watchlist "${folderName}" created successfully!`);
     } catch (error) {
         console.error("Error creating new folder:", error);
@@ -172,6 +186,19 @@ export async function deleteLibraryFolder(folderId, folderName) {
         showCustomAlert("Error", `Failed to delete watchlist: ${error.message}`);
     } finally {
         hideLoadingIndicator();
+    }
+}
+
+/**
+ * Updates the order field for a specific folder.
+ * @param {string} folderId - The ID of the folder.
+ * @param {number} newOrder - The new order index.
+ */
+async function updateFolderOrder(folderId, newOrder) {
+    try {
+        await saveUserData('watchlists', folderId, { order: newOrder });
+    } catch (error) {
+        console.error('Error updating folder order', error);
     }
 }
 
@@ -321,7 +348,9 @@ export function renderLibraryFolderCards(
         return;
     }
 
-    const foldersToShow = firestoreWatchlistsCache.filter(f => (f.parentId || null) === parentFolderId);
+    const foldersToShow = firestoreWatchlistsCache
+        .filter(f => (f.parentId || null) === parentFolderId)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     foldersToShow.forEach(folder => {
         const firstItemPoster = folder.items && folder.items.length > 0 && folder.items[0].poster_path
@@ -330,6 +359,7 @@ export function renderLibraryFolderCards(
 
         const card = document.createElement('div');
         card.className = 'content-card folder-card';
+        card.draggable = true;
         card.style.position = 'relative';
         card.style.display = 'inline-block';
         card.style.marginRight = '1rem';
@@ -362,6 +392,65 @@ export function renderLibraryFolderCards(
             await deleteLibraryFolder(folder.id, folder.name);
         };
         card.appendChild(deleteBtn);
+
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', folder.id);
+            card.style.opacity = '0.5';
+        });
+
+        card.addEventListener('dragend', () => {
+            card.style.opacity = '1';
+        });
+
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            card.style.border = '2px dashed var(--science-blue)';
+        });
+
+        card.addEventListener('dragleave', () => {
+            card.style.border = '2px solid transparent';
+        });
+
+        card.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            card.style.border = '2px solid transparent';
+            const draggedId = e.dataTransfer.getData('text/plain');
+            if (!draggedId || draggedId === folder.id) return;
+            const list = firestoreWatchlistsCache
+                .filter(f => (f.parentId || null) === parentFolderId)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            const draggedIndex = list.findIndex(f => f.id === draggedId);
+            const targetIndex = list.findIndex(f => f.id === folder.id);
+            if (draggedIndex === -1 || targetIndex === -1) return;
+            const [moved] = list.splice(draggedIndex, 1);
+            list.splice(targetIndex, 0, moved);
+            list.forEach((wl, idx) => {
+                wl.order = idx;
+                const cacheIndex = firestoreWatchlistsCache.findIndex(f => f.id === wl.id);
+                if (cacheIndex > -1) firestoreWatchlistsCache[cacheIndex].order = idx;
+                updateFolderOrder(wl.id, idx);
+            });
+            renderLibraryFolderCards(
+                isItemSeenFn,
+                isLightMode,
+                onCardClickCallback,
+                currentMediaTypeFilter,
+                currentAgeRatingFilter,
+                currentCategoryFilter,
+                parentFolderId
+            );
+            if (currentSelectedLibraryFolder) {
+                renderMoviesInSelectedFolder(
+                    currentSelectedLibraryFolder,
+                    isItemSeenFn,
+                    isLightMode,
+                    onCardClickCallback,
+                    currentMediaTypeFilter,
+                    currentAgeRatingFilter,
+                    currentCategoryFilter
+                );
+            }
+        });
 
         card.addEventListener('click', (e) => {
             if (e.target === deleteBtn) return;
