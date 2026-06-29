@@ -1,6 +1,6 @@
 // modules/netflixModal.js
 // Lightweight Netflix-style modal used by the app.
-// Exports `openNetflixModal` and also sets `window.openNetflixModal` so callers that don't import the module still work.
+// Exports `openNetflixModal`, `openWatchlistModal` and also sets window.openNetflixModal / window.openWatchlistModal so callers that don't import the module still work.
 
 function createElementFromHTML(html) {
   const template = document.createElement('template');
@@ -171,10 +171,138 @@ export function openNetflixModal(userOptions = {}) {
   return ret;
 }
 
+// Open a lightweight watchlist selection modal used when the bookmark icon is clicked.
+export async function openWatchlistModal(item = {}) {
+  // item: { id, media_type, title, poster_path }
+  // If a modal is already open, close it first
+  if (activeModal) closeNetflixModal();
+  previousActiveElement = document.activeElement;
+
+  const html = `
+    <div class="item-detail-modal" role="dialog" aria-modal="true" aria-label="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);">
+      <div class="item-detail-modal-content" style="max-width:520px;width:95%;background:var(--bg-color,#0b0b0b);color:var(--text-primary,#fff);border-radius:8px;overflow:auto;max-height:80vh;padding:1rem;">
+        <button class="close-button" aria-label="Close" style="background:transparent;border:none;color:inherit;font-size:1.25rem;position:absolute;right:1rem;top:1rem;cursor:pointer;"><i class="fas fa-times"></i></button>
+        <h2 style="margin:0 0 0.75rem 0;">Add "${(item.title||item.name||'item').replace(/\"/g,'&quot;')}" to Watchlists</h2>
+        <div id="watchlist-modal-body" style="display:flex;flex-direction:column;gap:0.5rem;">
+          <p style="margin:0 0 0.5rem 0;color:var(--text-secondary);">Select one or more watchlists to add this item to. Click a selected watchlist to remove it.</p>
+          <div id="watchlist-list" style="display:flex;flex-direction:column;gap:0.25rem;max-height:50vh;overflow:auto;padding-right:0.5rem;"></div>
+          <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:flex-end;">
+            <button id="create-new-watchlist" class="accent-button">+ New Watchlist</button>
+            <button id="close-watchlist-modal" class="accent-button">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const node = createElementFromHTML(html);
+  document.body.appendChild(node);
+  activeModal = node;
+
+  const closeBtn = node.querySelector('.close-button');
+  const closeFooterBtn = node.querySelector('#close-watchlist-modal');
+  const createBtn = node.querySelector('#create-new-watchlist');
+  const listContainer = node.querySelector('#watchlist-list');
+
+  function wireUpList(watchlists) {
+    listContainer.innerHTML = '';
+    if (!watchlists || watchlists.length === 0) {
+      listContainer.innerHTML = '<p style="color:var(--text-secondary);">No watchlists yet. Create one to get started.</p>';
+      return;
+    }
+
+    watchlists.forEach(wl => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'watchlist-item';
+      itemEl.style.display = 'flex';
+      itemEl.style.alignItems = 'center';
+      itemEl.style.justifyContent = 'space-between';
+      itemEl.style.padding = '0.4rem 0.5rem';
+      itemEl.style.borderRadius = '6px';
+      itemEl.style.cursor = 'pointer';
+      itemEl.style.background = 'rgba(255,255,255,0.02)';
+      itemEl.dataset.folderId = wl.id;
+
+      const label = document.createElement('div');
+      label.textContent = wl.name || '(unnamed)';
+      label.style.flex = '1';
+
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = Array.isArray(wl.items) && wl.items.some(i => String(i.tmdb_id) === String(item.id) && i.item_type === item.media_type);
+
+      itemEl.appendChild(label);
+      itemEl.appendChild(chk);
+
+      itemEl.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        // Toggle
+        try {
+          const module = await import('./libraryManager.js');
+          await module.addRemoveItemToFolder(wl.id, { id: item.id, title: item.title || item.name, poster_path: item.poster_path }, item.media_type);
+          // Update checkbox state visually
+          chk.checked = !chk.checked;
+        } catch (err) {
+          console.error('Error updating watchlist membership:', err);
+        }
+      });
+
+      listContainer.appendChild(itemEl);
+    });
+  }
+
+  // Load watchlists cache and render
+  (async () => {
+    try {
+      const module = await import('./libraryManager.js');
+      const watchlists = module.getWatchlistsCache();
+      wireUpList(watchlists);
+    } catch (err) {
+      console.error('Failed to load watchlists:', err);
+      listContainer.innerHTML = '<p style="color:red;">Failed to load watchlists.</p>';
+    }
+  })();
+
+  createBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const name = prompt('New watchlist name');
+    if (!name) return;
+    try {
+      const module = await import('./libraryManager.js');
+      await module.createLibraryFolder(name);
+      const watchlists = module.getWatchlistsCache();
+      wireUpList(watchlists);
+    } catch (err) {
+      console.error('Error creating watchlist:', err);
+    }
+  });
+
+  const doClose = () => {
+    closeNetflixModal();
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', doClose);
+  if (closeFooterBtn) closeFooterBtn.addEventListener('click', doClose);
+
+  document.addEventListener('keydown', handleKeyDown);
+  setTimeout(() => {
+    const focusable = node.querySelectorAll('a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length) focusable[0].focus();
+  }, 50);
+
+  return {
+    close: doClose
+  };
+}
+
 // Make available globally for scripts that call it without import
-if (typeof window !== 'undefined') window.openNetflixModal = openNetflixModal;
+if (typeof window !== 'undefined') {
+  window.openNetflixModal = openNetflixModal;
+  window.openWatchlistModal = openWatchlistModal;
+}
 
 export default {
   openNetflixModal,
-  closeNetflixModal
+  closeNetflixModal,
+  openWatchlistModal
 };
