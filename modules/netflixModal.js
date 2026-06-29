@@ -193,15 +193,18 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   });
 
 
-  watchNowBtn.addEventListener('click', () => {
-    if (streamingLinks && streamingLinks.length > 0) {
-      const idx = parseInt(providerBtn.dataset.selectedIndex, 10) || selectedLinkIndex;
-      const url = streamingLinks[idx]?.url || streamingLinks[0].url;
-      window.open(url, '_blank');
-    } else if (imdbUrl) {
-      window.open(imdbUrl, '_blank');
-    }
-  });
+watchNowBtn.addEventListener('click', () => {
+    if (!itemDetails) return;
+    const type = itemDetails.media_type || (itemDetails.title ? 'movie' : 'tv');
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://vidsrc.to/embed/${type}/${itemDetails.id}`;
+    iframe.style.width = '100%';
+    iframe.style.height = '400px';
+    iframe.style.border = 'none';
+    iframe.allowFullscreen = true;
+    body.innerHTML = '';
+    body.appendChild(iframe);
+});
 
   if (streamingLinks && streamingLinks.length > 0) {
     actions.appendChild(providerBtn);
