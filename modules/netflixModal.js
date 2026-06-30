@@ -716,17 +716,14 @@ function normalizeStreamingLinks(streamingLinks = []) {
 }
 
 function createWatchOptionLink(link) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'netflix-watch-link';
-  button.title = 'Open ' + link.name;
-  button.innerHTML = '<span>' + link.name + '</span><i class="fas fa-arrow-right"></i>';
-  button.addEventListener('click', event => {
-    event.preventDefault();
-    event.stopPropagation();
-    window.location.assign(link.url);
-  });
-  return button;
+  const anchor = document.createElement('a');
+  anchor.className = 'netflix-watch-link';
+  anchor.href = link.url;
+  anchor.target = '_blank';
+  anchor.rel = 'noopener noreferrer';
+  anchor.title = 'Open ' + link.name + ' in a new tab';
+  anchor.innerHTML = '<span>' + link.name + '</span><i class="fas fa-arrow-up-right-from-square"></i>';
+  return anchor;
 }
 
 function navigateToItem(item, onItemSelect) {
