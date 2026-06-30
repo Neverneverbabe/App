@@ -235,6 +235,7 @@ function ensureNetflixModalStyles() {
 }
 .netflix-watch-link {
   min-height: 42px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -246,7 +247,10 @@ function ensureNetflixModalStyles() {
   color: var(--white);
   text-decoration: none;
   font-size: 0.92rem;
+  font-family: inherit;
   font-weight: 700;
+  text-align: left;
+  cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 .netflix-watch-link:hover {
@@ -256,6 +260,56 @@ function ensureNetflixModalStyles() {
 }
 .netflix-watch-link i {
   color: var(--text-secondary);
+}
+.netflix-watch-player-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  background: #050505;
+}
+.netflix-watch-player-header {
+  min-height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  background: #111;
+  border-bottom: 1px solid rgba(var(--white-rgb), 0.12);
+}
+.netflix-watch-player-title {
+  min-width: 0;
+  margin: 0;
+  color: var(--white);
+  font-size: 0.95rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.netflix-watch-player-close {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(var(--white-rgb), 0.12);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.netflix-watch-player-close:hover {
+  background: rgba(var(--white-rgb), 0.2);
+}
+.netflix-watch-player-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: #000;
 }
 .netflix-watchlist-panel .dropdown-item {
   background: transparent;
@@ -700,13 +754,61 @@ function normalizeStreamingLinks(streamingLinks = []) {
 }
 
 function createWatchOptionLink(link) {
-  const anchor = document.createElement('a');
-  anchor.className = 'netflix-watch-link';
-  anchor.href = link.url;
-  anchor.target = '_blank';
-  anchor.rel = 'noopener noreferrer';
-  anchor.innerHTML = '<span>' + link.name + '</span><i class="fas fa-arrow-up-right-from-square"></i>';
-  return anchor;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'netflix-watch-link';
+  button.innerHTML = '<span>' + link.name + '</span><i class="fas fa-play"></i>';
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    openEmbeddedWatchPlayer(link);
+  });
+  return button;
+}
+
+function closeEmbeddedWatchPlayer() {
+  const player = document.getElementById('netflix-watch-player-overlay');
+  if (player) player.remove();
+}
+
+function openEmbeddedWatchPlayer(link) {
+  if (!link?.url) return;
+  closeEmbeddedWatchPlayer();
+  document.querySelectorAll('.netflix-watch-menu.is-open').forEach(menu => {
+    menu.classList.remove('is-open');
+  });
+
+  const overlay = document.createElement('div');
+  overlay.id = 'netflix-watch-player-overlay';
+  overlay.className = 'netflix-watch-player-overlay';
+
+  const header = document.createElement('div');
+  header.className = 'netflix-watch-player-header';
+
+  const title = document.createElement('p');
+  title.className = 'netflix-watch-player-title';
+  title.textContent = link.name || 'Now Playing';
+  header.appendChild(title);
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'netflix-watch-player-close';
+  closeButton.title = 'Close player';
+  closeButton.innerHTML = '<i class="fas fa-times"></i>';
+  closeButton.addEventListener('click', closeEmbeddedWatchPlayer);
+  header.appendChild(closeButton);
+
+  const frame = document.createElement('iframe');
+  frame.className = 'netflix-watch-player-frame';
+  frame.src = link.url;
+  frame.title = link.name || 'Watch source';
+  frame.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
+  frame.allowFullscreen = true;
+  frame.referrerPolicy = 'no-referrer-when-downgrade';
+
+  overlay.appendChild(header);
+  overlay.appendChild(frame);
+  document.body.appendChild(overlay);
 }
 
 function navigateToItem(item, onItemSelect) {
@@ -867,7 +969,12 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   };
 
   activeKeyHandler = event => {
-    if (event.key === 'Escape') handleClose();
+    if (event.key !== 'Escape') return;
+    if (document.getElementById('netflix-watch-player-overlay')) {
+      closeEmbeddedWatchPlayer();
+      return;
+    }
+    handleClose();
   };
   document.addEventListener('keydown', activeKeyHandler);
 
