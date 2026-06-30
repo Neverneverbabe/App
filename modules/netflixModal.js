@@ -1,4 +1,5 @@
-import { createContentCardHtml, showCustomAlert } from '../ui.js';
+import { showCustomAlert } from '../ui.js';
+import { fetchSearchResults } from '../api.js';
 import {
   addRemoveItemToFolder,
   createLibraryFolder,
@@ -9,17 +10,340 @@ import { isItemSeen, openSeenEpisodesModal, toggleSeenStatus } from './seenItems
 import { openEpisodeModal } from './track.js';
 
 let activeKeyHandler = null;
+const MODAL_STYLE_ID = 'netflix-modal-runtime-styles';
+
+function ensureNetflixModalStyles() {
+  if (document.getElementById(MODAL_STYLE_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = MODAL_STYLE_ID;
+  style.textContent = `
+.netflix-modal-overlay {
+  z-index: 1200;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.82);
+}
+.netflix-modal {
+  width: min(100%, 68rem);
+  max-width: 68rem;
+  max-height: calc(100vh - 3rem);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+}
+.netflix-modal-image {
+  height: 26rem;
+  min-height: 22rem;
+  background-color: var(--card-bg);
+}
+.netflix-modal-image-overlay {
+  padding: 2rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.68) 44%, rgba(0,0,0,0.1) 100%);
+}
+.netflix-modal-image-overlay h1 {
+  max-width: 44rem;
+  margin: 0 0 0.75rem;
+  font-size: 2.25rem;
+  line-height: 1.1;
+}
+.netflix-modal-body {
+  padding: 1.25rem 2rem 2rem;
+}
+.netflix-modal-description {
+  max-width: 48rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+}
+.netflix-modal-middle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.netflix-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  width: auto;
+}
+.netflix-modal-actions button {
+  flex: 0 0 auto;
+}
+.netflix-modal .watch-now-btn {
+  min-height: 44px;
+  border-radius: 6px;
+  padding: 0.7rem 1.2rem;
+}
+.netflix-modal .seen-btn,
+.netflix-modal .track-btn,
+.netflix-modal .watchlist-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--text-secondary);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+.netflix-modal .seen-btn:hover,
+.netflix-modal .track-btn:hover,
+.netflix-modal .watchlist-btn:hover,
+.netflix-modal .seen-btn.is-seen,
+.netflix-modal .watchlist-btn.is-selected {
+  border-color: var(--accent-color);
+  background: var(--accent-color);
+  color: var(--white);
+}
+.netflix-modal .seen-btn:active,
+.netflix-modal .track-btn:active,
+.netflix-modal .watchlist-btn:active {
+  transform: scale(0.96);
+}
+.netflix-watchlist-panel .dropdown-item {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+}
+.netflix-watchlist-panel .dropdown-item:hover,
+.netflix-watchlist-panel .dropdown-item.item-selected {
+  background: rgba(var(--white-rgb), 0.12);
+}
+.light-mode .netflix-watchlist-panel .dropdown-item:hover,
+.light-mode .netflix-watchlist-panel .dropdown-item.item-selected {
+  background: rgba(var(--black-rgb), 0.08);
+}
+.netflix-modal-section {
+  margin-top: 2rem;
+}
+.netflix-modal-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+.netflix-modal-section h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.netflix-media-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 1rem;
+}
+.netflix-media-card {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.netflix-media-card:disabled {
+  cursor: default;
+}
+.netflix-media-card-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--card-bg);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.netflix-media-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.netflix-media-card:hover img {
+  opacity: 0.82;
+  transform: scale(1.03);
+}
+.netflix-media-card-title {
+  margin-top: 0.55rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.netflix-media-card-meta {
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+.netflix-current-badge {
+  position: absolute;
+  left: 0.45rem;
+  bottom: 0.45rem;
+  border-radius: 4px;
+  background: rgba(var(--science-blue-rgb), 0.92);
+  color: var(--white);
+  padding: 0.2rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+@media (max-width: 640px) {
+  .netflix-modal-overlay {
+    padding: 0;
+  }
+  .netflix-modal {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  .netflix-modal-image {
+    height: 18rem;
+    min-height: 18rem;
+  }
+  .netflix-modal-image-overlay,
+  .netflix-modal-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .netflix-modal-image-overlay h1 {
+    font-size: 1.6rem;
+  }
+  .netflix-modal-middle-row {
+    align-items: flex-start;
+  }
+  .netflix-modal-actions {
+    flex-wrap: wrap;
+  }
+  .netflix-media-rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .netflix-media-card-title {
+    font-size: 0.78rem;
+  }
+}`;
+  document.head.appendChild(style);
+}
 
 function getItemType(item) {
   if (!item) return 'movie';
-  return item.media_type || (item.first_air_date || item.name ? 'tv' : 'movie');
+  if (item.media_type) return item.media_type;
+  return item.first_air_date || item.name || item.number_of_seasons ? 'tv' : 'movie';
 }
 
-function getPosterUrl(item, size = 'w300') {
-  const path = item?.poster_path || item?.backdrop_path;
+function getImageUrl(path, size = 'w342') {
   if (!path) return '';
   if (String(path).startsWith('http')) return path;
   return 'https://image.tmdb.org/t/p/' + size + path;
+}
+
+function getPosterUrl(item, size = 'w342') {
+  return getImageUrl(item?.poster_path || item?.backdrop_path, size);
+}
+
+function getItemTitle(item) {
+  return item?.title || item?.name || 'Untitled';
+}
+
+function getItemYear(item) {
+  return (item?.release_date || item?.first_air_date || '').slice(0, 4);
+}
+
+function normalizeForMatch(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\b(the|a|an)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getFranchiseQuery(itemDetails) {
+  const title = getItemTitle(itemDetails);
+  const lowerTitle = title.toLowerCase();
+
+  if (lowerTitle.includes('spider-man') || lowerTitle.includes('spiderman')) {
+    return 'Spider-Man';
+  }
+
+  const withoutParenthetical = title.replace(/\s*\([^)]*\)/g, '').trim();
+  const root = withoutParenthetical.split(/[:\u2013\u2014]/)[0].trim();
+  const cleaned = root
+    .replace(/\b(part|chapter|volume|vol)\s+[ivxlcdm0-9]+\b/ig, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return cleaned.length >= 3 ? cleaned : title;
+}
+
+function isLikelyFranchiseMovie(item, query) {
+  if (!item || getItemType(item) !== 'movie') return false;
+  const title = normalizeForMatch(getItemTitle(item));
+  const normalizedQuery = normalizeForMatch(query);
+  if (!title || !normalizedQuery) return false;
+  if (title.includes(normalizedQuery)) return true;
+
+  const tokens = normalizedQuery.split(' ').filter(token => token.length > 2);
+  return tokens.length > 0 && tokens.every(token => title.includes(token));
+}
+
+function sortMoviesByDate(items) {
+  return [...items].sort((a, b) => {
+    const aDate = a.release_date || '';
+    const bDate = b.release_date || '';
+    if (aDate && bDate) return aDate.localeCompare(bDate);
+    if (aDate) return -1;
+    if (bDate) return 1;
+    return (b.popularity || 0) - (a.popularity || 0);
+  });
+}
+
+function mergeMediaItems(...groups) {
+  const byKey = new Map();
+  groups.flat().filter(Boolean).forEach(item => {
+    if (!item.id) return;
+    const type = getItemType(item);
+    const key = type + '_' + item.id;
+    const existing = byKey.get(key) || {};
+    byKey.set(key, { ...existing, ...item, media_type: type });
+  });
+  return Array.from(byKey.values());
+}
+
+async function loadMovieSeriesItems(itemDetails, initialSeries = []) {
+  if (!itemDetails || getItemType(itemDetails) !== 'movie') return [];
+
+  const currentMovie = { ...itemDetails, media_type: 'movie' };
+  const collectionItems = (initialSeries || []).map(item => ({ ...item, media_type: 'movie' }));
+  let searchItems = [];
+  const query = getFranchiseQuery(itemDetails);
+
+  if (query && query.length >= 3) {
+    try {
+      const results = await fetchSearchResults(query, 'movie');
+      searchItems = results
+        .filter(item => isLikelyFranchiseMovie(item, query))
+        .map(item => ({ ...item, media_type: 'movie' }));
+    } catch (error) {
+      console.warn('Could not load related movie series:', error);
+    }
+  }
+
+  return sortMoviesByDate(mergeMediaItems([currentMovie], collectionItems, searchItems)).slice(0, 24);
 }
 
 function getFoldersContainingItem(itemDetails, itemType) {
@@ -64,7 +388,7 @@ function renderWatchlistChoices(container, itemDetails, itemType) {
 
     const checkmark = document.createElement('span');
     checkmark.className = 'checkmark';
-    checkmark.textContent = selectedIds.has(watchlist.id) ? 'OK' : '';
+    checkmark.innerHTML = selectedIds.has(watchlist.id) ? '<i class="fas fa-check"></i>' : '';
     option.appendChild(checkmark);
 
     if (selectedIds.has(watchlist.id)) {
@@ -142,67 +466,114 @@ function createWatchlistPanel(itemDetails, itemType, onUpdate) {
   return panel;
 }
 
-function createElementFromHtml(html) {
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = html.trim();
-  return wrapper.firstElementChild;
+function navigateToItem(item, onItemSelect) {
+  if (!item?.id || !onItemSelect) return;
+  closeNetflixModal({ immediate: true });
+  onItemSelect(item.id, getItemType(item));
 }
 
-function renderRelatedSection({ title, items, itemDetails, itemType, onItemSelect }) {
-  if (!items || items.length === 0) return null;
+function createMediaCard(item, options = {}) {
+  const type = options.type || getItemType(item);
+  const currentId = options.currentId ? String(options.currentId) : '';
+  const isCurrent = type === 'movie' && currentId && String(item.id) === currentId;
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'netflix-media-card';
+  card.disabled = isCurrent;
 
-  const section = document.createElement('div');
-  section.className = 'netflix-modal-section';
+  const poster = document.createElement('div');
+  poster.className = 'netflix-media-card-poster';
+  const imageUrl = getPosterUrl(item);
+  if (imageUrl) {
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = getItemTitle(item);
+    img.loading = 'lazy';
+    poster.appendChild(img);
+  }
+  if (isCurrent) {
+    const badge = document.createElement('span');
+    badge.className = 'netflix-current-badge';
+    badge.textContent = 'Current';
+    poster.appendChild(badge);
+  }
 
-  const heading = document.createElement('h3');
-  heading.textContent = title;
-  section.appendChild(heading);
+  const title = document.createElement('div');
+  title.className = 'netflix-media-card-title';
+  title.textContent = getItemTitle(item);
 
-  const grid = document.createElement('div');
-  grid.className = itemType === 'tv' ? 'episodes-grid' : 'recommendations-grid';
+  const meta = document.createElement('div');
+  meta.className = 'netflix-media-card-meta';
+  meta.textContent = options.meta || getItemYear(item) || (type === 'tv' ? 'TV' : 'Movie');
 
-  items.forEach(item => {
-    const card = document.createElement('div');
-    card.className = itemType === 'tv' ? 'episode-card' : 'content-card';
-    card.style.cursor = 'pointer';
+  card.appendChild(poster);
+  card.appendChild(title);
+  card.appendChild(meta);
 
-    const imageUrl = getPosterUrl(item);
-    const image = document.createElement('div');
-    image.className = itemType === 'tv' ? 'episode-image' : 'image-container';
-    if (imageUrl) image.style.backgroundImage = 'url("' + imageUrl + '")';
-
-    const info = document.createElement('div');
-    info.className = itemType === 'tv' ? 'episode-info' : '';
-
-    const itemTitle = document.createElement('div');
-    itemTitle.className = itemType === 'tv' ? 'episode-title' : '';
-    itemTitle.textContent = item.title || item.name || 'Untitled';
-    info.appendChild(itemTitle);
-
-    const metadata = document.createElement('div');
-    metadata.className = 'episode-metadata';
-    metadata.textContent = itemType === 'tv' && item.season_number ? 'Season ' + item.season_number : '';
-    if (metadata.textContent) info.appendChild(metadata);
-
-    card.appendChild(image);
-    card.appendChild(info);
+  if (!isCurrent) {
     card.addEventListener('click', () => {
-      if (itemType === 'tv') {
-        openEpisodeModal(itemDetails);
+      if (options.onSeasonSelect) {
+        options.onSeasonSelect(item);
         return;
       }
-      const selectedType = getItemType(item);
-      if (onItemSelect && item.id) onItemSelect(item.id, selectedType);
+      navigateToItem({ ...item, media_type: type }, options.onItemSelect);
     });
-    grid.appendChild(card);
-  });
+  }
 
-  section.appendChild(grid);
+  return card;
+}
+
+function createMediaRail(title, items, options = {}) {
+  const section = document.createElement('section');
+  section.className = 'netflix-modal-section netflix-media-section';
+
+  const header = document.createElement('div');
+  header.className = 'netflix-modal-section-header';
+  const heading = document.createElement('h3');
+  heading.textContent = title;
+  header.appendChild(heading);
+
+  const rail = document.createElement('div');
+  rail.className = 'netflix-media-rail';
+  section.appendChild(header);
+  section.appendChild(rail);
+  setMediaRailItems(section, items, options);
   return section;
+}
+
+function setMediaRailItems(section, items, options = {}) {
+  const rail = section.querySelector('.netflix-media-rail');
+  if (!rail) return;
+
+  const validItems = (items || []).filter(item => item && item.id);
+  rail.innerHTML = '';
+  section.hidden = validItems.length === 0;
+
+  validItems.forEach(item => {
+    rail.appendChild(createMediaCard(item, options));
+  });
+}
+
+function createTvSeasonRail(itemDetails, seasons = []) {
+  const seasonItems = seasons
+    .filter(season => season && season.season_number > 0)
+    .map(season => ({
+      ...season,
+      id: season.id || season.season_number,
+      title: season.name || 'Season ' + season.season_number,
+      media_type: 'tv'
+    }));
+
+  return createMediaRail('Seasons', seasonItems, {
+    type: 'tv',
+    meta: '',
+    onSeasonSelect: () => openEpisodeModal(itemDetails)
+  });
 }
 
 export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null, onBack = null, onClose = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
+  ensureNetflixModalStyles();
 
   const itemType = getItemType(itemDetails);
   const overlay = document.createElement('div');
@@ -239,7 +610,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     backBtn.className = 'netflix-modal-back';
     backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
     backBtn.addEventListener('click', () => {
-      closeNetflixModal();
+      closeNetflixModal({ immediate: true });
       onBack();
     });
     modal.appendChild(backBtn);
@@ -373,42 +744,28 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   middleRow.appendChild(actionsDiv);
   body.appendChild(middleRow);
 
-  const relatedSection = renderRelatedSection({
-    title: itemType === 'tv' ? 'Seasons' : 'In This Collection',
-    items: series,
-    itemDetails,
-    itemType,
-    onItemSelect
-  });
-  if (relatedSection) body.appendChild(relatedSection);
-
-  if (recommendations && recommendations.length > 0) {
-    const recSection = document.createElement('div');
-    recSection.className = 'netflix-modal-section';
-
-    const recTitle = document.createElement('h3');
-    recTitle.textContent = 'More Like This';
-    recSection.appendChild(recTitle);
-
-    const recGrid = document.createElement('div');
-    recGrid.className = 'recommendations-grid';
-    const isLightMode = document.body.classList.contains('light-mode');
-
-    recommendations.forEach(rec => {
-      const recType = getItemType(rec);
-      const card = createElementFromHtml(createContentCardHtml({ ...rec, media_type: recType }, isLightMode, isItemSeen));
-      if (!card) return;
-      card.addEventListener('click', event => {
-        if (event.target.closest('.seen-toggle-icon') || event.target.closest('.bookmark-toggle-icon')) return;
-        closeNetflixModal();
-        if (onItemSelect) onItemSelect(rec.id, recType);
-      });
-      recGrid.appendChild(card);
+  if (itemType === 'movie') {
+    const seriesSection = createMediaRail('Series', series, {
+      type: 'movie',
+      currentId: itemDetails?.id,
+      onItemSelect
     });
-
-    recSection.appendChild(recGrid);
-    body.appendChild(recSection);
+    body.appendChild(seriesSection);
+    loadMovieSeriesItems(itemDetails, series).then(items => {
+      setMediaRailItems(seriesSection, items, {
+        type: 'movie',
+        currentId: itemDetails?.id,
+        onItemSelect
+      });
+    });
+  } else if (Array.isArray(itemDetails?.seasons)) {
+    body.appendChild(createTvSeasonRail(itemDetails, itemDetails.seasons));
   }
+
+  const recommendedItems = (recommendations || [])
+    .filter(item => item && item.id && String(item.id) !== String(itemDetails?.id))
+    .slice(0, 24);
+  body.appendChild(createMediaRail('More Like This', recommendedItems, { onItemSelect }));
 
   modal.appendChild(body);
   overlay.appendChild(modal);
@@ -418,19 +775,26 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   setTimeout(() => overlay.classList.add('active'), 10);
 }
 
-export function closeNetflixModal() {
+export function closeNetflixModal(options = {}) {
   const overlay = document.getElementById('netflix-modal-overlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-    setTimeout(() => {
-      overlay.remove();
-      document.body.style.overflow = '';
-      if (activeKeyHandler) {
-        document.removeEventListener('keydown', activeKeyHandler);
-        activeKeyHandler = null;
-      }
-    }, 400);
+  if (!overlay) return;
+
+  const cleanup = () => {
+    overlay.remove();
+    document.body.style.overflow = '';
+    if (activeKeyHandler) {
+      document.removeEventListener('keydown', activeKeyHandler);
+      activeKeyHandler = null;
+    }
+  };
+
+  if (options.immediate) {
+    cleanup();
+    return;
   }
+
+  overlay.classList.remove('active');
+  setTimeout(cleanup, 400);
 }
 
 export function openWatchlistModal(itemDetails = null) {
