@@ -1,5 +1,5 @@
 import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
-import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from '../libraryManager.js';
+import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from './modules/libraryManager.js';
 import { renderTrackSectionInModal, openEpisodeModal } from './track.js';
 
 // Store the active keyboard handler so it can be accurately removed later
