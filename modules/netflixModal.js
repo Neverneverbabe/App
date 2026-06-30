@@ -1,308 +1,203 @@
-// modules/netflixModal.js
-// Lightweight Netflix-style modal used by the app.
-// Exports `openNetflixModal`, `openWatchlistModal` and also sets window.openNetflixModal / window.openWatchlistModal so callers that don't import the module still work.
+import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
+import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from '../libraryManager.js';
+import { renderTrackSectionInModal, openEpisodeModal } from './track.js';
 
-function createElementFromHTML(html) {
-  const template = document.createElement('template');
-  template.innerHTML = html.trim();
-  return template.content.firstChild;
-}
+export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null, onBack = null, onClose = null } = {}) {
+  if (document.getElementById('netflix-modal-overlay')) return;
 
-const DEFAULT_OPTIONS = {
-  imageSrc: '',
-  title: '',
-  tags: [],
-  description: '',
-  rating: null,
-  imdbUrl: '',
-  streamingLinks: [],
-  recommendations: [],
-  series: [],
-  onItemSelect: null,
-  onBack: null,
-  onClose: null
-};
+  const overlay = document.createElement('div');
+  overlay.id = 'netflix-modal-overlay';
+  overlay.className = 'netflix-modal-overlay';
 
-let activeModal = null;
-let previousActiveElement = null;
-
-const handleKeyDown = event => {
-  if (!activeModal) return;
-  // Close on Escape
-  if (event.key === 'Escape') {
+  const handleClose = () => {
     closeNetflixModal();
-    return;
-  }
-  // Basic focus trap: Tab
-  if (event.key === 'Tab') {
-    const focusable = activeModal.querySelectorAll('a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])');
-    if (focusable.length === 0) {
-      event.preventDefault();
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      last.focus();
-      event.preventDefault();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      first.focus();
-      event.preventDefault();
-    }
-  }
-};
+    if (onClose) onClose();
+  };
 
-function closeNetflixModal() {
-  if (!activeModal) return;
-  document.removeEventListener('keydown', handleKeyDown);
-  activeModal.remove();
-  activeModal = null;
-  if (previousActiveElement && previousActiveElement.focus) previousActiveElement.focus();
-}
+  const handleKeyDown = event => {
+    if (event.key === 'Escape') handleClose();
+  };
 
-export function openNetflixModal(userOptions = {}) {
-  const opts = Object.assign({}, DEFAULT_OPTIONS, userOptions);
+  document.addEventListener('keydown', handleKeyDown);
+  overlay.addEventListener('click', handleClose);
 
-  // If a modal is already open, close it first
-  if (activeModal) closeNetflixModal();
+  const modal = document.createElement('div');
+  modal.className = 'netflix-modal';
 
-  previousActiveElement = document.activeElement;
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'netflix-modal-close';
+  closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+  closeBtn.addEventListener('click', handleClose);
+  modal.appendChild(closeBtn);
 
-  const html = `
-    <div class="item-detail-modal" role="dialog" aria-modal="true" aria-label="Item details" style="display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);">
-      <div class="item-detail-modal-content" style="max-width:900px;width:95%;background:var(--bg-color,#0b0b0b);color:var(--text-primary,#fff);border-radius:8px;overflow:auto;max-height:90vh;padding:1rem;">
-        <button class="close-button" aria-label="Close" style="background:transparent;border:none;color:inherit;font-size:1.25rem;position:absolute;right:1rem;top:1rem;cursor:pointer;"><i class="fas fa-times"></i></button>
-        <div style="display:flex;gap:1rem;align-items:flex-start;">
-          <div style="flex:0 0 260px;">
-            <img src="${opts.imageSrc || ''}" alt="${(opts.title || '').replace(/\"/g, '&quot;')} poster" style="width:100%;border-radius:6px;object-fit:cover;"/>
-          </div>
-          <div style="flex:1;">
-            <h2 style="margin:0 0 0.5rem 0;">${opts.title || ''}</h2>
-            <div style="margin-bottom:0.5rem;opacity:0.9;">
-              ${(opts.tags || []).map(t => `<span style="margin-right:0.5rem;padding:0.2rem 0.45rem;border-radius:3px;background:rgba(255,255,255,0.04);font-size:0.875rem;">${t}</span>`).join('')}
-            </div>
-            <p style="margin-top:0.5rem;margin-bottom:0.5rem;line-height:1.4;">${opts.description || ''}</p>
-            ${opts.rating ? `<div style="margin:0.5rem 0;">Rating: <strong>${opts.rating}</strong></div>` : ''}
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;">
-              ${opts.streamingLinks && opts.streamingLinks.length ? opts.streamingLinks.map(link => `
-                <a class="watch-now-link" href="${link.url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-                  <button class="accent-button" style="cursor:pointer;">Watch: ${link.name}</button>
-                </a>`).join('') : `<button disabled style="opacity:0.6;">No streaming links</button>`}
-              ${opts.imdbUrl ? `<a href="${opts.imdbUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><button class="accent-button">IMDB</button></a>` : ''}
-            </div>
-
-            ${opts.series && opts.series.length ? `
-              <div style="margin-top:1rem;">
-                <h3 style="margin:0 0 0.5rem 0;font-size:1rem;">Series / Seasons</h3>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                  ${opts.series.map(s => `<button class="series-item" data-id="${s.id}" style="cursor:pointer;padding:0.4rem 0.6rem;border-radius:4px;background:rgba(255,255,255,0.03);">${s.title || s.name}</button>`).join('')}
-                </div>
-              </div>
-            ` : ''}
-
-            ${opts.recommendations && opts.recommendations.length ? `
-              <div style="margin-top:1rem;">
-                <h3 style="margin:0 0 0.5rem 0;font-size:1rem;">Recommendations</h3>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                  ${opts.recommendations.map(r => `<button class="recommendation-item" data-id="${r.id}" data-type="${r.media_type || 'movie'}" style="cursor:pointer;padding:0.3rem 0.5rem;border-radius:4px;background:rgba(255,255,255,0.03);">${r.title || r.name}</button>`).join('')}
-                </div>
-              </div>
-            ` : ''}
-
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const node = createElementFromHTML(html);
-  document.body.appendChild(node);
-  activeModal = node;
-
-  // Wire up close
-  const closeBtn = node.querySelector('.close-button');
-  if (closeBtn) closeBtn.addEventListener('click', () => { closeNetflixModal(); if (typeof opts.onClose === 'function') opts.onClose(); });
-
-  // Series item clicks
-  node.querySelectorAll('.series-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-id');
-      if (typeof opts.onItemSelect === 'function') opts.onItemSelect(parseInt(id, 10), 'tv');
-    });
-  });
-
-  // Recommendation clicks
-  node.querySelectorAll('.recommendation-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-id');
-      const type = btn.getAttribute('data-type') || 'movie';
-      if (typeof opts.onItemSelect === 'function') opts.onItemSelect(parseInt(id, 10), type);
-    });
-  });
-
-  // Back handler (if provided, render a back button)
-  if (typeof opts.onBack === 'function') {
-    const content = node.querySelector('.item-detail-modal-content');
+  if (onBack) {
     const backBtn = document.createElement('button');
-    backBtn.textContent = 'Back';
-    backBtn.style.marginRight = '0.5rem';
-    backBtn.className = 'accent-button';
-    backBtn.addEventListener('click', opts.onBack);
-    content.insertBefore(backBtn, content.firstChild);
-  }
-
-  // Add key handler and focus trap
-  document.addEventListener('keydown', handleKeyDown);
-
-  // Focus first focusable element
-  setTimeout(() => {
-    const focusable = node.querySelectorAll('a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])');
-    if (focusable.length) focusable[0].focus();
-  }, 50);
-
-  // Expose a close function on the returned object
-  const ret = {
-    close: () => {
+    backBtn.className = 'netflix-modal-back';
+    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
+    backBtn.addEventListener('click', () => {
       closeNetflixModal();
-      if (typeof opts.onClose === 'function') opts.onClose();
-    }
-  };
-
-  return ret;
-}
-
-// Open a lightweight watchlist selection modal used when the bookmark icon is clicked.
-export async function openWatchlistModal(item = {}) {
-  // item: { id, media_type, title, poster_path }
-  // If a modal is already open, close it first
-  if (activeModal) closeNetflixModal();
-  previousActiveElement = document.activeElement;
-
-  const html = `
-    <div class="item-detail-modal" role="dialog" aria-modal="true" aria-label="Add to Watchlist" style="display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);">
-      <div class="item-detail-modal-content" style="max-width:520px;width:95%;background:var(--bg-color,#0b0b0b);color:var(--text-primary,#fff);border-radius:8px;overflow:auto;max-height:80vh;padding:1rem;">
-        <button class="close-button" aria-label="Close" style="background:transparent;border:none;color:inherit;font-size:1.25rem;position:absolute;right:1rem;top:1rem;cursor:pointer;"><i class="fas fa-times"></i></button>
-        <h2 style="margin:0 0 0.75rem 0;">Add "${(item.title||item.name||'item').replace(/\"/g,'&quot;')}" to Watchlists</h2>
-        <div id="watchlist-modal-body" style="display:flex;flex-direction:column;gap:0.5rem;">
-          <p style="margin:0 0 0.5rem 0;color:var(--text-secondary);">Select one or more watchlists to add this item to. Click a selected watchlist to remove it.</p>
-          <div id="watchlist-list" style="display:flex;flex-direction:column;gap:0.25rem;max-height:50vh;overflow:auto;padding-right:0.5rem;"></div>
-          <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:flex-end;">
-            <button id="create-new-watchlist" class="accent-button">+ New Watchlist</button>
-            <button id="close-watchlist-modal" class="accent-button">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const node = createElementFromHTML(html);
-  document.body.appendChild(node);
-  activeModal = node;
-
-  const closeBtn = node.querySelector('.close-button');
-  const closeFooterBtn = node.querySelector('#close-watchlist-modal');
-  const createBtn = node.querySelector('#create-new-watchlist');
-  const listContainer = node.querySelector('#watchlist-list');
-
-  function wireUpList(watchlists) {
-    listContainer.innerHTML = '';
-    if (!watchlists || watchlists.length === 0) {
-      listContainer.innerHTML = '<p style="color:var(--text-secondary);">No watchlists yet. Create one to get started.</p>';
-      return;
-    }
-
-    watchlists.forEach(wl => {
-      const itemEl = document.createElement('div');
-      itemEl.className = 'watchlist-item';
-      itemEl.style.display = 'flex';
-      itemEl.style.alignItems = 'center';
-      itemEl.style.justifyContent = 'space-between';
-      itemEl.style.padding = '0.4rem 0.5rem';
-      itemEl.style.borderRadius = '6px';
-      itemEl.style.cursor = 'pointer';
-      itemEl.style.background = 'rgba(255,255,255,0.02)';
-      itemEl.dataset.folderId = wl.id;
-
-      const label = document.createElement('div');
-      label.textContent = wl.name || '(unnamed)';
-      label.style.flex = '1';
-
-      const chk = document.createElement('input');
-      chk.type = 'checkbox';
-      chk.checked = Array.isArray(wl.items) && wl.items.some(i => String(i.tmdb_id) === String(item.id) && i.item_type === item.media_type);
-
-      itemEl.appendChild(label);
-      itemEl.appendChild(chk);
-
-      itemEl.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        // Toggle
-        try {
-          const module = await import('./libraryManager.js');
-          await module.addRemoveItemToFolder(wl.id, { id: item.id, title: item.title || item.name, poster_path: item.poster_path }, item.media_type);
-          // Update checkbox state visually
-          chk.checked = !chk.checked;
-        } catch (err) {
-          console.error('Error updating watchlist membership:', err);
-        }
-      });
-
-      listContainer.appendChild(itemEl);
+      onBack();
     });
+    modal.appendChild(backBtn);
   }
 
-  // Load watchlists cache and render
-  (async () => {
-    try {
-      const module = await import('./libraryManager.js');
-      const watchlists = module.getWatchlistsCache();
-      wireUpList(watchlists);
-    } catch (err) {
-      console.error('Failed to load watchlists:', err);
-      listContainer.innerHTML = '<p style="color:red;">Failed to load watchlists.</p>';
-    }
-  })();
+  const imageSection = document.createElement('div');
+  imageSection.className = 'netflix-modal-image';
+  if (imageSrc) imageSection.style.backgroundImage = `url('${imageSrc}')`;
 
-  createBtn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    const name = prompt('New watchlist name');
-    if (!name) return;
-    try {
-      const module = await import('./libraryManager.js');
-      await module.createLibraryFolder(name);
-      const watchlists = module.getWatchlistsCache();
-      wireUpList(watchlists);
-    } catch (err) {
-      console.error('Error creating watchlist:', err);
+  const infoOverlay = document.createElement('div');
+  infoOverlay.className = 'netflix-modal-image-overlay';
+
+  const h1 = document.createElement('h1');
+  h1.textContent = title;
+  infoOverlay.appendChild(h1);
+
+  const tagsDiv = document.createElement('div');
+  tagsDiv.className = 'netflix-modal-tags';
+  let imdbInserted = false;
+  let imdbLink;
+  if (imdbUrl) {
+    imdbLink = document.createElement('a');
+    imdbLink.href = imdbUrl;
+    imdbLink.target = '_blank';
+    imdbLink.className = 'imdb-link';
+    const ratingHtml = rating !== null ? `<span class="imdb-rating">${rating}</span>` : '';
+    imdbLink.innerHTML = `<img src="IMDb.png" alt="IMDb">${ratingHtml}`;
+  }
+  tags.forEach(tag => {
+    const span = document.createElement('span');
+    span.textContent = tag;
+    tagsDiv.appendChild(span);
+    if (!imdbInserted && imdbLink && (tag === 'Movie' || tag === 'TV')) {
+      tagsDiv.appendChild(imdbLink);
+      imdbInserted = true;
     }
   });
 
-  const doClose = () => {
-    closeNetflixModal();
-  };
+  if (imdbLink && !imdbInserted) {
+    tagsDiv.appendChild(imdbLink);
+  }
+  infoOverlay.appendChild(tagsDiv);
 
-  if (closeBtn) closeBtn.addEventListener('click', doClose);
-  if (closeFooterBtn) closeFooterBtn.addEventListener('click', doClose);
+  imageSection.appendChild(infoOverlay);
+  modal.appendChild(imageSection);
 
-  document.addEventListener('keydown', handleKeyDown);
-  setTimeout(() => {
-    const focusable = node.querySelectorAll('a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])');
-    if (focusable.length) focusable[0].focus();
-  }, 50);
+  const body = document.createElement('div');
+  body.className = 'netflix-modal-body';
 
-  return {
-    close: doClose
-  };
+  const p = document.createElement('p');
+  p.className = 'netflix-modal-description';
+  p.textContent = description;
+  body.appendChild(p);
+
+  const middleRow = document.createElement('div');
+  middleRow.className = 'netflix-modal-middle-row';
+
+  const actionsDiv = document.createElement('div');
+  actionsDiv.className = 'netflix-modal-actions';
+
+  const watchNowBtn = document.createElement('button');
+  watchNowBtn.className = 'watch-now-btn';
+  watchNowBtn.innerHTML = '<i class="fas fa-play"></i> Watch Now';
+  watchNowBtn.addEventListener('click', () => {
+    if (streamingLinks && streamingLinks.length > 0) {
+      const firstLink = streamingLinks[0].url;
+      const iframeContainer = document.getElementById('iframe-container');
+      const iframe = document.getElementById('video-iframe');
+      if (iframeContainer && iframe) {
+        iframe.src = firstLink;
+        iframeContainer.style.display = 'block';
+        closeNetflixModal();
+      }
+    }
+  });
+  actionsDiv.appendChild(watchNowBtn);
+
+  const watchlistBtn = document.createElement('button');
+  watchlistBtn.className = 'watchlist-btn';
+  watchlistBtn.innerHTML = '<i class="fas fa-plus"></i> Watchlist';
+  watchlistBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const rect = watchlistBtn.getBoundingClientRect();
+    renderWatchlistOptionsInModal(itemDetails, {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX
+    });
+  });
+  actionsDiv.appendChild(watchlistBtn);
+
+  middleRow.appendChild(actionsDiv);
+  body.appendChild(middleRow);
+
+  if (series && series.length > 0) {
+    const episodesSection = document.createElement('div');
+    episodesSection.className = 'netflix-modal-section';
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.textContent = 'Episodes';
+    episodesSection.appendChild(sectionTitle);
+
+    const episodesGrid = document.createElement('div');
+    episodesGrid.className = 'episodes-grid';
+    series.forEach(episode => {
+      const episodeCard = document.createElement('div');
+      episodeCard.className = 'episode-card';
+      episodeCard.innerHTML = `
+        <div class="episode-image" style="background-image: url('${episode.image}')">
+          <div class="episode-play-overlay"><i class="fas fa-play"></i></div>
+        </div>
+        <div class="episode-info">
+          <div class="episode-title">${episode.title}</div>
+          <div class="episode-metadata">S${episode.season} E${episode.number}</div>
+        </div>
+      `;
+      episodeCard.addEventListener('click', () => {
+        openEpisodeModal(episode, series);
+      });
+      episodesGrid.appendChild(episodeCard);
+    });
+    episodesSection.appendChild(episodesGrid);
+    body.appendChild(episodesSection);
+  }
+
+  if (recommendations && recommendations.length > 0) {
+    const recSection = document.createElement('div');
+    recSection.className = 'netflix-modal-section';
+    const recTitle = document.createElement('h3');
+    recTitle.textContent = 'More Like This';
+    recSection.appendChild(recTitle);
+
+    const recGrid = document.createElement('div');
+    recGrid.className = 'recommendations-grid';
+    recommendations.forEach(rec => {
+      const recCard = createContentCardHtml(rec);
+      recCard.addEventListener('click', () => {
+        closeNetflixModal();
+        if (onItemSelect) onItemSelect(rec);
+      });
+      recGrid.appendChild(recCard);
+    });
+    recSection.appendChild(recGrid);
+    body.appendChild(recSection);
+  }
+
+  modal.appendChild(body);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => overlay.classList.add('active'), 10);
 }
 
-// Make available globally for scripts that call it without import
-if (typeof window !== 'undefined') {
-  window.openNetflixModal = openNetflixModal;
-  window.openWatchlistModal = openWatchlistModal;
+export function closeNetflixModal() {
+  const overlay = document.getElementById('netflix-modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    setTimeout(() => {
+      overlay.remove();
+      document.removeEventListener('keydown', handleKeyDown);
+    }, 400);
+  }
 }
 
-export default {
-  openNetflixModal,
-  closeNetflixModal,
-  openWatchlistModal
-};
+function handleKeyDown(event) {
+  if (event.key === 'Escape') closeNetflixModal();
+}
