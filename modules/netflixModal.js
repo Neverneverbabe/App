@@ -2,6 +2,9 @@ import { renderWatchlistOptionsInModal, createContentCardHtml } from '../ui.js';
 import { getWatchlistsCache, addRemoveItemToFolder, createLibraryFolder } from '../libraryManager.js';
 import { renderTrackSectionInModal, openEpisodeModal } from './track.js';
 
+// Store the active keyboard handler so it can be accurately removed later
+let activeKeyHandler = null;
+
 export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null, onBack = null, onClose = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
 
@@ -14,12 +17,18 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     if (onClose) onClose();
   };
 
-  const handleKeyDown = event => {
+  // FIX: Store the listener in a top-level variable
+  activeKeyHandler = event => {
     if (event.key === 'Escape') handleClose();
   };
+  document.addEventListener('keydown', activeKeyHandler);
 
-  document.addEventListener('keydown', handleKeyDown);
-  overlay.addEventListener('click', handleClose);
+  // FIX: Only close if clicking the dark overlay background, not the modal itself
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      handleClose();
+    }
+  });
 
   const modal = document.createElement('div');
   modal.className = 'netflix-modal';
@@ -78,7 +87,6 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     tagsDiv.appendChild(imdbLink);
   }
   infoOverlay.appendChild(tagsDiv);
-
   imageSection.appendChild(infoOverlay);
   modal.appendChild(imageSection);
 
@@ -113,9 +121,36 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   });
   actionsDiv.appendChild(watchNowBtn);
 
+  // FIX: Added the missing "Seen" button mentioned in the README
+  const seenBtn = document.createElement('button');
+  seenBtn.className = 'seen-btn';
+  seenBtn.innerHTML = '<i class="fas fa-check"></i>';
+  seenBtn.title = 'Mark as Seen';
+  seenBtn.addEventListener('click', () => {
+    // Add your logic to mark item as seen here
+    console.log('Marked as seen');
+  });
+  actionsDiv.appendChild(seenBtn);
+
+  // FIX: Added the missing "Track" button utilizing your unused import
+  const trackBtn = document.createElement('button');
+  trackBtn.className = 'track-btn';
+  trackBtn.innerHTML = '<i class="fas fa-bars"></i>';
+  trackBtn.title = 'Track Progress';
+  trackBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const rect = trackBtn.getBoundingClientRect();
+    renderTrackSectionInModal(itemDetails, {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX
+    });
+  });
+  actionsDiv.appendChild(trackBtn);
+
   const watchlistBtn = document.createElement('button');
   watchlistBtn.className = 'watchlist-btn';
-  watchlistBtn.innerHTML = '<i class="fas fa-plus"></i> Watchlist';
+  watchlistBtn.innerHTML = '<i class="fas fa-bookmark"></i>'; // Changed to bookmark to match README
+  watchlistBtn.title = 'Add to Watchlist';
   watchlistBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const rect = watchlistBtn.getBoundingClientRect();
@@ -193,11 +228,11 @@ export function closeNetflixModal() {
     overlay.classList.remove('active');
     setTimeout(() => {
       overlay.remove();
-      document.removeEventListener('keydown', handleKeyDown);
+      // FIX: accurately remove the correct listener using the variable reference
+      if (activeKeyHandler) {
+        document.removeEventListener('keydown', activeKeyHandler);
+        activeKeyHandler = null; 
+      }
     }, 400);
   }
-}
-
-function handleKeyDown(event) {
-  if (event.key === 'Escape') closeNetflixModal();
 }
