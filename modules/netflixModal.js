@@ -19,10 +19,17 @@ function ensureNetflixModalStyles() {
   style.id = MODAL_STYLE_ID;
   style.textContent = `
 .netflix-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
   z-index: 1200;
   align-items: flex-start;
+  justify-content: center;
   padding: 1.25rem;
   background: rgba(0, 0, 0, 0.86);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 .netflix-modal {
   position: relative;
@@ -33,7 +40,15 @@ function ensureNetflixModalStyles() {
   background: #141414;
   color: var(--white);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.netflix-modal::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 .netflix-modal-close,
 .netflix-modal-back {
@@ -93,13 +108,10 @@ function ensureNetflixModalStyles() {
   background: #141414;
 }
 .netflix-modal-info-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
-  gap: 2rem;
+  max-width: 58rem;
   padding: 1.25rem 3rem 0;
 }
-.netflix-modal-description-block h3,
-.netflix-watch-options h3 {
+.netflix-modal-description-block h3 {
   margin: 0 0 0.75rem;
   color: var(--white);
   font-size: 1rem;
@@ -221,13 +233,6 @@ function ensureNetflixModalStyles() {
 .netflix-modal .watchlist-btn:active {
   transform: scale(0.96);
 }
-.netflix-watch-options {
-  min-width: 0;
-}
-.netflix-watch-options-list {
-  display: grid;
-  gap: 0.55rem;
-}
 .netflix-watch-link {
   min-height: 42px;
   display: flex;
@@ -251,11 +256,6 @@ function ensureNetflixModalStyles() {
 }
 .netflix-watch-link i {
   color: var(--text-secondary);
-}
-.netflix-watch-empty {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
 }
 .netflix-watchlist-panel .dropdown-item {
   background: transparent;
@@ -416,8 +416,6 @@ function ensureNetflixModalStyles() {
     font-size: 2rem;
   }
   .netflix-modal-info-row {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
     padding: 1rem 1rem 0;
   }
   .netflix-modal-actions {
@@ -709,32 +707,6 @@ function createWatchOptionLink(link) {
   anchor.rel = 'noopener noreferrer';
   anchor.innerHTML = '<span>' + link.name + '</span><i class="fas fa-arrow-up-right-from-square"></i>';
   return anchor;
-}
-
-function createWatchOptionsPanel(watchOptions) {
-  const section = document.createElement('aside');
-  section.className = 'netflix-watch-options';
-
-  const heading = document.createElement('h3');
-  heading.textContent = 'Watch Options';
-  section.appendChild(heading);
-
-  if (!watchOptions.length) {
-    const empty = document.createElement('p');
-    empty.className = 'netflix-watch-empty';
-    empty.textContent = 'No links available yet.';
-    section.appendChild(empty);
-    return section;
-  }
-
-  const list = document.createElement('div');
-  list.className = 'netflix-watch-options-list';
-  watchOptions.forEach(link => {
-    list.appendChild(createWatchOptionLink(link));
-  });
-
-  section.appendChild(list);
-  return section;
 }
 
 function navigateToItem(item, onItemSelect) {
@@ -1079,7 +1051,6 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   descriptionBlock.appendChild(overview);
 
   infoRow.appendChild(descriptionBlock);
-  infoRow.appendChild(createWatchOptionsPanel(watchOptions));
   body.appendChild(infoRow);
 
   modal.addEventListener('click', event => {
