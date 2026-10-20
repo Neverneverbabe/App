@@ -3,6 +3,7 @@
 import { fetchSearchResults } from '../api.js';
 import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, displaySearchResults } from '../ui.js';
+import { escapeHtml } from './escape.js';
 
 // Cache for search results
 let cachedSearchResults = [];
@@ -49,7 +50,7 @@ export async function performSearch(query, reRenderOnly, currentMediaTypeFilter,
         }
         return;
     } else if (!reRenderOnly) {
-        searchResultsContainer.innerHTML = `<p class="loading-message">Searching for "${query}"...</p>`;
+        searchResultsContainer.innerHTML = `<p class="loading-message">Searching for "${escapeHtml(query)}"...</p>`;
         try {
             showLoadingIndicator('Searching...');
             const searchType = currentMediaTypeFilter === '' ? 'multi' : currentMediaTypeFilter;
@@ -71,13 +72,13 @@ export async function performSearch(query, reRenderOnly, currentMediaTypeFilter,
 
             displaySearchResults('search-results-container', filteredResults, isLightMode, onCardClick, isItemSeenFn);
             if (filteredResults.length === 0 && currentAgeRatingFilter.length > 0) {
-                searchResultsContainer.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items from your search for "${query}" matched the selected filter.</p>`;
+                searchResultsContainer.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No items from your search for "${escapeHtml(query)}" matched the selected filter.</p>`;
             } else if (results.length === 0) {
-                searchResultsContainer.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No results found for "${query}".</p>`;
+                searchResultsContainer.innerHTML = `<p style="padding: 1rem; color: var(--text-secondary);">No results found for "${escapeHtml(query)}".</p>`;
             }
         } catch (error) {
             console.error("Error performing search:", error);
-            searchResultsContainer.innerHTML = `<p style="color: var(--text-secondary);">Error searching for content. Please try again. Error: ${error.message}</p>`;
+            searchResultsContainer.innerHTML = `<p style="color: var(--text-secondary);">Error searching for content. Please try again. Error: ${escapeHtml(error.message)}</p>`;
         } finally {
             hideLoadingIndicator();
         }

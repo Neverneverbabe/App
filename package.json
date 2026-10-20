@@ -12,5 +12,9 @@
     "lucide-react": "^1.22.0",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.5.2"
+  },
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "check": "node --check api.js && node --check ui.js && node --check main.js && node --check ratingUtils.js && node --check service-worker.js && node --check modules/escape.js && node --check modules/search.js && node --check modules/netflixModal.js && node --check modules/libraryManager.js && node --check modules/contentManager.js && node --check modules/seenItems.js && node --check modules/track.js"
   }
 }

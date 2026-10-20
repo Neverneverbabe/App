@@ -2,6 +2,7 @@
 import { TMDB_IMG_BASE_URL, TMDB_BACKDROP_BASE_URL, VIDSRC_PROVIDERS } from './config.js';
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
 import { getWatchlistsCache, getWatchlistFullName } from './modules/libraryManager.js';
+import { escapeHtml, escapeAttr } from './modules/escape.js';
 
 // --- Global DOM References ---
 const itemDetailModal = document.getElementById('item-detail-modal');
@@ -137,7 +138,7 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
     const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
     const certification = getCertification(item);
     const certificationBadge = certification !== 'N/A'
-        ? `<span class="rating-badge" style="position: absolute; bottom: 8px; left: 8px; background-color: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; z-index: 5;">${certification}</span>`
+        ? `<span class="rating-badge" style="position: absolute; bottom: 8px; left: 8px; background-color: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; z-index: 5;">${escapeHtml(certification)}</span>`
         : '';
 
     const isSeen = isItemSeenFn(item.id, mediaType);
@@ -149,7 +150,7 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
     const bookmarkIconTitle = isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist';
 
     return `
-        <div class="content-card" data-id="${item.id}" data-type="${mediaType}" data-certification="${certification}" data-title="${title}" data-poster="${item.poster_path || ''}">
+        <div class="content-card" tabindex="0" role="button" aria-label="${escapeAttr(title)}" data-id="${escapeAttr(item.id)}" data-type="${escapeAttr(mediaType)}" data-certification="${escapeAttr(certification)}" data-title="${escapeAttr(title)}" data-poster="${escapeAttr(item.poster_path || '')}">
             <div class="image-container">
                 <div class="seen-toggle-icon ${seenIconClass}" data-id="${item.id}" data-type="${mediaType}" title="${seenIconTitle}">
                     <i class="fas fa-check"></i>
@@ -157,9 +158,9 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                 <div class="bookmark-toggle-icon ${bookmarkIconClass}" title="${bookmarkIconTitle}">
                     <i class="fa-${isBookmarked ? 'solid' : 'regular'} fa-bookmark"></i>
                 </div>
-                <img src="${posterPath || fallbackImageUrl}" alt="${title}"
+                <img src="${escapeAttr(posterPath || fallbackImageUrl)}" alt="${escapeAttr(title)}" loading="lazy" decoding="async" width="200" height="300"
                     onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}"
-                    data-fallback="${fallbackImageUrl}">
+                    data-fallback="${escapeAttr(fallbackImageUrl)}">
                 ${certificationBadge}
                 <div class="overlay">
                     <svg fill="currentColor" viewBox="0 0 20 20">
@@ -167,7 +168,7 @@ export function createContentCardHtml(item, isLightMode, isItemSeenFn) {
                     </svg>
                 </div>
             </div>
-            <p>${title}</p>
+            <p>${escapeHtml(title)}</p>
         </div>
     `;
 }

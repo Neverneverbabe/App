@@ -742,6 +742,17 @@ window.onload = async () => {
         sidebarOverlay?.classList.remove('active');
     });
 
+    // Keyboard activation for content cards (focusable via tabindex="0" in
+    // createContentCardHtml). Enter/Space dispatches a click, which the delegated
+    // body click handler above already knows how to handle.
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const card = e.target.closest?.('.content-card');
+        if (!card || e.target.closest('.seen-toggle-icon, .bookmark-toggle-icon')) return;
+        e.preventDefault();
+        card.click();
+    });
+
     // Close sidebar with Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && mainNav?.classList.contains('sidebar-open')) {
