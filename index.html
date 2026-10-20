@@ -61,6 +61,7 @@
 <nav id="main-nav" aria-hidden="true">
   <a href="#" class="tab-link active-nav-link" data-tab="watch-now-tab">Watch TV+</a>
   <a href="#" class="tab-link" data-tab="explore-tab">Explore</a>
+  <a href="#" class="tab-link" data-tab="free-tab">Free</a>
   <a href="#" class="tab-link" data-tab="library-tab">Library</a>
   <a href="#" class="tab-link" data-tab="seen-tab">Seen</a>
   <a href="#" class="tab-link" data-tab="track-tab">Track</a>
@@ -110,7 +111,15 @@
                 </div>
             <p id="explore-loading-indicator">Loading more movies and shows...</p>
         </section>
-        <section class="tab-content" id="library-tab">
+                <section class="tab-content" id="free-tab">
+            <section class="content-section">
+                <h3>Free to Watch</h3>
+                <p style="color: var(--text-secondary); max-width: 720px;">Every movie and show below is free to watch legally in the US — no subscription and no trial. They are carried by ad-supported services such as Tubi, Pluto TV, The Roku Channel, Freevee and YouTube's free movies. Open any title to see exactly which services have it for free, plus its rental and purchase options.</p>
+            </section>
+            <div id="free-grid-container" class="search-results-grid">
+            </div>
+        </section>
+<section class="tab-content" id="library-tab">
             <section class="content-section">
                 <h3>Your Folders</h3>
                 <div class="content-row hide-scrollbar" id="library-folders-row">

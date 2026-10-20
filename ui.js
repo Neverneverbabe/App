@@ -370,13 +370,13 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     // whose players opened popup/adult-ad tabs on click.
     const watchInfo = getWatchProvidersFromDetails(detailsObject);
     const trailer = getTrailerFromDetails(detailsObject);
-    let streamingLinksHtml = '<div id="watch-links-container" style="display:none;"><p style="margin-bottom: 0.5rem;"><strong>Watch On:</strong></p><div class="streaming-links">';
+    let streamingLinksHtml = '<div id="watch-links-container" style="display:none;"><p style="margin-bottom: 0.5rem;"><strong>Pricing &amp; where to watch:</strong></p><div class="streaming-links">';
     if (watchInfo.providers.length > 0 && watchInfo.link) {
         watchInfo.providers.forEach(provider => {
             const logo = provider.logo ? `<img src="${escapeAttr(provider.logo)}" alt="" width="28" height="28" loading="lazy" style="border-radius:6px;vertical-align:middle;margin-right:0.5rem;">` : '';
-            streamingLinksHtml += `<a href="${escapeAttr(watchInfo.link)}" target="_blank" rel="noopener noreferrer" style="display:block;margin-bottom:0.5rem;color:var(--science-blue);text-decoration:none;">${logo}${escapeHtml(provider.name)} <span style="color:var(--text-secondary);">\u00b7 ${escapeHtml(provider.kind)}</span></a>`;
+            streamingLinksHtml += `<a href="${escapeAttr(watchInfo.link)}" target="_blank" rel="noopener noreferrer" style="display:block;margin-bottom:0.5rem;color:var(--science-blue);text-decoration:none;">${logo}${escapeHtml(provider.name)} <span style="color:var(--text-secondary);">\u00b7 ${escapeHtml(provider.kind)}${provider.priceNote ? " \u00b7 " + escapeHtml(provider.priceNote) : ""}</span></a>`;
         });
-        streamingLinksHtml += '<p style="color:var(--text-secondary);font-size:0.85rem;">Opens the service via TMDB. A subscription may be required.</p>';
+        streamingLinksHtml += '<p style="color:var(--text-secondary);font-size:0.85rem;">Links open the service via TMDB (powered by JustWatch). TMDB does not list dollar prices - they are set by each service - so the exact price is shown there. Titles marked Free or Ads cost $0 and need no subscription.</p>';
     } else {
         streamingLinksHtml += '<p style="color: var(--text-secondary); margin-left: 0;">Not streaming anywhere in your region right now.</p>';
     }

@@ -386,7 +386,7 @@ window.onload = async () => {
             // page to the service that actually carries the title.
             const watchInfo = getWatchProvidersFromDetails(details);
             const streamingLinks = watchInfo.link
-                ? watchInfo.providers.map(p => ({ name: p.name, kind: p.kind, logo: p.logo, url: watchInfo.link }))
+                ? watchInfo.providers.map(p => ({ name: p.name, kind: p.kind, priceNote: p.priceNote, logo: p.logo, url: watchInfo.link }))
                 : [];
             const trailer = getTrailerFromDetails(details);
 
@@ -449,7 +449,7 @@ window.onload = async () => {
             // page to the service that actually carries the title.
             const watchInfo = getWatchProvidersFromDetails(details);
             const streamingLinks = watchInfo.link
-                ? watchInfo.providers.map(p => ({ name: p.name, kind: p.kind, logo: p.logo, url: watchInfo.link }))
+                ? watchInfo.providers.map(p => ({ name: p.name, kind: p.kind, priceNote: p.priceNote, logo: p.logo, url: watchInfo.link }))
                 : [];
             const trailer = getTrailerFromDetails(details);
             const recommendations = await fetchRecommendations(id, type);
@@ -616,6 +616,9 @@ window.onload = async () => {
                     break;
                 case 'explore-tab':
                     await ContentManager.populateExploreTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, currentExploreCategory, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
+                    break;
+                case 'free-tab':
+                    await ContentManager.populateFreeTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, SeenItemsManager.isItemSeen);
                     break;
                 case 'library-tab':
                     await LibraryManager.populateLibraryTab(

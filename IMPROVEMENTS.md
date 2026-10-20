@@ -169,3 +169,8 @@ were left as-is.
 - Firestore security rules live in the Firebase console, not this repo —
   they are the real access control for the public Firebase config.
 - The TMDB key in `config.js` should be domain-restricted in TMDB.
+
+## Pass 3 - Free to Watch tab + pricing (2026-10-20)
+- New **Free** nav tab (`free-tab`): `api.fetchFreeItems()` uses TMDB discover with `with_watch_monetization_types=free|ads` + `watch_region=US`, so every title listed is legally free (no subscription, no trial) on ad-supported services. `contentManager.populateFreeTab()` merges 2 pages each of movies/TV, de-dupes, sorts by popularity, respects the existing rating/genre/media-type filters, and caches per filter.
+- **Pricing**: `api.priceNoteForKind()` + a `priceNote` on every provider from `getWatchProvidersFromDetails()`. Both detail views (ui.js modal and Netflix-style modal) now head the section "Pricing & where to watch" and show e.g. "Tubi - Ads - $0 - free with ads, no subscription", "Netflix - Stream - Included with subscription", "Amazon Video - Rent - Paid rental - exact price on the service". TMDB/JustWatch do not expose dollar prices, so none are invented; links go via TMDB's watch page to the service.
+- Tests grew to 10 (pricing notes, provider price notes, free-filter URL). Service worker cache bumped to v5.

@@ -12,7 +12,7 @@
 //    (the old worker could resolve to `undefined`, which throws).
 //
 // Bump CACHE_VERSION whenever the shell file list changes.
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `watch-tv-cache-${CACHE_VERSION}`;
 
 const APP_SHELL = [

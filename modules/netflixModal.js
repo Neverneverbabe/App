@@ -725,7 +725,8 @@ function normalizeStreamingLinks(streamingLinks = []) {
       name: link.name || 'Source ' + (index + 1),
       url: link.url,
       logo: link.logo || null,
-      kind: link.kind || ''
+      kind: link.kind || '',
+      priceNote: link.priceNote || ''
     }))
     .filter(link => {
       const key = link.name + '|' + link.url;
@@ -753,7 +754,9 @@ function createWatchOptionLink(link) {
     anchor.appendChild(img);
   }
   const label = document.createElement('span');
-  label.textContent = link.kind ? `${link.name} · ${link.kind}` : link.name;
+  label.textContent = link.kind
+    ? `${link.name} · ${link.kind}${link.priceNote ? ` · ${link.priceNote}` : ''}`
+    : link.name;
   anchor.appendChild(label);
 
   const icon = document.createElement('i');
@@ -1006,7 +1009,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   if (watchOptions.length > 0) {
     const watchMenuTitle = document.createElement('p');
     watchMenuTitle.className = 'netflix-watch-menu-title';
-    watchMenuTitle.textContent = 'Where to watch';
+    watchMenuTitle.textContent = 'Pricing & where to watch';
     watchMenu.appendChild(watchMenuTitle);
     watchOptions.forEach(link => {
       watchMenu.appendChild(createWatchOptionLink(link));

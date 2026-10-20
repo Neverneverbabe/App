@@ -101,6 +101,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 );
 ```
 
+## Free to Watch tab + pricing
+
+The **Free** tab lists movies and shows that TMDB/JustWatch report as free or free-with-ads in the US (ad-supported services like Tubi, Pluto TV, The Roku Channel, Freevee and YouTube free movies) - $0, no subscription and no trial. Every title's detail view has a **Pricing & where to watch** section: each service is labelled Stream / Free / Ads / Rent / Buy with a pricing note (for example "$0 - free with ads, no subscription") and links out via TMDB to the service. TMDB does not publish dollar prices - services set those - so exact rental/purchase prices are shown on the service itself.
+
 ## Where to watch + trailers
 
 "Watch Now" shows the legal services that carry a title in the US

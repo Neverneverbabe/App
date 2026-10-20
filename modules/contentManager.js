@@ -1,7 +1,7 @@
 // modules/contentManager.js
 
 // Imports necessary functions from the API and utilities
-import { fetchTrendingItems, fetchDiscoveredItems, fetchEnoughDiscoveredItems, fetchTopRatedItems, fetchClassicItems, fetchRecommendations } from '../api.js';
+import { fetchTrendingItems, fetchDiscoveredItems, fetchEnoughDiscoveredItems, fetchTopRatedItems, fetchClassicItems, fetchRecommendations, fetchFreeItems } from '../api.js';
 import { getSeenItems } from './seenItems.js';
 import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, displayContentRow, appendItemsToGrid, updateHeroSection } from '../ui.js';
@@ -349,6 +349,69 @@ export async function loadMoreExploreItems(currentMediaTypeFilter, currentAgeRat
 /**
  * Resets the explore tab's pagination and cache.
  */
+// Cache for the Free tab, keyed by the media-type filter, so switching back
+// to the tab doesn't refetch.
+const freeItemsCache = new Map();
+
+/**
+ * Populates the 'Free to Watch' tab: titles TMDB/JustWatch list as free or
+ * free-with-ads in the US (legal services like Tubi, Pluto TV, The Roku
+ * Channel and YouTube's free movies - $0, no subscription, no trial).
+ * Opening any card shows exactly which services carry it for free.
+ */
+export async function populateFreeTab(currentMediaTypeFilter, currentAgeRatingFilter, currentCategoryFilter, isLightMode, onCardClick, isItemSeenFn) {
+    const grid = document.getElementById('free-grid-container');
+    if (!grid) return;
+
+    const cacheKey = currentMediaTypeFilter || 'all';
+    let items = freeItemsCache.get(cacheKey);
+
+    if (!items) {
+        grid.innerHTML = '<p class="loading-message">Loading free movies and shows...</p>';
+        try {
+            const pages = [1, 2];
+            let movieItems = [];
+            let tvItems = [];
+            if (currentMediaTypeFilter !== 'tv') {
+                for (const page of pages) movieItems.push(...await fetchFreeItems('movie', page));
+            }
+            if (currentMediaTypeFilter !== 'movie') {
+                for (const page of pages) tvItems.push(...await fetchFreeItems('tv', page));
+            }
+            const seen = new Set();
+            items = movieItems.concat(tvItems)
+                .filter(item => {
+                    const key = `${item.media_type}_${item.id}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                })
+                .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+            freeItemsCache.set(cacheKey, items);
+        } catch (error) {
+            console.error('Error loading free items:', error);
+            grid.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary);">Could not load free titles right now. Please try again in a minute.</p>';
+            return;
+        }
+    }
+
+    let filtered = items;
+    if (currentAgeRatingFilter.length > 0 || currentCategoryFilter.length > 0) {
+        filtered = items.filter(item => {
+            const ratingOk = currentAgeRatingFilter.length === 0 || checkRatingCompatibility(getCertification(item), currentAgeRatingFilter);
+            const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+            const categoryOk = currentCategoryFilter.length === 0 || genreIds.some(id => currentCategoryFilter.includes(String(id)));
+            return ratingOk && categoryOk;
+        });
+    }
+
+    grid.innerHTML = '';
+    appendItemsToGrid(grid, filtered, isLightMode, onCardClick, isItemSeenFn);
+    if (filtered.length === 0) {
+        grid.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary);">No free titles matched your filters.</p>';
+    }
+}
+
 export function resetExploreState() {
     exploreMoviePage = 1;
     exploreTvPage = 1;

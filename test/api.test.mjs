@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 
 // api.js reads config.js (no network at import time). fetch is stubbed.
 let calls = 0;
-globalThis.fetch = async () => {
+let urls = [];
+globalThis.fetch = async (url) => {
   calls++;
+  urls.push(String(url));
   return { ok: true, status: 200, statusText: 'OK', json: async () => ({ results: [{ id: 1, title: 'X' }] }) };
 };
 const api = await import('../api.js');
@@ -52,4 +54,33 @@ test('trailer picker prefers official YouTube trailers', () => {
 
 test('watch providers handle missing data', () => {
   assert.deepEqual(api.getWatchProvidersFromDetails({}), { link: '', providers: [] });
+});
+
+test('pricing notes: free kinds are $0 with no subscription', () => {
+  assert.match(api.priceNoteForKind('Free'), /\$0/);
+  assert.match(api.priceNoteForKind('Ads'), /\$0/);
+  assert.match(api.priceNoteForKind('Stream'), /subscription/i);
+  assert.match(api.priceNoteForKind('Rent'), /rental/i);
+  assert.match(api.priceNoteForKind('Buy'), /purchase/i);
+  assert.equal(api.priceNoteForKind('Nope'), '');
+});
+
+test('watch providers carry pricing notes', () => {
+  const details = { 'watch/providers': { results: { US: {
+    link: 'https://www.themoviedb.org/movie/2/watch',
+    ads: [{ provider_id: 73, provider_name: 'Tubi', logo_path: '/t.png' }],
+  } } } };
+  const { providers } = api.getWatchProvidersFromDetails(details);
+  assert.equal(providers[0].kind, 'Ads');
+  assert.match(providers[0].priceNote, /\$0/);
+});
+
+test('free items use the free/ads monetization filter', async () => {
+  urls = [];
+  const items = await api.fetchFreeItems('movie', 3);
+  assert.equal(items[0].media_type, 'movie');
+  assert.equal(urls.length, 1);
+  assert.match(urls[0], /with_watch_monetization_types=free\|ads/);
+  assert.match(urls[0], /watch_region=US/);
+  assert.match(urls[0], /page=3/);
 });

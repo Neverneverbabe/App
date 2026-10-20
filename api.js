@@ -52,6 +52,23 @@ const withMediaType = (results, mediaType) =>
   (results || []).map((item) => ({ ...item, media_type: mediaType }));
 
 /**
+ * Human-readable pricing note for a watch-provider kind.
+ * TMDB/JustWatch report HOW a title is offered, not dollar prices (those are
+ * set by each service and change constantly), so pricing is shown as the
+ * offer type. 'Free' and 'Ads' are genuinely $0 with no subscription/trial.
+ */
+export function priceNoteForKind(kind) {
+  switch (kind) {
+    case 'Free': return '$0 — free, no subscription';
+    case 'Ads': return '$0 — free with ads, no subscription';
+    case 'Stream': return 'Included with subscription';
+    case 'Rent': return 'Paid rental — exact price on the service';
+    case 'Buy': return 'Paid purchase — exact price on the service';
+    default: return '';
+  }
+}
+
+/**
  * Fetch trending movies or TV shows.
  * @param {'movie'|'tv'} mediaType
  * @param {'day'|'week'} timeWindow
@@ -132,6 +149,23 @@ export async function fetchEnoughDiscoveredItems(mediaType, certificationFilters
 }
 
 /**
+ * Fetch titles that are FREE to watch legally in a region: TMDB discover
+ * filtered to the 'free' and 'ads' monetization types (ad-supported services
+ * such as Tubi, Pluto TV, The Roku Channel, YouTube free movies). These need
+ * no subscription and no trial. Sorted by popularity.
+ * @param {'movie'|'tv'} mediaType
+ * @param {number} page
+ * @param {string} [region='US']
+ * @returns {Promise<Array>}
+ */
+export async function fetchFreeItems(mediaType = 'movie', page = 1, region = 'US') {
+  const data = await tmdbFetch(
+    `/discover/${mediaType}?include_adult=false&watch_region=${region}&with_watch_monetization_types=free|ads&sort_by=popularity.desc&vote_count.gte=50&page=${page}`,
+  );
+  return withMediaType(data.results, mediaType);
+}
+
+/**
  * Fetch recommended items for a movie or TV show.
  * @returns {Promise<Array>}
  */
@@ -201,6 +235,7 @@ export function getWatchProvidersFromDetails(details, region = 'US') {
           name: p.provider_name,
           logo: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null,
           kind: label,
+          priceNote: priceNoteForKind(label),
         });
       }
     }
