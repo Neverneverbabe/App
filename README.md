@@ -39,7 +39,7 @@ Each folder card also includes a small pencil icon you can click to rename that 
 
 ## React Movie Library Component
 
-A basic React component is provided in `examples/react/MovieLibrary.jsx` that implements a three-tier library layout. The component manages libraries, watchlists and movie lists in state and lets you add new folders dynamically.
+A basic React component is provided in `examples/react/MovieLibrary.jsx` that implements a three-tier library layout. The component manages libraries, watchlists and movie lists in state and lets you browse and organize content with a familiar layout.
 
 ```javascript
 import React from 'react';
@@ -53,7 +53,7 @@ Include React and ReactDOM via your preferred build system or CDN, then mount th
 
 ## Bookmark Folder Selector (React)
 
-A popup React component is available in `examples/react/BookmarkFolderSelector.jsx` for selecting multiple watchlist folders when bookmarking a movie. Pass a nested folder structure and any folders already containing the movie. When the user hits **Save**, the component calls your `onSave` callback with the selected folder IDs.
+A popup React component is available in `examples/react/BookmarkFolderSelector.jsx` for selecting multiple watchlist folders when bookmarking a movie. Pass a nested folder structure and any folder selection state to the component and it will render a tree editor with checkboxes.
 
 ```javascript
 import ReactDOM from 'react-dom/client';
@@ -117,3 +117,17 @@ Earlier versions linked to third-party "VidSrc" embed sites. Those were
 removed: their players are funded by exactly those click popups and
 adult ads, and there is no supported way to embed full movies for free
 without them.
+
+## VidSrc reference
+
+VidSrc is a popular video embedding and streaming API that lets users watch movies and TV shows directly using IMDb or TMDB IDs.
+
+### How VidSrc works
+
+- URL structure:
+  - Movies: https://vidsrc.to/embed/movie/{IMDB_ID}
+  - TV shows: https://vidsrc.cc/v2/embed/tv/{IMDB_ID}/{SEASON}/{EPISODE}
+- Integrations and addons: VidSrc is widely used across open-source project codebases, browser extensions (for example the VidSrc Quick Launcher in Edge and Firefox), and media centers.
+- Stremio integration: Addons like StremSRC pull direct HTTP streams from VidSrc as an alternative to torrenting.
+
+This reference is included for historical and integration context; the shipped app does not rely on third-party VidSrc embeds in its supported experience.
