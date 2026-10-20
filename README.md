@@ -39,12 +39,12 @@ Each folder card also includes a small pencil icon you can click to rename that 
 
 ## React Movie Library Component
 
-A basic React component is provided in `react/MovieLibrary.jsx` that implements a three-tier library layout. The component manages libraries, watchlists and movie lists in state and lets you add new folders dynamically.
+A basic React component is provided in `examples/react/MovieLibrary.jsx` that implements a three-tier library layout. The component manages libraries, watchlists and movie lists in state and lets you add new folders dynamically.
 
 ```javascript
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import MovieLibrary from './react/MovieLibrary.jsx';
+import MovieLibrary from './examples/react/MovieLibrary.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(<MovieLibrary />);
 ```
@@ -53,11 +53,11 @@ Include React and ReactDOM via your preferred build system or CDN, then mount th
 
 ## Bookmark Folder Selector (React)
 
-A popup React component is available in `react/BookmarkFolderSelector.jsx` for selecting multiple watchlist folders when bookmarking a movie. Pass a nested folder structure and any folders already containing the movie. When the user hits **Save**, the component calls your `onSave` callback with the selected folder IDs.
+A popup React component is available in `examples/react/BookmarkFolderSelector.jsx` for selecting multiple watchlist folders when bookmarking a movie. Pass a nested folder structure and any folders already containing the movie. When the user hits **Save**, the component calls your `onSave` callback with the selected folder IDs.
 
 ```javascript
 import ReactDOM from 'react-dom/client';
-import BookmarkFolderSelector from './react/BookmarkFolderSelector.jsx';
+import BookmarkFolderSelector from './examples/react/BookmarkFolderSelector.jsx';
 
 const folders = [
   { id: 'comedy', name: 'Comedy', children: [] },
@@ -89,7 +89,7 @@ The UI remembers the initial selection and lets you expand folders to reveal sub
 
 ## React Folder Manager
 
-`react/MovieFolderManager.jsx` demonstrates renaming folders and moving them into other folders.
+`examples/react/MovieFolderManager.jsx` demonstrates renaming folders and moving them into other folders.
 It renders a nested list where each folder can be edited inline or moved to a new parent.
 
 ```javascript
@@ -100,3 +100,20 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <MovieFolderManager />
 );
 ```
+
+## Where to watch + trailers
+
+"Watch Now" shows the legal services that carry a title in the US
+(TMDB watch providers, powered by JustWatch) with Stream / Rent / Buy
+labels, and links out via TMDB to that service — a subscription may be
+required there.
+
+Trailers play **inside the app**: the player (`modules/player.js`) uses
+a sandboxed YouTube (youtube-nocookie) frame with no `allow-popups` and
+no `allow-top-navigation`, so clicking can never open a popup, a
+redirect, or an ad tab.
+
+Earlier versions linked to third-party "VidSrc" embed sites. Those were
+removed: their players are funded by exactly those click popups and
+adult ads, and there is no supported way to embed full movies for free
+without them.

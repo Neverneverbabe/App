@@ -5,7 +5,7 @@ import { initializeFirebaseServices, getFirebaseAuth, getFirebaseFirestore } fro
 // Import auth related functions
 import { canvasSignIn, initAuthRefs, handleAuthStateChanged } from './SignIn/auth.js';
 // Import API calls for item details and related data
-import { fetchItemDetails, fetchRecommendations, fetchCollectionItems } from './api.js';
+import { fetchItemDetails, fetchRecommendations, fetchCollectionItems, getWatchProvidersFromDetails, getTrailerFromDetails } from './api.js';
 
 // Import new modules for content, search, seen items, and library management
 import * as ContentManager from './modules/contentManager.js';
@@ -16,8 +16,9 @@ import * as TrackManager from './modules/track.js';
 
 // Import Netflix-style modal helpers
 import { openNetflixModal, openWatchlistModal } from './modules/netflixModal.js';
-import { TMDB_BACKDROP_BASE_URL, TMDB_IMG_BASE_URL, VIDSRC_PROVIDERS } from './config.js';
+import { TMDB_BACKDROP_BASE_URL, TMDB_IMG_BASE_URL } from './config.js';
 import { getCertification } from './ratingUtils.js';
+import { escapeHtml } from './modules/escape.js';
 
 // Import UI utility functions
 import {
@@ -379,18 +380,15 @@ window.onload = async () => {
             const imdbId = details.external_ids && details.external_ids.imdb_id;
             const imdbUrl = imdbId ? `https://www.imdb.com/title/${imdbId}/` : '';
 
-            const streamingLinks = [];
-            if (VIDSRC_PROVIDERS && VIDSRC_PROVIDERS.length > 0) {
-                VIDSRC_PROVIDERS.forEach(provider => {
-                    let url = '';
-                    if (type === 'movie') url = `${provider.movieUrl}${details.id}`;
-                    else if (type === 'tv') url = `${provider.tvUrl}${details.id}`;
-                    if (url) {
-                        const name = provider.name + (type === 'tv' ? ' (TV Series)' : '');
-                        streamingLinks.push({ name, url });
-                    }
-                });
-            }
+            // Legal watch options from TMDB (powered by JustWatch) + trailer.
+            // The old VidSrc embed links were removed: their players open
+            // popup/adult-ad tabs on click. Providers link via TMDB's watch
+            // page to the service that actually carries the title.
+            const watchInfo = getWatchProvidersFromDetails(details);
+            const streamingLinks = watchInfo.link
+                ? watchInfo.providers.map(p => ({ name: p.name, kind: p.kind, logo: p.logo, url: watchInfo.link }))
+                : [];
+            const trailer = getTrailerFromDetails(details);
 
             openNetflixModal({
                 itemDetails: details,
@@ -401,6 +399,7 @@ window.onload = async () => {
                 imdbUrl,
                 rating: details.vote_average ? details.vote_average.toFixed(1) : null,
                 streamingLinks,
+                trailer,
                 recommendations,
                 series: seriesItems,
                 onItemSelect: onCardClick,
@@ -444,18 +443,15 @@ window.onload = async () => {
             }
             const imdbId = details.external_ids && details.external_ids.imdb_id;
             const imdbUrl = imdbId ? `https://www.imdb.com/title/${imdbId}/` : '';
-            const streamingLinks = [];
-            if (VIDSRC_PROVIDERS && VIDSRC_PROVIDERS.length > 0) {
-                VIDSRC_PROVIDERS.forEach(provider => {
-                    let url = '';
-                    if (type === 'movie') url = `${provider.movieUrl}${details.id}`;
-                    else if (type === 'tv') url = `${provider.tvUrl}${details.id}`;
-                    if (url) {
-                        const name = provider.name + (type === 'tv' ? ' (TV Series)' : '');
-                        streamingLinks.push({ name, url });
-                    }
-                });
-            }
+            // Legal watch options from TMDB (powered by JustWatch) + trailer.
+            // The old VidSrc embed links were removed: their players open
+            // popup/adult-ad tabs on click. Providers link via TMDB's watch
+            // page to the service that actually carries the title.
+            const watchInfo = getWatchProvidersFromDetails(details);
+            const streamingLinks = watchInfo.link
+                ? watchInfo.providers.map(p => ({ name: p.name, kind: p.kind, logo: p.logo, url: watchInfo.link }))
+                : [];
+            const trailer = getTrailerFromDetails(details);
             const recommendations = await fetchRecommendations(id, type);
             let seriesItems = [];
             if (type === 'movie' && details.belongs_to_collection && details.belongs_to_collection.id) {
@@ -476,6 +472,7 @@ window.onload = async () => {
                 description: details.overview || '',
                 imdbUrl,
                 streamingLinks,
+                trailer,
                 recommendations,
                 series: seriesItems,
                 onItemSelect: onCardClick,
@@ -660,7 +657,7 @@ window.onload = async () => {
                         <li>Network issues preventing connection to the TMDB API or Firebase.</li>
                         <li>API rate limits being exceeded (try again in a minute).</li>
                     </ul>
-                    <p style="color: red; margin-top: 1rem;"><strong>Detailed Error:</strong> ${error.message}</p>
+                    <p style="color: red; margin-top: 1rem;"><strong>Detailed Error:</strong> ${escapeHtml(error.message)}</p>
                 </section>
             `;
             const heroSection = activeTabElement.querySelector('.hero-section');

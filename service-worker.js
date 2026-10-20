@@ -12,12 +12,13 @@
 //    (the old worker could resolve to `undefined`, which throws).
 //
 // Bump CACHE_VERSION whenever the shell file list changes.
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `watch-tv-cache-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   './',
   './index.html',
+  './styles.css',
   './manifest.json',
   './config.js',
   './api.js',
@@ -35,6 +36,8 @@ const APP_SHELL = [
   './modules/netflixModal.js',
   './modules/track.js',
   './modules/escape.js',
+  './modules/player.js',
+  './modules/episodes.js',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
 ];

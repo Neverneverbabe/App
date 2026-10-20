@@ -8,6 +8,7 @@ import {
 } from './libraryManager.js';
 import { isItemSeen, openSeenEpisodesModal, toggleSeenStatus } from './seenItems.js';
 import { openEpisodeModal } from './track.js';
+import { openTrailerPlayer } from './player.js';
 
 let activeKeyHandler = null;
 const MODAL_STYLE_ID = 'netflix-modal-runtime-styles';
@@ -717,16 +718,19 @@ function createWatchlistPanel(itemDetails, itemType, onUpdate) {
 }
 
 function normalizeStreamingLinks(streamingLinks = []) {
-  const seenUrls = new Set();
+  const seen = new Set();
   return streamingLinks
     .filter(link => link && link.url)
     .map((link, index) => ({
       name: link.name || 'Source ' + (index + 1),
-      url: link.url
+      url: link.url,
+      logo: link.logo || null,
+      kind: link.kind || ''
     }))
     .filter(link => {
-      if (seenUrls.has(link.url)) return false;
-      seenUrls.add(link.url);
+      const key = link.name + '|' + link.url;
+      if (seen.has(key)) return false;
+      seen.add(key);
       return true;
     });
 }
@@ -737,8 +741,24 @@ function createWatchOptionLink(link) {
   anchor.href = link.url;
   anchor.target = '_blank';
   anchor.rel = 'noopener noreferrer';
-  anchor.title = 'Open ' + link.name + ' in a new tab';
-  anchor.innerHTML = '<span>' + link.name + '</span><i class="fas fa-arrow-up-right-from-square"></i>';
+  anchor.title = 'Watch on ' + link.name + ' (opens the provider via TMDB)';
+
+  if (link.logo) {
+    const img = document.createElement('img');
+    img.src = link.logo;
+    img.alt = '';
+    img.width = 28; img.height = 28;
+    img.loading = 'lazy';
+    img.style.borderRadius = '6px';
+    anchor.appendChild(img);
+  }
+  const label = document.createElement('span');
+  label.textContent = link.kind ? `${link.name} · ${link.kind}` : link.name;
+  anchor.appendChild(label);
+
+  const icon = document.createElement('i');
+  icon.className = 'fas fa-arrow-up-right-from-square';
+  anchor.appendChild(icon);
   return anchor;
 }
 
@@ -884,7 +904,7 @@ function createTvSeasonRail(itemDetails, seasons = []) {
   });
 }
 
-export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], recommendations = [], series = [], onItemSelect = null, onBack = null, onClose = null } = {}) {
+export function openNetflixModal({ itemDetails = null, imageSrc = '', title = '', tags = [], description = '', imdbUrl = '', rating = null, streamingLinks = [], trailer = null, recommendations = [], series = [], onItemSelect = null, onBack = null, onClose = null } = {}) {
   if (document.getElementById('netflix-modal-overlay')) return;
   ensureNetflixModalStyles();
 
@@ -951,7 +971,8 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
     imdbLink.target = '_blank';
     imdbLink.rel = 'noopener noreferrer';
     imdbLink.className = 'imdb-link';
-    imdbLink.innerHTML = '<img src="IMDb.png" alt="IMDb">' + (rating !== null ? '<span class="imdb-rating">' + rating + '</span>' : '');
+    imdbLink.innerHTML = '<img src="IMDb.png" alt="IMDb">';
+    if (rating !== null) { const rs = document.createElement('span'); rs.className = 'imdb-rating'; rs.textContent = rating; imdbLink.appendChild(rs); }
   }
 
   tags.forEach(tag => {
@@ -978,14 +999,14 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   watchNowBtn.className = 'watch-now-btn';
   watchNowBtn.innerHTML = '<i class="fas fa-play"></i> Watch Now';
   watchNowBtn.disabled = watchOptions.length === 0;
-  watchNowBtn.title = watchOptions.length ? 'Choose a streaming source' : 'No streaming links available';
+  watchNowBtn.title = watchOptions.length ? 'See where this is streaming' : 'Not streaming anywhere in your region right now';
 
   const watchMenu = document.createElement('div');
   watchMenu.className = 'netflix-watch-menu';
   if (watchOptions.length > 0) {
     const watchMenuTitle = document.createElement('p');
     watchMenuTitle.className = 'netflix-watch-menu-title';
-    watchMenuTitle.textContent = 'Choose source';
+    watchMenuTitle.textContent = 'Where to watch';
     watchMenu.appendChild(watchMenuTitle);
     watchOptions.forEach(link => {
       watchMenu.appendChild(createWatchOptionLink(link));
@@ -995,7 +1016,7 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   watchNowBtn.addEventListener('click', event => {
     event.stopPropagation();
     if (!watchOptions.length) {
-      showCustomAlert('Info', 'No streaming links are available for this item.');
+      showCustomAlert('Info', 'This title is not available on any streaming service in your region right now. You can still watch the trailer if one is available.');
       return;
     }
     watchlistPanel.style.display = 'none';
@@ -1005,6 +1026,19 @@ export function openNetflixModal({ itemDetails = null, imageSrc = '', title = ''
   watchNowWrapper.appendChild(watchNowBtn);
   watchNowWrapper.appendChild(watchMenu);
   actionsDiv.appendChild(watchNowWrapper);
+
+  if (trailer && trailer.key) {
+    const trailerBtn = document.createElement('button');
+    trailerBtn.type = 'button';
+    trailerBtn.className = 'watch-now-btn trailer-btn';
+    trailerBtn.innerHTML = '<i class="fas fa-film"></i> Trailer';
+    trailerBtn.title = 'Play the trailer inside the app (no popups, no new tab)';
+    trailerBtn.addEventListener('click', event => {
+      event.stopPropagation();
+      openTrailerPlayer(trailer, title);
+    });
+    actionsDiv.appendChild(trailerBtn);
+  }
 
   const iconActions = document.createElement('div');
   iconActions.className = 'netflix-icon-actions';

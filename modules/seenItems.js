@@ -2,7 +2,8 @@
 
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
 import { showCustomAlert, updateSeenButtonStateInModal, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
-import { fetchSeasonDetails } from '../api.js';
+import { escapeHtml } from './escape.js';
+import { seasonOptionsHtml, loadEpisodesInto } from './episodes.js';
 
 // Local cache for user's seen items
 let localUserSeenItemsCache = [];
@@ -196,27 +197,25 @@ export async function openSeenEpisodesModal(showDetails) {
     titleEl.textContent = showDetails.name || showDetails.title || 'Select Episodes';
 
     const seasons = (showDetails.seasons || []).filter(s => s.season_number > 0);
-    seasonSelect.innerHTML = seasons.map(s => `<option value="${s.season_number}">Season ${s.season_number}</option>`).join('');
+    seasonSelect.innerHTML = seasonOptionsHtml(seasons);
 
     async function loadSeason(num) {
-        episodeList.innerHTML = '<p style="text-align:center;padding:1rem;">Loading...</p>';
-        try {
-            const seasonData = await fetchSeasonDetails(showDetails.id, num);
-            episodeList.innerHTML = seasonData.episodes.map(ep => {
+        await loadEpisodesInto({
+            listEl: episodeList,
+            tvId: showDetails.id,
+            seasonNumber: num,
+            renderEpisode: (ep) => {
                 const overview = ep.overview ? ep.overview.slice(0, 100) + (ep.overview.length > 100 ? '...' : '') : '';
                 const checked = allSelected || (selected[num] && selected[num].has(ep.episode_number));
                 return `<label class="episode-item" data-season="${num}" data-episode="${ep.episode_number}" style="display:flex;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--border-color);cursor:pointer;">
                             <input type="checkbox" class="episode-checkbox" ${checked ? 'checked' : ''} style="margin-right:0.5rem;">
                             <div>
-                                <strong>E${ep.episode_number} - ${ep.name}</strong>
-                                <p style="margin:0.2rem 0 0;font-size:0.9rem;color:var(--text-secondary);">${overview}</p>
+                                <strong>E${ep.episode_number} - ${escapeHtml(ep.name)}</strong>
+                                <p style="margin:0.2rem 0 0;font-size:0.9rem;color:var(--text-secondary);">${escapeHtml(overview)}</p>
                             </div>
                         </label>`;
-            }).join('');
-        } catch (err) {
-            console.error('Error loading episodes', err);
-            episodeList.innerHTML = '<p style="color:red;text-align:center;">Failed to load episodes.</p>';
-        }
+            }
+        });
     }
 
     seasonSelect.addEventListener('change', () => {

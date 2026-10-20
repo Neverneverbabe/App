@@ -69,7 +69,7 @@ export async function fetchTrendingItems(mediaType = 'movie', timeWindow = 'week
  * @returns {Promise<Object>}
  */
 export async function fetchItemDetails(id, type) {
-  return tmdbFetch(`/${type}/${id}?append_to_response=release_dates,content_ratings,external_ids`);
+  return tmdbFetch(`/${type}/${id}?append_to_response=release_dates,content_ratings,external_ids,videos,watch/providers`);
 }
 
 /**
@@ -175,4 +175,50 @@ export async function fetchClassicItems(mediaType = 'movie', page = 1) {
     `/discover/${mediaType}?sort_by=vote_average.desc&vote_count.gte=500&primary_release_date.lte=2000-12-31&page=${page}`,
   );
   return withMediaType(data.results, mediaType);
+}
+
+/**
+ * Extract legal watch-provider options from a details object returned by
+ * fetchItemDetails (which now appends `watch/providers` and `videos`).
+ * Pure function — no network call.
+ * @param {object} details - TMDB details object.
+ * @param {string} [region='US'] - ISO country code key in results.
+ * @returns {{link: string, providers: Array<{id:number,name:string,logo:string|null,kind:string}>}}
+ *   kind is one of 'Stream' | 'Free' | 'Ads' | 'Rent' | 'Buy'. Providers are
+ *   de-duplicated by id, preferring Stream > Free > Ads > Rent > Buy.
+ */
+export function getWatchProvidersFromDetails(details, region = 'US') {
+  const results = details?.['watch/providers']?.results || {};
+  const regional = results[region] || results.US || Object.values(results)[0] || {};
+  const link = regional.link || '';
+  const kinds = [['flatrate', 'Stream'], ['free', 'Free'], ['ads', 'Ads'], ['rent', 'Rent'], ['buy', 'Buy']];
+  const byId = new Map();
+  for (const [key, label] of kinds) {
+    for (const p of regional[key] || []) {
+      if (!byId.has(p.provider_id)) {
+        byId.set(p.provider_id, {
+          id: p.provider_id,
+          name: p.provider_name,
+          logo: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null,
+          kind: label,
+        });
+      }
+    }
+  }
+  return { link, providers: [...byId.values()] };
+}
+
+/**
+ * Pick the best playable trailer/teaser from a details object
+ * (fetchItemDetails appends `videos`). Pure function — no network call.
+ * Prefers official YouTube trailers, then any YouTube trailer, teaser, clip.
+ * @returns {{key:string, name:string, type:string}|null}
+ */
+export function getTrailerFromDetails(details) {
+  const videos = details?.videos?.results || [];
+  const youtube = videos.filter((v) => v.site === 'YouTube' && v.key);
+  const score = (v) =>
+    (v.type === 'Trailer' ? 0 : v.type === 'Teaser' ? 10 : v.type === 'Clip' ? 20 : 30) + (v.official ? 0 : 5);
+  const best = youtube.sort((a, b) => score(a) - score(b))[0];
+  return best ? { key: best.key, name: best.name || 'Trailer', type: best.type || 'Trailer' } : null;
 }

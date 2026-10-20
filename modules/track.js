@@ -1,8 +1,10 @@
 // modules/track.js
 import { getCurrentUser, saveUserData, deleteUserData, listenToUserCollection } from '../SignIn/firebase_api.js';
 import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast } from '../ui.js';
-import { fetchSeasonDetails, fetchItemDetails } from '../api.js';
+import { fetchItemDetails } from '../api.js';
 import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
+import { escapeHtml } from './escape.js';
+import { seasonOptionsHtml, loadEpisodesInto } from './episodes.js';
 
 let trackedShowsCache = [];
 let unsubscribeTrack = null;
@@ -141,24 +143,22 @@ export async function openEpisodeModal(showDetails) {
     titleEl.textContent = showDetails.name || showDetails.title || 'Select Episode';
 
     const seasons = (showDetails.seasons || []).filter(s => s.season_number > 0);
-    seasonSelect.innerHTML = seasons.map(s => `<option value="${s.season_number}">Season ${s.season_number}</option>`).join('');
+    seasonSelect.innerHTML = seasonOptionsHtml(seasons);
 
     async function loadSeason(num) {
-        episodeList.innerHTML = '<p style="text-align:center;padding:1rem;">Loading...</p>';
-        try {
-            const seasonData = await fetchSeasonDetails(showDetails.id, num);
-            episodeList.innerHTML = seasonData.episodes.map(ep => {
+        await loadEpisodesInto({
+            listEl: episodeList,
+            tvId: showDetails.id,
+            seasonNumber: num,
+            renderEpisode: (ep) => {
                 const overview = ep.overview ? ep.overview.slice(0, 100) + (ep.overview.length > 100 ? '...' : '') : '';
                 const selClass = (selectedSeason === num && selectedEpisode === ep.episode_number) ? 'selected' : '';
                 return `<div class="episode-item ${selClass}" data-season="${num}" data-episode="${ep.episode_number}" style="padding:0.5rem 0;border-bottom:1px solid var(--border-color);cursor:pointer;">
-                            <strong>E${ep.episode_number} - ${ep.name}</strong>
-                            <p style="margin:0.2rem 0 0;font-size:0.9rem;color:var(--text-secondary);">${overview}</p>
+                            <strong>E${ep.episode_number} - ${escapeHtml(ep.name)}</strong>
+                            <p style="margin:0.2rem 0 0;font-size:0.9rem;color:var(--text-secondary);">${escapeHtml(overview)}</p>
                         </div>`;
-            }).join('');
-        } catch (err) {
-            console.error('Error loading episodes', err);
-            episodeList.innerHTML = '<p style="color:red;text-align:center;">Failed to load episodes.</p>';
-        }
+            }
+        });
     }
 
     seasonSelect.addEventListener('change', () => {
@@ -209,7 +209,7 @@ export function renderTrackSectionInModal(showDetails) {
     const progressText = tracked ? `Season ${tracked.season}, Episode ${tracked.episode}` : 'No progress saved';
     container.innerHTML = `
         <div style="display:flex;gap:0.5rem;align-items:center;">
-            <span style="flex:1;">${progressText}</span>
+            <span style="flex:1;">${escapeHtml(progressText)}</span>
             <button id="track-select-episode-btn" class="accent-button">Choose Episode</button>
             ${tracked ? '<button id="track-remove-btn" class="accent-button">Remove</button>' : ''}
         </div>

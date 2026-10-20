@@ -91,3 +91,81 @@ riskier rewrite:
    by design, so Firestore security rules are your actual protection.
 6. No tests or linter. `npm run check` is a start; adding ESLint +
    a smoke test would be next.
+
+---
+
+# Pass 2 — full-repo fix (2026-10-20, later)
+
+Requested: fix the entire repo, and specifically make playback
+seamless with no popup / adult-ad tabs on click.
+
+## Playback overhaul (the headline change)
+Root cause: "Watch Now" linked to VidSrc embed sites
+(`vidsrc.pm/.in`, `vidsrcme.ru/.su`). Their players are ad-funded —
+click popups, redirects and adult ads are their business model, not a
+configurable option, and the streams are unauthorised. They are gone:
+
+- `config.js`: `VIDSRC_PROVIDERS` deleted; added `WATCH_REGION` and a
+  logo base URL.
+- `api.js`: `fetchItemDetails` now appends `videos,watch/providers`
+  (no extra requests). New pure helpers `getWatchProvidersFromDetails()`
+  (deduped, Stream > Free > Ads > Rent > Buy) and
+  `getTrailerFromDetails()` (prefers official YouTube trailers).
+- `main.js` / `ui.js`: both modals now build "Where to watch" from
+  those providers (logo + name + kind, linking via TMDB to the service
+  that carries the title; a subscription may be required there).
+- New `modules/player.js`: trailers play **in-app** in a sandboxed
+  youtube-nocookie iframe with **no `allow-popups` and no
+  `allow-top-navigation`** — frame content cannot open a tab, pop
+  under, or redirect the page. Escape/backdrop/close all stop playback.
+  Wired into both the Netflix-style modal (Trailer button) and the
+  detail modal (Play Trailer button).
+
+There is no legal way to embed full movies for free, so full titles now
+open on the provider that actually carries them instead of an ad farm.
+
+## Remaining XSS sinks fixed
+Pass 1 covered cards, search and hero. Pass 2 covers the rest found in
+audit: detail-modal title/overview/genres/dates/rating/certification/
+backdrop, the modal watchlist dropdown (**user-created folder names**
+— a stored-XSS sink), library folder cards (folder name + poster URL),
+episode names/overviews in both episode modals, tracked-progress text,
+the tab error template's `error.message`, and the Netflix modal's
+provider-link names and IMDb rating (now built with `textContent`).
+The IMDb id is also validated (`tt` + digits) before it is used in an
+href. Trusted constant templates (filter options defined in `main.js`)
+were left as-is.
+
+## Structure
+- `index.html`: **2,063 → 303 lines (80 KB → 17 KB)**. The 1,767-line
+  inline `<style>` block moved verbatim to `styles.css` (plus player /
+  provider styles).
+- Removed **12 duplicate `<script type="module">` tags**. Every module
+  is reachable from `main.js`'s import graph; only `firebase-config.js`
+  (sets `window.firebaseConfig`, must run first) and `main.js` remain.
+- `modules/episodes.js`: the duplicated season-options + episode-list
+  fetch/render/fail logic in `seenItems.js` and `track.js` (~60 lines
+  × 2) is now one shared helper; each modal passes only its row markup.
+- `examples/`: the unused React demos and the modal experiment moved
+  out of the shipped app, with their own README. The experiment was
+  misnamed `moviemodalexample.py` — it is JSX, now
+  `examples/moviemodalexample.jsx`.
+
+## Tooling / hygiene
+- `package.json`: **all runtime dependencies removed** — the shipped
+  app uses none of them (Firebase loads from CDN, CSS is hand-written,
+  there is no bundler); they existed for the examples. Added
+  `"type": "module"` and `npm test`.
+- `test/`: real test suite using Node's built-in runner (no deps) —
+  escaping, API caching, watch-provider extraction, trailer picking.
+  `npm run check && npm test` → 7/7 passing.
+- Deleted the stale `package-lock.json` (nothing left to lock).
+- `firebase.json`: hosting now ignores `test/`, `examples/` and this
+  file so they are not deployed.
+- Service worker bumped to `v4`, shell now includes `styles.css`,
+  `modules/player.js` and `modules/episodes.js`.
+
+## Still open (unchanged from pass 1)
+- Firestore security rules live in the Firebase console, not this repo —
+  they are the real access control for the public Firebase config.
+- The TMDB key in `config.js` should be domain-restricted in TMDB.

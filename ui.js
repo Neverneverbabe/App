@@ -1,5 +1,6 @@
 // App/ui.js
-import { TMDB_IMG_BASE_URL, TMDB_BACKDROP_BASE_URL, VIDSRC_PROVIDERS } from './config.js';
+import { TMDB_IMG_BASE_URL, TMDB_BACKDROP_BASE_URL } from './config.js';
+import { getWatchProvidersFromDetails, getTrailerFromDetails } from './api.js';
 import { getCertification, checkRatingCompatibility } from './ratingUtils.js';
 import { getWatchlistsCache, getWatchlistFullName } from './modules/libraryManager.js';
 import { escapeHtml, escapeAttr } from './modules/escape.js';
@@ -319,13 +320,13 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const genres = detailsObject.genres && detailsObject.genres.length > 0 ? detailsObject.genres.map(g => g.name).join(', ') : 'N/A';
     const certification = getCertification(detailsObject);
     const ageRatingHtml = certification !== 'N/A'
-        ? `<p><strong>Age Rating:</strong> <span class="rating-badge" style="background-color: var(--science-blue); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem;">${certification}</span></p>`
+        ? `<p><strong>Age Rating:</strong> <span class="rating-badge" style="background-color: var(--science-blue); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem;">${escapeHtml(certification)}</span></p>`
         : `<p><strong>Age Rating:</strong> N/A</p>`;
 
     const fallbackPoster = `https://placehold.co/300x450/${isLightMode ? 'BBB' : '555'}/${isLightMode ? '333' : 'FFF'}?text=No+Poster`;
 
     const seenButtonHtml = `
-        <button id="toggle-seen-btn" class="seen-action-button" data-id="${detailsObject.id}" data-type="${itemType}" title="Mark as Seen" aria-label="Mark as Seen">
+        <button id="toggle-seen-btn" class="seen-action-button" data-id="${escapeAttr(detailsObject.id)}" data-type="${escapeAttr(itemType)}" title="Mark as Seen" aria-label="Mark as Seen">
             <i class="fas fa-check"></i>
         </button>`;
 
@@ -362,21 +363,25 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const imdbId = detailsObject.external_ids && detailsObject.external_ids.imdb_id;
     let imdbLogoHtml = '';
     if (imdbId) {
-        imdbLogoHtml = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" class="imdb-link"><img src="IMDb.png" alt="IMDb"><span class="imdb-rating">${voteAverage}</span></a>`;
+        imdbLogoHtml = /^tt\d+$/.test(String(imdbId)) ? `<a href="https://www.imdb.com/title/${escapeAttr(imdbId)}/" target="_blank" rel="noopener noreferrer" class="imdb-link"><img src="IMDb.png" alt="IMDb"><span class="imdb-rating">${escapeHtml(voteAverage)}</span></a>` : '';
     }
 
+    // Legal watch options (TMDB / JustWatch) — replaces the old VidSrc links,
+    // whose players opened popup/adult-ad tabs on click.
+    const watchInfo = getWatchProvidersFromDetails(detailsObject);
+    const trailer = getTrailerFromDetails(detailsObject);
     let streamingLinksHtml = '<div id="watch-links-container" style="display:none;"><p style="margin-bottom: 0.5rem;"><strong>Watch On:</strong></p><div class="streaming-links">';
-    if (VIDSRC_PROVIDERS && VIDSRC_PROVIDERS.length > 0) {
-        VIDSRC_PROVIDERS.forEach(provider => {
-            let url = '';
-            if (itemType === 'movie') url = `${provider.movieUrl}${detailsObject.id}`;
-            else if (itemType === 'tv') url = `${provider.tvUrl}${detailsObject.id}`;
-            if (url) {
-                streamingLinksHtml += `<a href="${url}" target="_blank" style="display: block; margin-bottom: 0.5rem; color: var(--science-blue); text-decoration: none;">${provider.name}${itemType === 'tv' ? ' (TV Series)' : ''}</a>`;
-            }
+    if (watchInfo.providers.length > 0 && watchInfo.link) {
+        watchInfo.providers.forEach(provider => {
+            const logo = provider.logo ? `<img src="${escapeAttr(provider.logo)}" alt="" width="28" height="28" loading="lazy" style="border-radius:6px;vertical-align:middle;margin-right:0.5rem;">` : '';
+            streamingLinksHtml += `<a href="${escapeAttr(watchInfo.link)}" target="_blank" rel="noopener noreferrer" style="display:block;margin-bottom:0.5rem;color:var(--science-blue);text-decoration:none;">${logo}${escapeHtml(provider.name)} <span style="color:var(--text-secondary);">\u00b7 ${escapeHtml(provider.kind)}</span></a>`;
         });
+        streamingLinksHtml += '<p style="color:var(--text-secondary);font-size:0.85rem;">Opens the service via TMDB. A subscription may be required.</p>';
     } else {
-        streamingLinksHtml += '<p style="color: var(--text-secondary); margin-left: 0;">No streaming providers configured.</p>';
+        streamingLinksHtml += '<p style="color: var(--text-secondary); margin-left: 0;">Not streaming anywhere in your region right now.</p>';
+    }
+    if (trailer) {
+        streamingLinksHtml += '<button id="play-trailer-btn" type="button" style="margin-top:0.5rem;cursor:pointer;">\u25b6 Play Trailer (in app, no popups)</button>';
     }
     streamingLinksHtml += '</div></div>';
 
@@ -387,27 +392,27 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     const certificationTag = certification !== 'N/A' ? certification : 'NR';
     const typeTag = itemType === 'movie' ? 'Movie' : 'TV';
     const genresTags = detailsObject.genres && detailsObject.genres.length > 0
-        ? detailsObject.genres.map(g => `<span>${g.name}</span>`).join('')
+        ? detailsObject.genres.map(g => `<span>${escapeHtml(g.name)}</span>`).join('')
         : '';
 
     modalContentArea.innerHTML = `
-    <div class="movie-modal-hero" style="background-image:url('${backdropPath}');"></div>
+    <div class="movie-modal-hero" style="background-image:url('${escapeAttr(backdropPath)}');"></div>
     <div class="movie-modal-body">
-        <h2>${title}</h2>
+        <h2>${escapeHtml(title)}</h2>
         <div class="movie-modal-tags">
             <span>${yearTag}</span>
-            <span>${certificationTag}</span>
+            <span>${escapeHtml(certificationTag)}</span>
             <span>${typeTag}</span>
             ${imdbLogoHtml}
             ${genresTags}
         </div>
-        <p class="movie-modal-description">${overview}</p>
+        <p class="movie-modal-description">${escapeHtml(overview)}</p>
         <div class="movie-modal-actions">${actionsRowHtml}</div>
         <div class="details-info">
-            <p><strong>Release Date:</strong> ${releaseDate}</p>
-            <p><strong>Rating:</strong> ${voteAverage} / 10</p>
+            <p><strong>Release Date:</strong> ${escapeHtml(releaseDate)}</p>
+            <p><strong>Rating:</strong> ${escapeHtml(voteAverage)} / 10</p>
             ${ageRatingHtml}
-            <p><strong>Genres:</strong> ${genres}</p>
+            <p><strong>Genres:</strong> ${escapeHtml(genres)}</p>
             ${streamingLinksHtml}
             ${itemType === 'tv' ? '<div id="track-progress-container" style="margin-top:1rem;display:none;"></div>' : ''}
         </div>
@@ -417,6 +422,10 @@ export function displayItemDetails(detailsObject, itemType, isLightMode) {
     document.body.style.overflow = 'hidden';
     setupWatchLinksToggle();
     setupTrackProgressToggle(detailsObject);
+    const trailerBtn = document.getElementById('play-trailer-btn');
+    if (trailerBtn && trailer) {
+        trailerBtn.onclick = () => import('./modules/player.js').then(m => m.openTrailerPlayer(trailer, title));
+    }
 }
 
 /**
@@ -516,8 +525,8 @@ export function renderWatchlistOptionsInModal(currentItemDetails, watchlistsCach
 
         dropdownListModal.innerHTML = allWatchlists.length
             ? allWatchlists.map(watchlist => `
-                <div class="dropdown-item ${currentlySelectedWatchlistIds.includes(watchlist.id) ? 'item-selected' : ''}" data-folder-id="${watchlist.id}">
-                    ${getWatchlistFullName(watchlist.id)}
+                <div class="dropdown-item ${currentlySelectedWatchlistIds.includes(watchlist.id) ? 'item-selected' : ''}" data-folder-id="${escapeAttr(watchlist.id)}">
+                    ${escapeHtml(getWatchlistFullName(watchlist.id))}
                     <span class="checkmark">✔</span>
                 </div>`).join('')
             : `<div class="dropdown-item" style="color:var(--text-secondary);cursor:default;text-align:center;">No watchlists yet. Click '+' below.</div>`;
@@ -635,8 +644,8 @@ export function updateHeroSection(imageUrl, title, description, item = null) {
     }
     if (heroContent) {
         heroContent.innerHTML = `
-            <h2>${title || ''}</h2>
-            <p>${description || ''}</p>
+            <h2>${escapeHtml(title || '')}</h2>
+            <p>${escapeHtml(description || '')}</p>
             <button id="hero-watch-now">Watch Now</button>
         `;
     }

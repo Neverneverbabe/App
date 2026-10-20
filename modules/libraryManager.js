@@ -5,6 +5,7 @@ import { showCustomAlert, showLoadingIndicator, hideLoadingIndicator, showToast,
 import { createContentCardHtml } from '../ui.js'; // Import directly from ui.js
 import { fetchItemDetails } from '../api.js';
 import { getCertification, checkRatingCompatibility } from '../ratingUtils.js';
+import { escapeHtml, escapeAttr } from './escape.js';
 
 // Local cache for user's watchlists
 let firestoreWatchlistsCache = [];
@@ -459,8 +460,8 @@ export function renderLibraryFolderCards(
         card.dataset.folderName = folder.name;
 
         card.innerHTML = `
-            <img src="${firstItemPoster}" alt="Folder: ${folder.name}" style="width:100%; height:14rem; object-fit: cover; border-radius:0.5rem; box-shadow: 0 4px 6px -1px rgba(var(--black-rgb), 0.1);">
-            <p style="text-align:center; margin-top:0.5rem; font-size:0.9em; font-weight:500; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${folder.name} (${folder.items.length})</p>
+            <img src="${escapeAttr(firstItemPoster)}" alt="Folder: ${escapeAttr(folder.name)}" style="width:100%; height:14rem; object-fit: cover; border-radius:0.5rem; box-shadow: 0 4px 6px -1px rgba(var(--black-rgb), 0.1);">
+            <p style="text-align:center; margin-top:0.5rem; font-size:0.9em; font-weight:500; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(folder.name)} (${folder.items.length})</p>
         `;
 
         const deleteBtn = document.createElement('button');
